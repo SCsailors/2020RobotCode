@@ -1,0 +1,1 @@
+When someone starts a new piece, such as turret or auton, create a new branch for your code. After it's finished, merge the current competition code with your branch, test again, then merge your branch with the competition code.
