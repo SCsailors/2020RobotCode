@@ -1,0 +1,9 @@
+Everything to be tuned is in the constants.h file
+1. Determine the number of rotations per 100 inches for low and high gear
+2. Check and tune 2Ds positioning by changing scrubfactor
+3. run drive characterization
+4. run PID tuning mode to check ka, kv, ks (PID =0.0)
+test on 1 dimensional profile, then repeat on 2 dimensional profile,
+5. Tune kAcceleration in Feedforward_only (Feedforward_only set in DriveMotionPlanner.h)
+6. Tune NONLINEAR_FEEDBACK values kBeta and kZeta set in DriveMotionPlanner.h and DriveMotionPlanner.cpp
+7. Run test profiles selected in the autonomous chooser
