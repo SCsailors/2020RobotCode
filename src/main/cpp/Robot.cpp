@@ -25,6 +25,8 @@ AutoModeSelector Robot::autoModeSelector;
 shared_ptr<Subsystems::Drive> Robot::drive(new Subsystems::Drive());
 shared_ptr<Subsystems::RobotStateEstimator> Robot::robotStateEstimator(new Subsystems::RobotStateEstimator());
 //Subsystems::Arm Robot::arm;
+shared_ptr<Subsystems::Turret> Robot::turret(new Subsystems::Turret());
+shared_ptr<Subsystems::TurretLimelight> Robot::turretlimelight(new Subsystems::TurretLimelight());
 
 TrajectoryGenerator Robot::trajectoryGenerator;
 

@@ -18,6 +18,8 @@
 #include "Subsystems/RobotStateEstimator.h"
 #include "Subsystems/Arm.h"
 #include "Subsystems/Subsystem.h"
+#include "Subsystems/Turret.h"
+#include "Subsystems/TurretLimelight.h"
 
 //Paths
 #include "Paths/TrajectoryGenerator.h"
@@ -79,6 +81,8 @@ static AutoModeSelector autoModeSelector;
 static shared_ptr<Subsystems::Drive> drive;
 static shared_ptr<Subsystems::RobotStateEstimator> robotStateEstimator;
 //static Subsystems::Arm arm;
+static shared_ptr<Subsystems::Turret> turret;
+static shared_ptr<Subsystems::TurretLimelight> turretlimelight;
 
 //Paths
 static TrajectoryGenerator trajectoryGenerator;
