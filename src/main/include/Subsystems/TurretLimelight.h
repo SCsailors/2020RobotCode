@@ -8,7 +8,6 @@
 #include <networktables/NetworkTableEntry.h>
 #include <networktables/NetworkTableInstance.h>
 
-
 namespace Subsystems{
 
 class TurretLimelight: public Subsystem{
@@ -24,6 +23,7 @@ class TurretLimelight: public Subsystem{
     double getHeight();
     double getPosOffsetR(); //distance from center of turret
     double getDistanceFromTY(); //horizontal distance from limelight (change to turret center?)
+    double getLatency();
 
   private:
     nt::NetworkTableInstance inst=nt::NetworkTableInstance::GetDefault();

@@ -7,19 +7,22 @@ Turret::Turret(){
 }
  
 void Turret::OnStart(double timestamp){
-    turretencoder.SetPositionConversionFactor(degreesperrotation);
-    offset=0.;
-    pid.SetP(.5); //change
-    pid.SetI(0.); //change
-    pid.SetD(0.); //change
+    turretencoder.SetPositionConversionFactor(degreesperrevolution);
+    turretencoder.SetVelocityConversionFactor(degreesperrevolution);
+    turretencoder.SetPosition(0.); //change
+    pid.SetFeedbackDevice(turretencoder);
+    pid.SetP(p); //change
+    pid.SetI(i); //change
+    pid.SetD(d); //change
+    pid.SetSmartMotionMaxVelocity(maxdegpersec/60.);  //check units
 }
 
 void Turret::OnLoop(double timestamp){
     if (counterclockwiselimit.Get()){
-        offset=counterclockwisemax-turretencoder.GetPosition();
+        turretencoder.SetPosition(counterclockwisemax);
     }
     else if (clockwiselimit.Get()){
-        offset=counterclockwisemax-turretencoder.GetPosition();
+        turretencoder.SetPosition(clockwisemax);
     };
 
 }
@@ -29,7 +32,7 @@ void Turret::OnStop(double timestamp){
 }
 
 void Turret::setAngle(double angle){
-    angle=angleInRange(angle+offset);
+    angle=angleInRange(angle);
     //no. if between maxs: go to max nearest to prev setpoint? or turrettracking should anticipate where to put setpoint if outside of turret range
     if (angle<counterclockwisemax  && angle>=((counterclockwisemax+clockwisemax)/2.)){
         pid.SetReference(counterclockwisemax,rev::ControlType::kPosition);

@@ -54,6 +54,8 @@ void Robot::RobotInit() {
   //add subsystem loops to vector
   subsystems.push_back(drive);
   subsystems.push_back(robotStateEstimator);
+  subsystems.push_back(turret);
+  subsystems.push_back(turretlimelight);
   
   //m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   //m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);

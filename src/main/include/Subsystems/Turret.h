@@ -30,8 +30,11 @@ class Turret : public Subsystems::Subsystem{
     double counterclockwisemax=185.;  //put 0 straight forward on robot (do not put 0 between maxs)
     frc::DigitalInput clockwiselimit{1};
     double clockwisemax=175.;
-    double offset;
-    double degreesperrotation=1.;  //change
+    double degreesperrevolution=1.;  //change
+    double p=.5;
+    double i=0.;
+    double d=0.;
+    double maxdegpersec=10.;
 
 
 };

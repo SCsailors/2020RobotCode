@@ -36,6 +36,11 @@ double TurretLimelight::getDistanceFromTY(){
     return (targetheight-height)/tan(getTurretTY()*M_PI/180.);
 }
 
+double TurretLimelight::getLatency(){
+    table=inst.GetTable("limelight");
+    return (table->GetEntry("tl").GetDouble(0));
+}
+
 
 
 
