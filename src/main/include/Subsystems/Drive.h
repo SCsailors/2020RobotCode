@@ -15,7 +15,6 @@
 #include "lib/Util/CSVWriter.h"
 #include "lib/Trajectory/TrajectoryIterator.h"
 #include "Planners/DriveMotionPlanner.h"
-#include "Constants.h"
 
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/Timer.h>
@@ -162,7 +161,7 @@ frc::DoubleSolenoid gearSolenoid{0,1};
   shared_ptr<Rotation2D> mGyroOffset= make_shared<Rotation2D>();
   bool mOverrideTrajectory = false;
   shared_ptr<DriveSignal> mDriveSignal=make_shared<DriveSignal>();
-  shared_ptr<Constants> constants=make_shared<Constants>();
+  
   double pi=3.14159265;
 
   int hGear=0;

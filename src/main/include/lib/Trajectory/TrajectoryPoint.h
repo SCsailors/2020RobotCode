@@ -8,12 +8,14 @@
 #pragma once
 #include <memory>
 #include <vector>
-#include "lib/Trajectory/Timing/TimedState.h"
+//#include "lib/Trajectory/Timing/TimedState.h"
 using namespace std;
+
+class TimedState;
 
 class TrajectoryPoint {
  public:
-  shared_ptr<TimedState> state_= make_shared<TimedState>();
+  shared_ptr<TimedState> state_;
   int index_=0;
   TrajectoryPoint(shared_ptr<TimedState> state, int index);
   shared_ptr<TimedState> state();

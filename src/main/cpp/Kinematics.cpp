@@ -6,11 +6,11 @@
 /*----------------------------------------------------------------------------*/
 
 #include "Kinematics.h"
-
+#include "Constants.h"
 Kinematics::Kinematics() {}
 
 shared_ptr<Twist2D> Kinematics::forwardKinematics(double left_wheel_delta, double right_wheel_delta){
-    double delta_rotation = (right_wheel_delta-left_wheel_delta)/ (constants->kDriveWheelTrackWidthInches*constants->kTrackScrubFactor);
+    double delta_rotation = (right_wheel_delta-left_wheel_delta)/ (Constants::kDriveWheelTrackWidthInches*Constants::kTrackScrubFactor);
     return forwardKinematics(left_wheel_delta, right_wheel_delta, delta_rotation);
 }
 

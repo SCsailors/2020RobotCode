@@ -37,12 +37,10 @@ using namespace std;
 #include "lib/Util/CSVWriter.h"
 #include "lib/Util/Units.h"
 #include "lib/Util/Util.h"
-#include "Constants.h"
 
 
 class DriveMotionPlanner {
   shared_ptr<CSVWriter> mCSVWriter;
-  shared_ptr<Constants> constants=make_shared<Constants>();
   shared_ptr<Units> units=make_shared<Units>();
   shared_ptr<Util> util=make_shared<Util>();
   shared_ptr<TrajectoryUtil> trajUtil=make_shared<TrajectoryUtil>();

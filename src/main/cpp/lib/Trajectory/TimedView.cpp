@@ -6,6 +6,7 @@
 /*----------------------------------------------------------------------------*/
 
 #include "lib/Trajectory/TimedView.h"
+#include "lib/Trajectory/TrajectoryPoint.h"
 #include "Robot.h"
 
 TimedView::TimedView(vector<shared_ptr<TimedState>> trajectory){
@@ -37,11 +38,11 @@ shared_ptr<TrajectorySamplePoint> TimedView::sample(double t){
     }
     
     for(int i=1; i<trajectory_.size(); i++){ //fixed already, I think
-        shared_ptr<TrajectoryPoint> s =make_shared<TrajectoryPoint>(trajectory_.at(i), i);
+        shared_ptr<TrajectorySamplePoint> s =make_shared<TrajectorySamplePoint>(trajectory_.at(i), i);
         if( s->state()->t()>=t){
-            shared_ptr<TrajectoryPoint> prev_s=make_shared<TrajectoryPoint>(trajectory_.at(i-1), i-1);
+            shared_ptr<TrajectorySamplePoint> prev_s=make_shared<TrajectorySamplePoint>(trajectory_.at(i-1), i-1);
             if(Robot::util.epsilonEquals(s->state()->t(), prev_s->state()->t())){
-                shared_ptr<TrajectorySamplePoint> st =make_shared<TrajectorySamplePoint>(s->state(), s->index());
+                shared_ptr<TrajectorySamplePoint> st =make_shared<TrajectorySamplePoint>(s->state(), s->index_floor());
                 return st;
             }
             shared_ptr<TrajectorySamplePoint> point=make_shared<TrajectorySamplePoint>(prev_s->state()->interpolate(s->state(), (t-prev_s->state()->t())/(s->state()->t()-prev_s->state()->t())), i-1, i); 

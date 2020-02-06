@@ -8,11 +8,14 @@
 #include "States/SuperstructureGoal.h"
 #include "States/SuperstructureConstants.h"
 
-SuperstructureGoal::SuperstructureGoal(double turret, double shooter, double hood) 
+SuperstructureGoal::SuperstructureGoal(double turret, double shooter, double hood, double ballPathBottom, double ballPathTop, double centeringIntake) 
 {
     state.turret = turret;
     state.shooter = shooter;
     state.hood = hood;
+    state.ballPathBottom = ballPathBottom;
+    state.ballPathTop = ballPathTop;
+    state.centeringIntake = centeringIntake;
 }
 
 SuperstructureGoal::SuperstructureGoal(SuperstructureState state)
@@ -24,7 +27,9 @@ bool SuperstructureGoal::equals(SuperstructureGoal other)
 {
     return this->state.turret == other.state.turret &&
             this->state.shooter == other.state.shooter &&
-            this->state.hood == other.state.hood;
+            this->state.hood == other.state.hood &&
+            this->state.ballPathBottom == other.state.ballPathBottom &&
+            this->state.ballPathTop == other.state.ballPathTop;
 }
 
 bool SuperstructureGoal::isAtDesiredState(SuperstructureState currentState)
@@ -32,7 +37,10 @@ bool SuperstructureGoal::isAtDesiredState(SuperstructureState currentState)
     std::vector<double> error{
         currentState.turret - state.turret,
         currentState.shooter - state.shooter,
-        currentState.hood - state.hood
+        currentState.hood - state.hood,
+        currentState.ballPathBottom - state.ballPathBottom,
+        currentState.ballPathTop - state.ballPathTop,
+        currentState.centeringIntake - state.centeringIntake
         };
     
     for (int i = 0; i < error.size(); i++)

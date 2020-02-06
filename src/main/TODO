@@ -1,23 +1,49 @@
-1. Increase Accuracy of profile following (Especially left-right)
-    -Tune variables
-    -improve Spline Generation and add optimization (Bezier or Hermite?)- complete
+Subsystems
 
-2. Fix and Clarify Drive encoder outputs- Done
+1. Shooter
+2. Intake
+3. Ball Path
+4. Turret
+5. Superstructure--
+6. Wheel of Fortune
 
-3. Increase Accuracy of positioning -Within 1 or 2 inches
-    -Tune variables
-    -Higher resolution sensors
 
-4. Add Zeroing of sensors on start up -Completed
+5. Climber 
 
-5. Update Drive Characterization
+Statemachines
+1. Superstructure
+2. Turret
+3. Shooter
+4. Wheel of Fortune
+5. Climber
+6. Drive
 
-6. CTRE/Phoenix.h causes an error when included
 
-7. Geometry, Splines, CSVwriter: inheritance
+States
+1. LED states
+2. Superstructure
 
-8. Pure Pursuit?
+Top Level
+Robot.cpp
 
-9. Global definition of pi.
+Interpretation
+-Statemachines
+1. Superstructure to individual subsystems or state machines
 
-10. determine kAcceleration based on kDriveMaxAcceleration
+Low Level
+-Subsystems
+1. individual subsystems
+
+Goals
+1. Idiot proof: push button get action with manual mode
+2. Drivers get close
+3. LED Feedback
+
+buttons:
+-Jog -manual arrows
+Intake - toggle in and out: out = running, retract when 5 balls
+Shoot - all, manual shoot one per press
+Climber - Up, start Climber
+Auto drive - destination
+Wheel of Fortune: Position and Rotation
+Turret manual rescan

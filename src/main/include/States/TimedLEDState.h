@@ -35,4 +35,5 @@ class StaticLEDState : public TimedLEDState
     void getCurrentLEDState(LEDState &desiredState, double timestamp) override;
   
   //add static LEDState as static
+    const static LEDState kStaticOff;
 };

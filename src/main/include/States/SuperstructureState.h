@@ -16,9 +16,12 @@ class SuperstructureState {
   Util util;
  public:
   double turret; //degrees
-  double shooter; //RPM
-  double hood; //degrees 
-  SuperstructureState(double turret, double shooter, double hood);
+  double shooter; //RPS
+  double hood; //degrees
+  double ballPathTop; //RPS
+  double ballPathBottom; //RPS 
+  double centeringIntake; //RPS
+  SuperstructureState(double turret, double shooter, double hood, double ballPathTop, double ballPathBottom, double centeringIntake);
   SuperstructureState();
   void setFrom(SuperstructureState source);
   std::string toString();

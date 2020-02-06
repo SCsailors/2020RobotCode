@@ -6,16 +6,16 @@
 /*----------------------------------------------------------------------------*/
 
 #include "Paths/TrajectoryGenerator.h"
-
+#include "Constants.h"
 TrajectoryGenerator::TrajectoryGenerator() {
     
 }
 
 TrajectoryGenerator::TrajectorySet::TrajectorySet(){
-    kMaxVelocity=Robot::constants.kDriveMaxVelocity;
-    kMaxAccel=Robot::constants.kDriveMaxAcceleration;
-    kMaxCentripetalAccel=Robot::constants.kDriveMaxCentripetalAcceleration;
-    kMaxVoltage=Robot::constants.kDriveMaxVoltage;
+    kMaxVelocity=Constants::kDriveMaxVelocity;
+    kMaxAccel=Constants::kDriveMaxAcceleration;
+    kMaxCentripetalAccel=Constants::kDriveMaxCentripetalAcceleration;
+    kMaxVoltage=Constants::kDriveMaxVoltage;
     
     DriveForwardStraightTest=make_shared<MirroredTrajectory>(getDriveForwardStraightTest());
     DriveForwardSwerveTest=make_shared<MirroredTrajectory>(getDriveForwardSwerveTest());
@@ -104,7 +104,7 @@ vector<shared_ptr<TimedState>> TrajectoryGenerator::TrajectorySet::getDriveRever
 }
 
 void TrajectoryGenerator::generateTrajectories(){
-    Trajectories=make_shared<TrajectorySet>();
+    Trajectories=std::make_shared<TrajectorySet>();
 }
 
 vector<shared_ptr<TimedState>> TrajectoryGenerator::TrajectorySet::MirroredTrajectory::get(bool left){

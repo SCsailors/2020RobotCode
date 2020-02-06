@@ -8,6 +8,7 @@
 
 #include "Subsystems/Drive.h"
 #include <cmath>
+#include "Constants.h"
 
 using namespace Subsystems;
 namespace Subsystems{
@@ -15,12 +16,12 @@ Drive::PeriodicIO::PeriodicIO(){}
 
 
 Drive::Drive() {
-    kP=Robot::constants.kDriveLowGearVelocityKp;//1E-4*.5;//PID Tuning: 1E-4*.5; Trajectory: 8e-5;
-    kI=Robot::constants.kDriveLowGearVelocityKi;//1.864E-6*.35;//PID Tuning: 1.864E-6*.35; Trajectory: 0.0;
-    kD=Robot::constants.kDriveLowGearVelocityKd;//0.00025;//1.20713E-6*4;//PID Tuning: 1.20713E-6*4; Trajectory: 0.0;
-    kFF=Robot::constants.kDriveLowGearVelocityKf;//.000015;//PID Tuning and Trajectory: .000015;
-    kIZ=Robot::constants.kDriveLowGearVelocityKiZone;
-    kA=Robot::constants.kAcceleration;
+    kP=Constants::kDriveLowGearVelocityKp;//1E-4*.5;//PID Tuning: 1E-4*.5; Trajectory: 8e-5;
+    kI=Constants::kDriveLowGearVelocityKi;//1.864E-6*.35;//PID Tuning: 1.864E-6*.35; Trajectory: 0.0;
+    kD=Constants::kDriveLowGearVelocityKd;//0.00025;//1.20713E-6*4;//PID Tuning: 1.20713E-6*4; Trajectory: 0.0;
+    kFF=Constants::kDriveLowGearVelocityKf;//.000015;//PID Tuning and Trajectory: .000015;
+    kIZ=Constants::kDriveLowGearVelocityKiZone;
+    kA=Constants::kAcceleration;
     
     frc::SmartDashboard::PutNumber("Drive P", kP);
     frc::SmartDashboard::PutNumber("Drive I", kI);
@@ -112,18 +113,18 @@ void Drive::configureSparkMaxPID(){
     leftMaster.RestoreFactoryDefaults();
     rightMaster.RestoreFactoryDefaults();
     /*
-    leftMasterPID.SetP(Robot::constants.kDriveLowGearVelocityKp);
-    leftMasterPID.SetI(Robot::constants.kDriveLowGearVelocityKi);
-    leftMasterPID.SetD(Robot::constants.kDriveLowGearVelocityKd);
-    leftMasterPID.SetFF(Robot::constants.kDriveLowGearVelocityKf);
-    leftMasterPID.SetIZone(Robot::constants.kDriveLowGearVelocityKiZone);
+    leftMasterPID.SetP(Constants::kDriveLowGearVelocityKp);
+    leftMasterPID.SetI(Constants::kDriveLowGearVelocityKi);
+    leftMasterPID.SetD(Constants::kDriveLowGearVelocityKd);
+    leftMasterPID.SetFF(Constants::kDriveLowGearVelocityKf);
+    leftMasterPID.SetIZone(Constants::kDriveLowGearVelocityKiZone);
     leftMasterPID.SetOutputRange(-1.0, 1.0);
     
-    rightMasterPID.SetP(Robot::constants.kDriveLowGearVelocityKp);
-    rightMasterPID.SetI(Robot::constants.kDriveLowGearVelocityKi);
-    rightMasterPID.SetD(Robot::constants.kDriveLowGearVelocityKd);
-    rightMasterPID.SetFF(Robot::constants.kDriveLowGearVelocityKf);
-    rightMasterPID.SetIZone(Robot::constants.kDriveLowGearVelocityKiZone);
+    rightMasterPID.SetP(Constants::kDriveLowGearVelocityKp);
+    rightMasterPID.SetI(Constants::kDriveLowGearVelocityKi);
+    rightMasterPID.SetD(Constants::kDriveLowGearVelocityKd);
+    rightMasterPID.SetFF(Constants::kDriveLowGearVelocityKf);
+    rightMasterPID.SetIZone(Constants::kDriveLowGearVelocityKiZone);
     rightMasterPID.SetOutputRange(-1.0, 1.0);
     */
     
@@ -231,11 +232,11 @@ void Drive::OnStop(double timestamp){
 }
 
 double Drive::IPSToRadiansPerSecond(double inches_per_second){ //vel/wheel radius
-    return inches_per_second/Robot::constants.kDriveWheelRadiusInches;
+    return inches_per_second/Constants::kDriveWheelRadiusInches;
 }//Inches/Sec->Radians/Sec of drive wheels.
 
 double Drive::rotationsToInches(double rotations){
-    return rotations* (mIsHighGear? Robot::constants.kDriveHighGearIPR: Robot::constants.kDriveLowGearIPR);
+    return rotations* (mIsHighGear? Constants::kDriveHighGearIPR: Constants::kDriveLowGearIPR);
 }
 
 double Drive::RPMToInchesPerSecond(double rpm){
@@ -243,7 +244,7 @@ double Drive::RPMToInchesPerSecond(double rpm){
 }
 
 double Drive::inchesToRotations(double inches){
-    return inches/(mIsHighGear? Robot::constants.kDriveHighGearIPR: Robot::constants.kDriveLowGearIPR); 
+    return inches/(mIsHighGear? Constants::kDriveHighGearIPR: Constants::kDriveLowGearIPR); 
 }
 
 double Drive::inchesPerSecondToRPM(double inches_per_second){
@@ -251,7 +252,7 @@ double Drive::inchesPerSecondToRPM(double inches_per_second){
 }
 
 double Drive::radiansPerSecondToRPM(double rad_s){ //rad/s of Drive wheels to RPM of the drive Encoders
-    return inchesPerSecondToRPM(rad_s*Robot::constants.kDriveWheelRadiusInches);
+    return inchesPerSecondToRPM(rad_s*Constants::kDriveWheelRadiusInches);
 } //rad/s->inches/sec (both of drive wheels)->RPM (of Encoders)
 
 void Drive::setOpenLoop(shared_ptr<DriveSignal> signal){
@@ -453,7 +454,7 @@ double Drive::getLinearVelocity(){// inches/sec of drive wheels
 }
 
 double Drive::getAngularVelocity(){
-    return (getRightLinearvelocity()-getLeftLinearVelocity())/constants->kDriveWheelTrackWidthInches;
+    return (getRightLinearvelocity()-getLeftLinearVelocity())/Constants::kDriveWheelTrackWidthInches;
 }
 
 void Drive::overrideTrajectory(bool value){
@@ -492,9 +493,9 @@ void Drive::updatePathFollower(){
 void Drive::handleAutoShift(){ //TODO stop from thrashing: gets up to speed, shifts, then down shifts immediately
     double linear_velocity= fabs(getLinearVelocity());
     double angular_velocity= fabs(getAngularVelocity());
-    if(mIsHighGear&& linear_velocity<constants->kDriveDownShiftVelocity){ // && angular_velocity< constants->kDriveDownShiftAngularVelocity
+    if(mIsHighGear&& linear_velocity<Constants::kDriveDownShiftVelocity){ // && angular_velocity< constants->kDriveDownShiftAngularVelocity
         setHighGear(false);
-    } else if (!mIsHighGear && linear_velocity> constants->kDriveDownShiftVelocity){
+    } else if (!mIsHighGear && linear_velocity> Constants::kDriveDownShiftVelocity){
         setHighGear(true);
     }
 }
@@ -539,10 +540,10 @@ void Drive::readPeriodicInputs(){
     mPeriodicIO->gyro_heading= tmp;
     #endif
     double deltaLeftRotations= ((mPeriodicIO->left_rotations-prevLeftRotations));
-    mPeriodicIO->left_distance+= deltaLeftRotations*pi*constants->kDriveWheelDiameterInches;
+    mPeriodicIO->left_distance+= deltaLeftRotations*pi*Constants::kDriveWheelDiameterInches;
 
     double deltaRightRotations= (mPeriodicIO->right_rotations-prevRightRotations);
-    mPeriodicIO->right_distance+= deltaRightRotations*pi*constants->kDriveWheelDiameterInches;
+    mPeriodicIO->right_distance+= deltaRightRotations*pi*Constants::kDriveWheelDiameterInches;
     if(mCSVWriter!=NULL){
         mCSVWriter->add(toCSV());
     }
@@ -601,11 +602,11 @@ void Drive::writePeriodicOutputs(){
         
         //setting velocity (rpm) for Trajectory following
         #ifdef FRC_ROBORIO
-        //leftMasterPID.SetReference(mPeriodicIO->left_demand, rev::ControlType::kVelocity, 0, (mPeriodicIO->left_feedforward + Robot::constants.kDriveLowGearVelocityKd*mPeriodicIO->left_accel)); 
-        //rightMasterPID.SetReference(mPeriodicIO->right_demand, rev::ControlType::kVelocity, 0, mPeriodicIO->right_feedforward + Robot::constants.kDriveLowGearVelocityKd*mPeriodicIO->right_accel);
+        //leftMasterPID.SetReference(mPeriodicIO->left_demand, rev::ControlType::kVelocity, 0, (mPeriodicIO->left_feedforward + Constants::kDriveLowGearVelocityKd*mPeriodicIO->left_accel)); 
+        //rightMasterPID.SetReference(mPeriodicIO->right_demand, rev::ControlType::kVelocity, 0, mPeriodicIO->right_feedforward + Constants::kDriveLowGearVelocityKd*mPeriodicIO->right_accel);
 
-        leftMasterPID.SetReference(mPeriodicIO->left_demand, rev::ControlType::kVelocity,0,mPeriodicIO->left_feedforward+mPeriodicIO->left_accel/(Robot::constants.kDriveMaxAcceleration*kA)); 
-        rightMasterPID.SetReference(mPeriodicIO->right_demand, rev::ControlType::kVelocity,0, mPeriodicIO->right_feedforward+mPeriodicIO->right_accel/(Robot::constants.kDriveMaxAcceleration*kA));
+        leftMasterPID.SetReference(mPeriodicIO->left_demand, rev::ControlType::kVelocity,0,mPeriodicIO->left_feedforward+mPeriodicIO->left_accel/(Constants::kDriveMaxAcceleration*kA)); 
+        rightMasterPID.SetReference(mPeriodicIO->right_demand, rev::ControlType::kVelocity,0, mPeriodicIO->right_feedforward+mPeriodicIO->right_accel/(Constants::kDriveMaxAcceleration*kA));
         //if(mPeriodicIO->left_demand!=0.0){
 
         

@@ -1,0 +1,5 @@
+Test ServoMotorSubsystem Inheritence
+1. check position and velocity that they're in ticks and ticks/100ms
+2. use the different modes and set functions
+3. check get...(whatever function) is equal to constants
+4. unit tests on conversions?

@@ -1,0 +1,98 @@
+/*----------------------------------------------------------------------------*/
+/* Copyright (c) 2018 FIRST. All Rights Reserved.                             */
+/* Open Source Software - may be modified and shared by FRC teams. The code   */
+/* must be accompanied by the FIRST BSD license file in the root directory of */
+/* the project.                                                               */
+/*----------------------------------------------------------------------------*/
+
+#include "Subsystems/BallPathTop.h"
+#include "Constants.h"
+
+using namespace Subsystems;
+std::shared_ptr<Subsystems::BallPathTop> BallPathTop::mInstance;
+
+BallPathTop::BallPathTop(Subsystems::TalonConstants constants) : Subsystems::TalonSRXSubsystem(constants) {}
+
+std::shared_ptr<Subsystems::BallPathTop> BallPathTop::getInstance()
+{
+    if (!mInstance)
+    {
+        mInstance = std::make_shared<Subsystems::BallPathTop>(*Constants::kBallPathTopConstants.get());
+    }
+    return mInstance;
+}
+
+void BallPathTop::updateFirst()
+{
+    if (!mFirstBreakState && mFirstBreakState != mPrevFirstBreakState)
+    { //ball left
+        mBallCount --;
+    }
+    if (mBallCount < 0)
+    {
+        mBallCount = 0;
+        frc::DriverStation::ReportError("mBallCount dropped below zero!");
+    }
+    mPrevFirstBreakState = mFirstBreakState;
+}
+
+void BallPathTop::updateLast()
+{
+    if (mLastBreakState && mLastBreakState != mPrevLastBreakState)
+    { //just entered 
+        mLastBreakStartTimestamp = frc::Timer::GetFPGATimestamp();
+        mBallCount++;
+    }
+
+    if (!mLastBreakState && mLastBreakState != mPrevLastBreakState)
+    { //Just passed
+        double passTime = frc::Timer::GetFPGATimestamp()-mLastBreakStartTimestamp;
+        frc::SmartDashboard::PutNumber("Ball Detection Pass Time", passTime);
+    }
+
+    bool holding = (frc::Timer::GetFPGATimestamp()-mLastBreakStartTimestamp) > Constants::kBallDetectHoldTime;
+    if (mLastBreakState && holding)
+    { //ball is stuck or we have 5 balls
+        mHasFiveBalls = true;
+    }
+
+    if (mBallCount > 5)
+    {
+        mBallCount = 5;
+        frc::DriverStation::ReportError("mBallCount is greater than 5 Balls!");
+    }
+
+    mPrevLastBreakState = mLastBreakState;
+}
+
+void BallPathTop::readPeriodicInputs()
+{
+    mFirstBreakState = mFirstBreak.Get();
+    mFirstMakeState = mFirstMake.Get();
+
+    mLastBreakState = mLastBreak.Get();
+    mLastMakeState = mLastMake.Get();
+    
+    updateLast();
+    updateFirst();
+    mHasBalls = mBallCount > 0;
+    mHasFiveBalls = mBallCount == 5;
+
+    TalonSRXSubsystem::readPeriodicInputs();
+    
+}
+
+int BallPathTop::getBallCount()
+{
+    return mBallCount;
+}
+
+bool BallPathTop::hasBalls()
+{
+    return mHasBalls;
+}
+
+bool BallPathTop::hasFiveBalls()
+{
+    return mHasFiveBalls;
+}

@@ -9,7 +9,6 @@
 #include "lib/Geometry/Pose2D.h"
 #include "lib/Geometry/Rotation2D.h"
 #include "lib/Geometry/Twist2D.h"
-#include "Constants.h"
 
 #include <memory>
 #include <cmath>
@@ -17,7 +16,6 @@ using namespace std;
 
 class Kinematics {
   double kEpsilon= 1E-9;
-  shared_ptr<Constants> constants = make_shared<Constants>();
  public:
   Kinematics();
   //Forward Kinematics using only encoders: less accurate, but useful for predicting

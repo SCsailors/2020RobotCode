@@ -16,7 +16,6 @@
 //Subsystems
 #include "Subsystems/Drive.h"
 #include "Subsystems/RobotStateEstimator.h"
-#include "Subsystems/Arm.h"
 #include "Subsystems/Subsystem.h"
 
 //Paths
@@ -34,10 +33,10 @@
 
 //Misc
 #include "Kinematics.h"
-#include "Constants.h"
 #include "RobotState.h"
 #include "AutoModeSelector.h"
 
+#include "Constants.h"
 
 #include <string>
 #include <cmath>
@@ -63,15 +62,15 @@ class Robot : public frc::TimedRobot {
   bool isHighGear=false;
 
 //Util
-
+static Constants constants;
 static Util util;
 static Units units;
 static DriveAssist driveAssist;
 
 //Misc
 static Kinematics kinematics;
-static Constants constants;
-static RobotState robotState;
+
+static FRC_7054::RobotState robotState;
 static AutoModeSelector autoModeSelector;
 
 //Subsystems

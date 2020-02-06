@@ -7,11 +7,14 @@
 
 #include "States/SuperstructureState.h"
 
-SuperstructureState::SuperstructureState(double turret, double shooter, double hood) 
+SuperstructureState::SuperstructureState(double turret, double shooter, double hood, double ballPathBottom, double ballPathTop, double centeringIntake) 
 {
     this->turret = turret;
     this->shooter = shooter;
     this->hood = hood;
+    this->ballPathTop = ballPathTop;
+    this->ballPathBottom = ballPathBottom;
+    this->centeringIntake = centeringIntake;
 }
 
 SuperstructureState::SuperstructureState()
@@ -19,6 +22,9 @@ SuperstructureState::SuperstructureState()
     turret = 0.0;
     shooter = 0.0;
     hood = 0.0;
+    ballPathTop = 0.0;
+    ballPathBottom = 0.0;
+    centeringIntake = 0.0;
 }
 
 void SuperstructureState::setFrom(SuperstructureState source)
@@ -26,15 +32,18 @@ void SuperstructureState::setFrom(SuperstructureState source)
     turret = source.turret;
     shooter = source.shooter;
     hood = source.hood;
+    ballPathTop = source.ballPathTop;
+    ballPathBottom = source.ballPathBottom;
+    centeringIntake = source.centeringIntake;
 }
 
 std::string SuperstructureState::toString()
 {
-    return util.toString(turret) + ", " + util.toString(shooter) + ", " + util.toString(hood) + ", ";
+    return util.toString(turret) + ", " + util.toString(shooter) + ", " + util.toString(hood) + ", " + util.toString(ballPathTop) + ", " + util.toString(ballPathBottom) + ", " + util.toString(centeringIntake) + ", " ;
 }
 
 std::vector<double> SuperstructureState::asVector()
 {
-    std::vector<double> tmp{turret, shooter, hood};
+    std::vector<double> tmp{turret, shooter, hood, ballPathTop, ballPathBottom, centeringIntake};
     return tmp;
 }

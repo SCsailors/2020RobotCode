@@ -7,6 +7,8 @@
 
 #include "lib/Physics/DriveCharacterization.h"
 
+#include <Constants.h>
+
 DriveCharacterization::DriveCharacterization() {}
 
 DriveCharacterization::CharacterizationConstants::CharacterizationConstants(){} 

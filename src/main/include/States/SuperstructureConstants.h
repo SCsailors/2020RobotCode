@@ -10,8 +10,11 @@
 #include <vector>
 namespace SuperstructureConstants{
 const static double kTurretPaddingDegrees = 5.0;
-const static double kShooterPaddingRPM = 100.0;
-const static double kWristPaddingDegrees = 5.0;
+const static double kShooterPaddingRPS = 100.0;
+const static double kHoodPaddingDegrees = 5.0;
+const static double kBallPathTopPaddingRPS = 100.0;
+const static double kBallPathBottomPaddingRPS = 100.0;
+const static double kCenteringIntakePaddingRPS = 100.0;
 const static std::vector<double> kPadding{
-    kTurretPaddingDegrees, kShooterPaddingRPM, kWristPaddingDegrees};
+    kTurretPaddingDegrees, kShooterPaddingRPS, kHoodPaddingDegrees, kBallPathTopPaddingRPS, kBallPathBottomPaddingRPS, kCenteringIntakePaddingRPS};
 }

@@ -12,11 +12,12 @@
 #include <cmath>
 
 class SuperstructureGoal {
-  SuperstructureState state{0.0, 0.0, 0.0};
  public:
-  SuperstructureGoal(double turret, double shooter, double hood);
+  SuperstructureGoal(double turret, double shooter, double hood, double ballPathTop, double ballPathBottom, double centeringIntake);
   SuperstructureGoal(SuperstructureState state);
+  SuperstructureGoal(){};
 
+  SuperstructureState state{0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
   bool equals(SuperstructureGoal other);
   bool isAtDesiredState(SuperstructureState currentState);
 

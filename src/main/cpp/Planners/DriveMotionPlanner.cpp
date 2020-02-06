@@ -9,19 +9,20 @@
 #include "Robot.h"
 #include "frc/Timer.h"
 #include "frc/smartdashboard/SmartDashboard.h"
+#include "Constants.h"
 
 DriveMotionPlanner::DriveMotionPlanner() {
     shared_ptr<DCMotorTransmission> transmission= make_shared<DCMotorTransmission>(
-        1.0/constants->kDriveKv,
-        units->inches_to_meters(constants->kDriveWheelRadiusInches)*units->inches_to_meters(constants->kDriveWheelRadiusInches)*constants->kRobotLinearInertia/(2.0*constants->kDriveKa),
-        constants->kDriveVIntercept);
+        1.0/Constants::kDriveKv,
+        units->inches_to_meters(Constants::kDriveWheelRadiusInches)*units->inches_to_meters(Constants::kDriveWheelRadiusInches)*Constants::kRobotLinearInertia/(2.0*Constants::kDriveKa),
+        Constants::kDriveVIntercept);
 
     mModel=make_shared<DifferentialDrive>(
-        constants->kRobotLinearInertia,
-        constants->kRobotAngularInertia,
-        constants->kRobotAngularDrag,
-        units->inches_to_meters(constants->kDriveWheelDiameterInches/2.0),
-        units->inches_to_meters(constants->kDriveWheelTrackWidthInches/2.0*constants->kTrackScrubFactor),
+        Constants::kRobotLinearInertia,
+        Constants::kRobotAngularInertia,
+        Constants::kRobotAngularDrag,
+        units->inches_to_meters(Constants::kDriveWheelDiameterInches/2.0),
+        units->inches_to_meters(Constants::kDriveWheelTrackWidthInches/2.0*Constants::kTrackScrubFactor),
         transmission, transmission);
     constraints= make_shared<TimingConstraint>(130.0, mModel, 9.0);
     //mCSVWriter=make_shared<CSVWriter>("motion_planning_logs", "Setpoint T,Setpoint X,Setpoint Y,Setpoint Theta,Setpoint Velocity,Setpoint Acceleration, Setpoint Curvature, Setpoint dCurvature_ds, Error X, Error Y, Error Theta, Linear Velocity, Angular Velocity, Adjusted Linear Velocity, Adjusted Angular Velocity, Left Feedforward, Right Feedforward, Adjusted Left Feedforward, Adjusted Right Feedforward, Actual Left Output, Actual Right Output, Pose X, Pose Y, Pose Theta, Left Demand, Right Demand, Left Velocity Actual, Right Velocity Actual");

@@ -9,7 +9,6 @@
 #include "lib/Util/Util.h"
 #include "lib/Trajectory/Timing/TimedState.h"
 #include "lib/Trajectory/TrajectorySamplePoint.h"
-#include "lib/Trajectory/TrajectoryPoint.h"
 #include <memory>
 #include <vector>
 using namespace std;

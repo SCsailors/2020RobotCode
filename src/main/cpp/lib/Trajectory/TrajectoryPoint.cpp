@@ -7,6 +7,8 @@
 
 #include "lib/Trajectory/TrajectoryPoint.h"
 
+#include "lib/Trajectory/Timing/TimedState.h"
+
 TrajectoryPoint::TrajectoryPoint(shared_ptr<TimedState> state, int index) {
     state_=state;
     index_=index;

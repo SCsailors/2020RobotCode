@@ -11,15 +11,14 @@
 
 #include <frc/smartdashboard/SmartDashboard.h>
 #include "lib/Util/CSVWriter.h"
-
+Constants Robot::constants;
 Util Robot::util;
 Units Robot::units;
 DriveAssist Robot::driveAssist;
 
 
 Kinematics Robot::kinematics;
-Constants Robot::constants;
-RobotState Robot::robotState;
+FRC_7054::RobotState Robot::robotState;
 AutoModeSelector Robot::autoModeSelector;
 
 shared_ptr<Subsystems::Drive> Robot::drive(new Subsystems::Drive());
