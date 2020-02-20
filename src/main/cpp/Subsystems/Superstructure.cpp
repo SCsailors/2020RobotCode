@@ -34,13 +34,24 @@ void Superstructure::OnStart(double timestamp){}
 
 void Superstructure::OnLoop(double timestamp)
 {
-    updateCurrentState();
+    updateCurrentState(); //gets data from subsystems
+
+    //calculate intake, hood, and shooter setpoints and set it to goal
+    setGoal(mStateMachine.mergedShootingIntaking(timestamp, mWantedActionShooter, mWantedActionIntake, mCurrentState, mLatestAimingParameters.getRange()));
+    updateWantedAction(); //update wanted action because state transitions in superstructure state machine could change it
+    
+    //update turret 
     maybeUpdateGoalFromVision(timestamp);
     maybeUpdateGoalFromFieldRelativeGoal(timestamp);
+    //set updated data
     followSetpoint();
 }
 
-void Superstructure::OnStop(double timestamp){}
+void Superstructure::OnStop(double timestamp)
+{
+    mWantedActionIntake = StateMachines::SuperstructureStateMachine::WantedAction::WANTED_IDLE;
+    mWantedActionShooter = StateMachines::SuperstructureStateMachine::WantedAction::WANTED_IDLE;
+}
 
 SuperstructureGoal Superstructure::getGoal()
 {
@@ -79,6 +90,9 @@ void Superstructure::setGoal(SuperstructureGoal goal)
     mGoal.state.centeringIntake = goal.state.centeringIntake;
     mGoal.state.ballPathBottom = goal.state.ballPathBottom;
     mGoal.state.ballPathTop = goal.state.ballPathTop;
+    mGoal.state.numBalls = goal.state.numBalls; //should just be passed through
+    mGoal.state.extendIntake = goal.state.extendIntake;
+    mGoal.state.extendWheelieBar = goal.state.extendWheelieBar;
 }
 
 void Superstructure::maybeUpdateGoalFromFieldRelativeGoal(double timestamp)
@@ -105,13 +119,13 @@ void Superstructure::maybeUpdateGoalFromFieldRelativeGoal(double timestamp)
             ->rotateBy(mFieldRelativeGoal);
     mGoal.state.turret = mCurrentState.turret + turret_error->getDegrees();
 
-    if (mGoal.state.turret < Constants::kTurretConstants->kMinUnitsLimit)
+    if (mGoal.state.turret < mTurret->getMinUnits())
     {
-        mGoal.state.turret += 360.0;
+        mGoal.state.turret += mTurret->getMinUnits();
     } 
-    if (mGoal.state.turret > Constants::kTurretConstants->kMaxUnitsLimit)
+    if (mGoal.state.turret > mTurret->getMaxUnits())
     {
-        mGoal.state.turret -=360.0;
+        mGoal.state.turret = mTurret->getMaxUnits();
     }
 
 }
@@ -150,13 +164,13 @@ void Superstructure::maybeUpdateGoalFromVision(double timestamp)
         //Add (opposite) of tangential velocity about goal + angular velocity in local frame.
         mTurretFeedforwardV = -(angular_component + tangential_component);
 
-        if (mGoal.state.turret < Constants::kTurretConstants->kMinUnitsLimit)
+        if (mGoal.state.turret < mTurret->getMinUnits())
         {
-            mGoal.state.turret += 360.0;
+            mGoal.state.turret = mTurret->getMinUnits();
         } 
-        if (mGoal.state.turret > Constants::kTurretConstants->kMaxUnitsLimit)
+        if (mGoal.state.turret > mTurret->getMaxUnits())
         {
-            mGoal.state.turret -=360.0;
+            mGoal.state.turret = mTurret->getMaxUnits();
         }
         mHasTarget = true;
 
@@ -219,9 +233,13 @@ void Superstructure::updateCurrentState()
     mCurrentState.turret = mTurret->getAngle();
     mCurrentState.hood = mHood->getAngle();
     mCurrentState.shooter = mShooter->getVelocity();
-    mCurrentState.ballPathBottom = mBallPathBottom->getVelocity();
-    mCurrentState.ballPathTop = mBallPathTop->getVelocity();
-    mCurrentState.centeringIntake = mCenteringIntake->getVelocity();
+    mCurrentState.ballPathBottom = mBallPathBottom->getSetpoint();
+    mCurrentState.ballPathTop = mBallPathTop->getSetpoint();
+    mCurrentState.centeringIntake = mCenteringIntake->getSetpoint();
+
+    mCurrentState.numBalls = mBallPathTop->getBallCount();
+    mCurrentState.extendIntake = mIntakeExtended;
+    mCurrentState.extendWheelieBar = mWheelieBarExtended;
 }
 
 void Superstructure::setWantAutoAim(std::shared_ptr<Rotation2D> field_to_turret_hint, bool enforce_min_distance, double min_distance)
@@ -256,6 +274,18 @@ void Superstructure::setTurretOpenLoop(double throttle)
 
 void Superstructure::followSetpoint()
 {
+    frc::SmartDashboard::PutNumber("Superstructure Turret Goal: ", mGoal.state.turret);
+    frc::SmartDashboard::PutNumber("Superstructure Hood Goal: ", mGoal.state.hood);
+    frc::SmartDashboard::PutNumber("Superstructure Centering Intake Goal: ", mGoal.state.centeringIntake);
+    frc::SmartDashboard::PutNumber("Superstructure BallPath Bottom Goal: ", mGoal.state.ballPathBottom);
+    frc::SmartDashboard::PutNumber("Superstructure BallPath Top Goal: ", mGoal.state.ballPathTop);
+    frc::SmartDashboard::PutNumber("Superstructure Shooter Goal: ", mGoal.state.shooter);
+
+    frc::SmartDashboard::PutBoolean("Superstructure Extend Intake Goal: ", mGoal.state.turret);
+    frc::SmartDashboard::PutBoolean("Superstructure Extend Wheelie Bar Goal: ", mGoal.state.turret);
+
+    frc::SmartDashboard::PutNumber("Superstructure numBalls Goal: ", mGoal.state.numBalls);
+    
     if (mTurretMode == TurretControlModes::VISION_AIMED || mTurretMode == TurretControlModes::JOGGING)
     {
         mTurret->setSetpointPositionPID(mGoal.state.turret, mTurretFeedforwardV);
@@ -267,12 +297,51 @@ void Superstructure::followSetpoint()
         mTurret->setSetpointMotionMagic(mGoal.state.turret);
     }
 
-    //maybe add something here about hood and trench
     mHood->setSetpointPositionPID(mGoal.state.hood, mHoodFeedforwardV);
     mShooter->setSetpointVelocityPID(mGoal.state.shooter, mShooterFeedforwardV);
-    mBallPathBottom->setSetpointVelocityPID(mGoal.state.ballPathBottom, mBallPathBottomFeedforwardV);
-    mBallPathTop->setSetpointVelocityPID(mGoal.state.ballPathTop, mBallPathTopFeedforwardV);
-    mCenteringIntake->setSetpointVelocityPID(mGoal.state.centeringIntake, mCenteringIntakeFeedforwardV);
+    mBallPathBottom->setOpenLoop(mGoal.state.ballPathBottom);
+    mBallPathTop->setOpenLoop(mGoal.state.ballPathTop);
+    mCenteringIntake->setOpenLoop(mGoal.state.centeringIntake);
+
+    if (mGoal.state.extendIntake)
+    {
+        extendIntake();
+    } else
+    {
+        stowIntake();
+    }
+    
+}
+
+void Superstructure::updateWantedAction()
+{ //update wanted action if it is changed by transition
+    StateMachines::SuperstructureStateMachine::WantedAction intakeAction = SystemStateToWantedAction(mStateMachine.getSystemIntakeState());
+    StateMachines::SuperstructureStateMachine::WantedAction shooterAction = SystemStateToWantedAction(mStateMachine.getSystemShooterState());
+
+    if (shooterAction != mWantedActionShooter)
+    {
+        mWantedActionShooter = shooterAction;
+    }
+    if (intakeAction != mWantedActionIntake)
+    {
+        mWantedActionIntake = intakeAction;
+    }
+}
+
+StateMachines::SuperstructureStateMachine::WantedAction Superstructure::SystemStateToWantedAction(StateMachines::SuperstructureStateMachine::SystemState state)
+{
+    switch (state) {
+        case StateMachines::SuperstructureStateMachine::IDLE:
+            return StateMachines::SuperstructureStateMachine::WANTED_IDLE;
+        case StateMachines::SuperstructureStateMachine::INTAKING_BALL:
+            return StateMachines::SuperstructureStateMachine::WANTED_INTAKE_BALL;
+        case StateMachines::SuperstructureStateMachine::PRE_EXHAUSTING_BALL:
+            return StateMachines::SuperstructureStateMachine::WANTED_PRE_EXHAUST_BALL;
+        case StateMachines::SuperstructureStateMachine::EXHAUSTING_BALL:
+            return StateMachines::SuperstructureStateMachine::WANTED_EXHAUST_BALL;
+        case StateMachines::SuperstructureStateMachine::HAVE_BALLS:
+            return StateMachines::SuperstructureStateMachine::WANTED_HAVE_BALLS;
+    }
 }
 
 bool Superstructure::isAtDesiredState()
@@ -282,25 +351,51 @@ bool Superstructure::isAtDesiredState()
 
 bool Superstructure::isShooting()
 {
-    return util.epsilonEquals( mGoal.state.shooter, 0.0);
-}
-
-void Superstructure::extendWheelieBar()
-{
-    mWheelieBar.Set(true);
-}
-
-void Superstructure::stowWheelieBar()
-{
-    mWheelieBar.Set(false);
+    return !(util.epsilonEquals( mGoal.state.shooter, 0.0));
 }
 
 void Superstructure::extendIntake()
 {
-    mIntake.Set(true);
+    if (!mIntakeExtended)
+    {
+        mIntake.Set(true);
+        mIntakeExtended = true;
+    }
+    
 }
 
 void Superstructure::stowIntake()
 {
-    mIntake.Set(false);
+    if (mIntakeExtended)
+    {
+        mIntake.Set(false);
+        mIntakeExtended = false;
+    }
+    
+}
+
+void Superstructure::setGoalNumBalls(double ballsToShoot)
+{
+    double initial_ball_count = (double) mBallPathTop->getBallCount() - ballsToShoot;
+    double final_ball_count;
+    if (initial_ball_count < 0)
+    {
+        final_ball_count = 0.0;
+    } else
+    {
+        final_ball_count = initial_ball_count;
+    }
+    
+    
+    mStateMachine.setBallGoal(final_ball_count);
+}
+
+void Superstructure::setStateMachineLEDPriority(bool priority)
+{
+    mStateMachine.setLEDPriority(priority);
+}
+
+void Superstructure::setStateMachineLEDMaxPriority(bool maxPriority)
+{
+    mStateMachine.setLEDMaxPriority(maxPriority);
 }

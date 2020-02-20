@@ -13,18 +13,28 @@
 #include <string>
 
 class SuperstructureState {
-  Util util;
+  Util util{};
  public:
-  double turret; //degrees
-  double shooter; //RPS
-  double hood; //degrees
-  double ballPathTop; //RPS
-  double ballPathBottom; //RPS 
-  double centeringIntake; //RPS
-  SuperstructureState(double turret, double shooter, double hood, double ballPathTop, double ballPathBottom, double centeringIntake);
+  double turret = 0.0; //degrees
+  double shooter = 0.0; //RPS
+  double hood = 0.0; //degrees
+  double ballPathTop = 0.0; //RPS
+  double ballPathBottom = 0.0; //RPS 
+  double centeringIntake = 0.0; //RPS
+  double numBalls = 0.0;
+  bool extendIntake = false;
+  bool extendWheelieBar = false;
+  SuperstructureState(double turret, double shooter, double hood, double ballPathTop, double ballPathBottom, double centeringIntake, int numBalls, bool extendIntake, bool extendWheelieBar);
   SuperstructureState();
   void setFrom(SuperstructureState source);
   std::string toString();
+  bool hasBalls();
+  bool hasFiveBalls();
+
+  bool intakeExtended(){return extendIntake;}
+  bool wheelieBarExtended(){return extendWheelieBar;}
+  void reset();
+  
 
   std::vector<double> asVector();
 };

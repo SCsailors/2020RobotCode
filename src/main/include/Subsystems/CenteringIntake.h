@@ -15,10 +15,10 @@
 #include <memory>
 
 namespace Subsystems{
-class CenteringIntake : public Subsystems::TalonSRXSubsystem {
+class CenteringIntake : public Subsystems::SparkMaxSubsystem {
  static std::shared_ptr<Subsystems::CenteringIntake> mInstance;
  public:
-  CenteringIntake(Subsystems::TalonConstants constants);
+  CenteringIntake(Subsystems::SparkMaxConstants constants);
   static std::shared_ptr<Subsystems::CenteringIntake> getInstance();
 };
 }

@@ -28,6 +28,7 @@ namespace Subsystems {
 class SlaveConstants {
   public:
     SlaveConstants(){}
+    SlaveConstants(int id, bool invert_motor, bool isTalonSRX) : id(id), invert_motor(invert_motor), isTalonSRX(isTalonSRX) {}
     int id = -1;
     bool invert_motor = false;
     bool isTalonSRX = false;
@@ -36,15 +37,15 @@ class SlaveConstants {
 class ServoMotorSubsystemConstants {
  public:
   ServoMotorSubsystemConstants(){}
-  std::vector<SlaveConstants> kSlaveIDs{};
+  std::vector<SlaveConstants> kSlaveIDs{SlaveConstants{}};
   int id = -1;
   std::string kName = "ERROR_ASSIGN_A_NAME";
   double kHomePosition = 0.0; //Units
   double kTicksPerUnitDistance = 1.0;
   bool inverted = false;
   bool invert_sensor_phase = false;
-  double kMinUnitsLimit = -INFINITY;
-  double kMaxUnitsLimit = INFINITY;
+  double kMinUnitsLimit = -std::numeric_limits<double>::max();
+  double kMaxUnitsLimit = std::numeric_limits<double>::max();
   
 
   //see Constants.h for which slot is for which purpose 
@@ -83,11 +84,9 @@ class TalonConstants : public ServoMotorSubsystemConstants {
   int kContinuousCurrentLimit = 20; //amps
   int kPeakCurrentLimit = 60; //amps
   int kPeakCurrentDuration = 200; //milliseconds
+  //TalonFX uses these slightly differentyly to configure the SupplyCurrentLimitConfig
   NeutralMode kNeutralMode = NeutralMode::Brake;
   int kStatusFrame8UpdateRate = 1000;
-    //add limit switches
-    //add feedback device
-    //add Custom MotionProfiling
 };
 
 class SparkMaxConstants : public ServoMotorSubsystemConstants {
@@ -114,37 +113,33 @@ class SparkMaxConstants : public ServoMotorSubsystemConstants {
   int kCurrentStallLimit = 80;
   int kCurrentFreeLimit = 20;
 
-  /* figure out current limits
-  int kCurrentLimit = 50.0;
-  */
-
 };
 
 class PeriodicIO {
     public:
       PeriodicIO(){}
       //INPUTS
-      double timestamp;
-      int position_ticks;
-      double position_units;
-      int velocity_ticks_per_100ms;
-      double velocity_units; //Units/second
-      int active_trajectory_position;
-      int active_trajectory_velocity;
-      int active_trajectory_acceleration;
-      double output_percent;
-      double output_voltage;
-      double master_current;
-      int error_ticks;
+      double timestamp = 0.0;
+      int position_ticks= 0;
+      double position_units = 0.0;
+      int velocity_ticks_per_100ms = 0;
+      double velocity_units = 0.0; //Units/second
+      int active_trajectory_position = 0;
+      int active_trajectory_velocity = 0;
+      int active_trajectory_acceleration = 0;
+      double output_percent = 0.0;
+      double output_voltage = 0.0;
+      double master_current = 0.0;
+      int error_ticks = 0;
       int encoder_wraps = 0;
       int absolute_offset = 0;
-      int absolute_position;
-      int absolute_position_modded;
-      bool reset_occurred;
+      int absolute_position = 0;
+      int absolute_position_modded = 0;
+      bool reset_occurred = false;
 
       //OUTPUTS
-      double demand;
-      double feedforward;
+      double demand = 0.0;
+      double feedforward = 0.0;
   };
 
 class ServoMotorSubsystem : public Subsystems::Subsystem {
@@ -173,6 +168,11 @@ class SparkMaxSubsystem : public ServoMotorSubsystem {
     void readPeriodicInputs() override;
     void writePeriodicOutputs() override;
     void zeroSensors() override;
+    void OnStart(double timestamp) override;
+    void OnLoop(double timestamp) override;
+    void OnStop(double timestamp) override;
+    void outputTelemetry() override;
+
 
     bool hasFinishedTrajectory();
     double getActiveTrajectoryUnits();
@@ -211,67 +211,75 @@ class SparkMaxSubsystem : public ServoMotorSubsystem {
 };
 
 
-class TalonSRXSubsystem : public ServoMotorSubsystem {
+class TalonSubsystem : public ServoMotorSubsystem {
     
   public:
     
 
+    
+    TalonSubsystem(){};
+
+    void outputTelemetry() override;
+
+    bool hasFinishedTrajectory();
+    double getActiveTrajectoryUnits();
+    double getActiveTrajectoryUnitsPerSecond();
+    double getPredictedPositionUnits(double lookahead_secs);
+    bool atHomingLocation();
+    void resetIfAtLimit();
+    int getAbsoluteEncoderRawPosition(int pulse_width_position);
+    bool hasBeenZeroed();
+    void stop();
+    int estimateSensorPositionFromAbsolute();
+    virtual void handleMasterReset(bool reset){};
+
+
+    double getSetpoint();
+    void setSetpointMotionMagic(double units, double feedforward_v);
+    void setSetpointMotionMagic(double units);
+    void setSetpointPositionPID(double units, double feedforward_v);
+    void setSetpointVelocityPID(double units, double feedforward_v);
+    void setGoalMotionProfiling(){}
+    void setOpenLoop(double percentage);
+    
+    double ticksToUnits(double ticks);
+    double ticksToHomedUnits(double ticks);
+    double unitsToTicks(double units);
+    double homeAwareUnitsToTicks(double units);
+    double constrainTicks(double ticks);
+    double ticksPer100msToUnitsPerSecond(double ticks_per_100ms);
+    double unitsPerSecondToTicksPer100ms(double units_per_second);
+    
+    TalonConstants mConstants{};
+    
+    //change to template, but for now do one leave it as TalonSRX for autocompletion.
+    std::shared_ptr<BaseTalon> mMaster;
+    std::vector<std::shared_ptr<BaseTalon>> mSlaves;
+    //std::shared_ptr<T> mMaster;
+    //std::vector<std::shared_ptr<T>> mSlaves;
+    StickyFaults mFaults{};
+};
+
+class TalonSRXSubsystem : public TalonSubsystem {
+  public:
     TalonSRXSubsystem(TalonConstants constants);
-    TalonSRXSubsystem(){};
     void readPeriodicInputs() override;
     void writePeriodicOutputs() override;
     void zeroSensors() override;
 
+    
     void OnStart(double timestamp) override;
     void OnLoop(double timestamp) override;
     void OnStop(double timestamp) override;
-
-    bool hasFinishedTrajectory();
-    double getActiveTrajectoryUnits();
-    double getActiveTrajectoryUnitsPerSecond();
-    double getPredictedPositionUnits(double lookahead_secs);
-    bool atHomingLocation();
-    void resetIfAtLimit();
-    int getAbsoluteEncoderRawPosition(int pulse_width_position);
-    bool hasBeenZeroed();
-    void stop();
-    int estimateSensorPositionFromAbsolute();
-    virtual void handleMasterReset(bool reset){};
-
-
-    double getSetpoint();
-    void setSetpointMotionMagic(double units, double feedforward_v);
-    void setSetpointMotionMagic(double units);
-    void setSetpointPositionPID(double units, double feedforward_v);
-    void setSetpointVelocityPID(double units, double feedforward_v);
-    void setGoalMotionProfiling(){}
-    void setOpenLoop(double percentage);
     
-    double ticksToUnits(double ticks);
-    double ticksToHomedUnits(double ticks);
-    double unitsToTicks(double units);
-    double homeAwareUnitsToTicks(double units);
-    double constrainTicks(double ticks);
-    double ticksPer100msToUnitsPerSecond(double ticks_per_100ms);
-    double unitsPerSecondToTicksPer100ms(double units_per_second);
-    
-    TalonConstants mConstants{};
-    
-    //change to template, but for now do one leave it as TalonSRX for autocompletion.
     std::shared_ptr<TalonSRX> mMaster;
-    std::vector<std::shared_ptr<TalonSRX>> mSlaves;
-    //std::shared_ptr<T> mMaster;
-    //std::vector<std::shared_ptr<T>> mSlaves;
-    StickyFaults mFaults{};
+
 };
 
-class TalonFXSubsystem : public ServoMotorSubsystem {
-    
-  public:
-    
 
+class TalonFXSubsystem : public TalonSubsystem {
+  public:
     TalonFXSubsystem(TalonConstants constants);
-    TalonFXSubsystem(){};
     void readPeriodicInputs() override;
     void writePeriodicOutputs() override;
     void zeroSensors() override;
@@ -279,43 +287,9 @@ class TalonFXSubsystem : public ServoMotorSubsystem {
     void OnStart(double timestamp) override;
     void OnLoop(double timestamp) override;
     void OnStop(double timestamp) override;
-
-    bool hasFinishedTrajectory();
-    double getActiveTrajectoryUnits();
-    double getActiveTrajectoryUnitsPerSecond();
-    double getPredictedPositionUnits(double lookahead_secs);
-    bool atHomingLocation();
-    void resetIfAtLimit();
-    int getAbsoluteEncoderRawPosition(int pulse_width_position);
-    bool hasBeenZeroed();
-    void stop();
-    int estimateSensorPositionFromAbsolute();
-    virtual void handleMasterReset(bool reset){};
-
-
-    double getSetpoint();
-    void setSetpointMotionMagic(double units, double feedforward_v);
-    void setSetpointMotionMagic(double units);
-    void setSetpointPositionPID(double units, double feedforward_v);
-    void setSetpointVelocityPID(double units, double feedforward_v);
-    void setGoalMotionProfiling(){}
-    void setOpenLoop(double percentage);
     
-    double ticksToUnits(double ticks);
-    double ticksToHomedUnits(double ticks);
-    double unitsToTicks(double units);
-    double homeAwareUnitsToTicks(double units);
-    double constrainTicks(double ticks);
-    double ticksPer100msToUnitsPerSecond(double ticks_per_100ms);
-    double unitsPerSecondToTicksPer100ms(double units_per_second);
-    
-    TalonConstants mConstants{};
-    
-    //change to template, but for now do one leave it as TalonSRX for autocompletion.
     std::shared_ptr<TalonFX> mMaster;
-    std::vector<std::shared_ptr<TalonFX>> mSlaves;
-    //std::shared_ptr<T> mMaster;
-    //std::vector<std::shared_ptr<T>> mSlaves;
-    StickyFaults mFaults{};
+    
 };
+
 }

@@ -30,10 +30,7 @@ std::shared_ptr<LimelightManager> LimelightManager::getInstance()
 
 void LimelightManager::OnStart(double timestamp)
 {
-    for (auto limelight : mAllLimelights)
-    {
-        limelight.setLed(Limelight::LedMode::OFF);
-    }
+    setAllLEDS(Limelight::LedMode::OFF);
 
     FRC_7054::RobotState::getInstance()->resetVision();
 }
@@ -113,4 +110,20 @@ double LimelightManager::getAverageLatency()
         x += limelight.getLatency();   
     }
     return x/i;
+}
+
+void LimelightManager::setAllLEDS(Limelight::LedMode mode)
+{
+    for (auto limelight : mAllLimelights)
+    {
+        limelight.setLed(mode);
+    }
+}
+
+void LimelightManager::setPipeline(int pipeline)
+{
+    for (auto limelight : mAllLimelights)
+    {
+        limelight.setPipeline(pipeline);
+    }
 }

@@ -11,6 +11,8 @@
 #include "frc/smartdashboard/SmartDashboard.h"
 #include "Constants.h"
 
+#include <RobotState.h>
+
 DriveMotionPlanner::DriveMotionPlanner() {
     shared_ptr<DCMotorTransmission> transmission= make_shared<DCMotorTransmission>(
         1.0/Constants::kDriveKv,
@@ -311,5 +313,5 @@ shared_ptr<TimedState> DriveMotionPlanner::setpoint(){
 }
 
 string DriveMotionPlanner::toPlannerCSV(){
-    return toString(mSetpoint->t())+","+toString(mSetpoint->state()->getTranslation()->x())+","+toString(mSetpoint->state()->getTranslation()->y())+","+toString(mSetpoint->state()->getRotation()->getDegrees())+","+toString(mSetpoint->velocity())+","+toString(mSetpoint->acceleration())+","+toString(mSetpoint->state()->getCurvature())+","+toString(mSetpoint->state()->getDCurvatureDs())+","+toString(mError->getTranslation()->x())+","+toString(mError->getTranslation()->y())+","+toString(mError->getRotation()->getDegrees())+","+toString(initialDynamics->chassis_velocity->linear)+","+toString(initialDynamics->chassis_velocity->angular)+","+toString(adjustedDynamics->chassis_velocity->linear)+","+toString(adjustedDynamics->chassis_velocity->angular)+","+toString(initialDynamics->voltage->left)+","+toString(initialDynamics->voltage->right)+","+toString(adjustedDynamics->voltage->left)+","+toString(adjustedDynamics->voltage->right)+","+toString(Robot::drive->leftAppliedOutput())+","+toString(Robot::drive->rightAppliedOutput())+","+ Robot::robotState.toPlannerCSV()+toString(Robot::drive->mPeriodicIO->left_demand)+ ","+toString(Robot::drive->mPeriodicIO->right_demand)+","+toString(Robot::drive->getLeftVelocityNativeUnits())+","+toString(Robot::drive->getRightVelocityNativeUnits());
+    return toString(mSetpoint->t())+","+toString(mSetpoint->state()->getTranslation()->x())+","+toString(mSetpoint->state()->getTranslation()->y())+","+toString(mSetpoint->state()->getRotation()->getDegrees())+","+toString(mSetpoint->velocity())+","+toString(mSetpoint->acceleration())+","+toString(mSetpoint->state()->getCurvature())+","+toString(mSetpoint->state()->getDCurvatureDs())+","+toString(mError->getTranslation()->x())+","+toString(mError->getTranslation()->y())+","+toString(mError->getRotation()->getDegrees())+","+toString(initialDynamics->chassis_velocity->linear)+","+toString(initialDynamics->chassis_velocity->angular)+","+toString(adjustedDynamics->chassis_velocity->linear)+","+toString(adjustedDynamics->chassis_velocity->angular)+","+toString(initialDynamics->voltage->left)+","+toString(initialDynamics->voltage->right)+","+toString(adjustedDynamics->voltage->left)+","+toString(adjustedDynamics->voltage->right)+","+toString(Robot::drive->leftAppliedOutput())+","+toString(Robot::drive->rightAppliedOutput())+","+ FRC_7054::RobotState::getInstance()->toPlannerCSV()+toString(Robot::drive->mPeriodicIO->left_demand)+ ","+toString(Robot::drive->mPeriodicIO->right_demand)+","+toString(Robot::drive->getLeftVelocityNativeUnits())+","+toString(Robot::drive->getRightVelocityNativeUnits());
 }

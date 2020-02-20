@@ -24,8 +24,8 @@ class Rotation2D {
   Rotation2D(double x, double y, bool normalize);
    double cos();
    double sin();
-   shared_ptr<Rotation2D> fromRadians(double radians);
-   shared_ptr<Rotation2D> fromDegrees(double degrees);
+   static shared_ptr<Rotation2D> fromRadians(double radians);
+   static shared_ptr<Rotation2D> fromDegrees(double degrees);
    double getRadians();
    double getDegrees();
   shared_ptr<Rotation2D> inverse();

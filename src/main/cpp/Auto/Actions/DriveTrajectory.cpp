@@ -7,6 +7,8 @@
 
 #include "Auto/Actions/DriveTrajectory.h"
 
+#include <RobotState.h>
+
 DriveTrajectory::DriveTrajectory(vector<shared_ptr<TimedState>> trajectory) {
     mResetPose=false;
     shared_ptr<TimedView> tmp= make_shared<TimedView>(trajectory);
@@ -22,7 +24,7 @@ DriveTrajectory::DriveTrajectory(vector<shared_ptr<TimedState>> trajectory, bool
 void DriveTrajectory::start(){
     cout << "Starting Trajectory! (Length="+ toString(mTrajectory->getRemainingProgress())+")"<<endl;
     if(mResetPose){
-        Robot::robotState.reset(frc::Timer::GetFPGATimestamp(), mTrajectory->getState()->state()->getPose());
+        FRC_7054::RobotState::getInstance()->reset(frc::Timer::GetFPGATimestamp(), mTrajectory->getState()->state()->getPose());
     }
     Robot::drive->setTrajectory(mTrajectory);
 }

@@ -11,40 +11,162 @@
 #include "frc/smartdashboard/SmartDashboard.h"
 
 #include <memory>
-using namespace std;
+#include <vector>
 
-class ControlBoard {
-  shared_ptr<Joysticks> joysticks= make_shared<Joysticks>();
-  bool stop=false;
+#include <lib/Geometry/Rotation2D.h>
+#include <lib/Util/Util.h>
 
-  bool high=false;
-  bool prev_high=false;
-  bool prev_HighGear=false;
+namespace ControlBoard {
 
-  bool claw=false;
-  bool prevClaw=false;
-  bool prev_Claw=false;
-
-  bool pickup=false;
-  bool prevPickup=false;
-  bool prev_Pickup=false;
+class TurretCardinal {
   
-  
-  
-  bool highGear=false;
-  int hGear=0;
-  int lGear=0;
  public:
-  ControlBoard();
-  double getThrottle();
-  double getTurn();
-  bool getQuickTurn();
-  bool overrideTrajectory();
-  bool setHighGear();
-  double getArmThrottle();
-  bool toggleClaw();
-  bool toggleBallPickup();
+  std::shared_ptr<Rotation2D> rotation;
+  std::shared_ptr<Rotation2D> inputDirection;
+  TurretCardinal(int degrees)
+  {
+    double deg = (double) degrees;
+    rotation = rotation->fromDegrees(deg);
+    inputDirection = inputDirection->fromDegrees(deg);
+  }
+  
+  TurretCardinal(double degrees)
+  {
+    rotation = rotation->fromDegrees(degrees);
+    inputDirection = inputDirection->fromDegrees(degrees);
+  }
 
-  void testHighGearToggle();
+  TurretCardinal(double degrees, double inputDirectionDegrees)
+  {
+    rotation = rotation->fromDegrees(degrees);
+    inputDirection = inputDirection->fromDegrees(inputDirectionDegrees);
+  }
 
+  TurretCardinal()
+  {
+    rotation = rotation->fromDegrees(0.0);
+    inputDirection = NULL;
+  }
 };
+
+class ControlBoardBase {
+ public: 
+  ControlBoardBase(){reset();}
+  virtual double getThrottle(){return 0.0;};
+  virtual double getTurn(){return 0.0;};
+  virtual bool getQuickTurn(){return false;};
+  virtual bool getWantsLowGear(){return false;};
+  virtual bool getShoot(){return false;}
+  virtual bool getWheel(){return false;}
+  virtual bool getWantsRotation(){return false;}
+
+  virtual bool getClimber(){return false;}
+  virtual bool getIntake(){return false;}
+  virtual bool getCancel(){return false;}
+
+  virtual double getTurretJog(){return 0.0;}
+
+  virtual bool isTurretJogging(){return 0.0;}
+  
+  virtual TurretCardinal getTurretCardinal()
+  {
+    return TurretCardinal{0.0};
+  }
+
+  virtual bool getAutoAim(){return false;}
+  virtual double getBallShootCount(bool preshoot){return 0.0;}
+  virtual void reset(){};
+
+  
+
+  Util util{}; 
+  double turretDeadband = .4;
+  enum TurretCardinalEnum 
+  {
+    BACK = 180,
+    FRONT = 0,
+    LEFT = 90,
+    RIGHT = 270,
+    FRONT_LEFT = 45,
+    FRONT_RIGHT = 315,
+    BACK_LEFT = 135,
+    BACK_RIGHT = 225,
+    NONE = 0
+  };
+  //                                                  back                front                 left                  right                 Front left            Front right            Back left              Back Right
+  std::vector<TurretCardinal> TurretCardinalVecotr{TurretCardinal{180.0}, TurretCardinal{0.0}, TurretCardinal{90.0}, TurretCardinal{270.0}, TurretCardinal{45.0}, TurretCardinal{315.0}, TurretCardinal{135.0}, TurretCardinal{225.0}};
+  
+  TurretCardinal findClosest(double xAxis, double yAxis)
+  {
+    std::shared_ptr<Rotation2D> rot = std::make_shared<Rotation2D>(yAxis, -xAxis, true);
+    return findClosest(rot);
+  }
+
+  TurretCardinal findClosest(std::shared_ptr<Rotation2D> stickDirection)
+  {
+    TurretCardinal closest;
+    double closestDistance = INFINITY;
+    for (auto checkDirection : TurretCardinalVecotr)
+    {
+      double distance = std::fabs(stickDirection->inverse()->rotateBy(checkDirection.inputDirection)->getDegrees());
+      if (distance < closestDistance)
+      {
+        closestDistance = distance;
+        closest = checkDirection;
+      }
+    }
+
+    return closest;
+  }
+
+  bool isDiagonal(TurretCardinalEnum cardinal)
+  {
+    return cardinal == FRONT_LEFT || cardinal == FRONT_RIGHT || cardinal == BACK_LEFT || cardinal == BACK_RIGHT;
+  }
+
+  TurretCardinal enumToTurretCardinal(TurretCardinalEnum TC_enum)
+  {
+    return TurretCardinal{TC_enum};
+  }
+
+  TurretCardinalEnum TurretCardinalToEnum(TurretCardinal TC)
+  {
+    if (TC.inputDirection == NULL)
+    {
+      return TurretCardinalEnum::NONE;
+    }
+    
+    if (util.epsilonEquals(TC.inputDirection->getDegrees(), 0.0))
+    {
+      return TurretCardinalEnum::FRONT;
+    } else if (util.epsilonEquals(TC.inputDirection->getDegrees(), 180.0))
+    {
+      return TurretCardinalEnum::BACK;
+    } else if (util.epsilonEquals(TC.inputDirection->getDegrees(), 90.0))
+    {
+      return TurretCardinalEnum::LEFT;
+    } else if (util.epsilonEquals(TC.inputDirection->getDegrees(), 270.0))
+    {
+      return TurretCardinalEnum::RIGHT;
+    } else if (util.epsilonEquals(TC.inputDirection->getDegrees(), 45.0))
+    {
+      return TurretCardinalEnum::FRONT_LEFT;
+    } else if (util.epsilonEquals(TC.inputDirection->getDegrees(), 315.0))
+    {
+      return TurretCardinalEnum::FRONT_RIGHT;
+    } else if (util.epsilonEquals(TC.inputDirection->getDegrees(), 135.0))
+    {
+      return TurretCardinalEnum::BACK_LEFT;
+    } else if (util.epsilonEquals(TC.inputDirection->getDegrees(), 225.0))
+    {
+      return TurretCardinalEnum::BACK_RIGHT;
+    }
+  
+    return TurretCardinalEnum::NONE;
+  }
+
+  
+  
+};
+
+}

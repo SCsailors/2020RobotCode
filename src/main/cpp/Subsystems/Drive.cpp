@@ -10,6 +10,8 @@
 #include <cmath>
 #include "Constants.h"
 
+#include <RobotState.h>
+
 using namespace Subsystems;
 namespace Subsystems{
 Drive::PeriodicIO::PeriodicIO(){}
@@ -30,8 +32,8 @@ Drive::Drive() {
     frc::SmartDashboard::PutNumber("Drive FF", kFF);
     frc::SmartDashboard::PutNumber("Drive Acceleration", kA);
     
-    //Initialize hardware here wrap all spark and navx in #ifdef FRC_ROBORIO / #endif because there aren't binaries for on workstation unit testing
-    #ifdef FRC_ROBORIO
+    //Initialize hardware here wrap all spark and navx in #ifdef CompetitionBot / #endif because there aren't binaries for on workstation unit testing
+    #ifdef CompetitionBot
     configureSparkMaxPID();    
      leftMaster.SetPeriodicFramePeriod(rev::CANSparkMaxLowLevel::PeriodicFrame::kStatus0, 5);
      rightMaster.SetPeriodicFramePeriod(rev::CANSparkMaxLowLevel::PeriodicFrame::kStatus0, 5);
@@ -108,7 +110,7 @@ Drive::Drive() {
 
 }
 
-#ifdef FRC_ROBORIO
+#ifdef CompetitionBot
 void Drive::configureSparkMaxPID(){
     leftMaster.RestoreFactoryDefaults();
     rightMaster.RestoreFactoryDefaults();
@@ -192,7 +194,7 @@ void Drive::OnStart(double timestamp){
 void Drive::OnLoop(double timestamp){
     
     //if (PIDTuning){
-    #ifdef FRC_ROBORIO
+    #ifdef CompetitionBot
     
     frc::SmartDashboard::PutNumber("Actual Drive P", leftMasterPID.GetP());
     frc::SmartDashboard::PutNumber("Actual Drive I", leftMasterPID.GetI());
@@ -306,13 +308,13 @@ void Drive::setHighGear(bool wantsHighGear){
 
         if(wantsHighGear){
             mIsHighGear=true;
-            #ifdef FRC_ROBORIO  
+            #ifdef CompetitionBot  
             gearSolenoid.Set(frc::DoubleSolenoid::Value::kForward); // TODO check if forward is high gear
             #endif
         } else if (!wantsHighGear) {
 
             mIsHighGear=false;
-            #ifdef FRC_ROBORIO  
+            #ifdef CompetitionBot  
             gearSolenoid.Set(frc::DoubleSolenoid::Value::kReverse);
             #endif
         }
@@ -330,7 +332,7 @@ void Drive::setBrakeMode(bool on){
         mIsBrakeMode= on;
         
         if(mIsBrakeMode){
-            #ifdef FRC_ROBORIO
+            #ifdef CompetitionBot
             leftMaster.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
             rightMaster.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
             leftSlave1.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
@@ -341,7 +343,7 @@ void Drive::setBrakeMode(bool on){
             #endif
             #endif
         }else{
-            #ifdef FRC_ROBORIO
+            #ifdef CompetitionBot
             leftMaster.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
             rightMaster.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
             leftSlave1.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
@@ -363,7 +365,7 @@ shared_ptr<Rotation2D> Drive::getHeading(){
 
 void Drive::setHeading(shared_ptr<Rotation2D> heading){
     mPeriodicIO->gyro_heading=heading;
-    #ifdef FRC_ROBORIO
+    #ifdef CompetitionBot
      mGyroOffset= heading->rotateBy(heading->fromDegrees(navx.GetFusedHeading())->inverse());
     #endif
     
@@ -395,7 +397,7 @@ void Drive::outputTelemetry(){
 
 void Drive::resetEncoders(){
     mPeriodicIO=make_shared<Drive::PeriodicIO>();
-    #ifdef FRC_ROBORIO
+    #ifdef CompetitionBot
      leftMasterEncoder.SetPosition(0.0);
      rightMasterEncoder.SetPosition(0.0);
     #endif
@@ -466,7 +468,7 @@ void Drive::updatePathFollower(){
         
     if (mDriveControlState==Path_Following){
         double now = frc::Timer::GetFPGATimestamp(); 
-        shared_ptr<Pose2D> pose= Robot::robotState.getLatestFieldToVehicle();//TODO check units for conversion from RadiansPerSecondToRPS()
+        shared_ptr<Pose2D> pose= FRC_7054::RobotState::getInstance()->getLatestFieldToVehicle();//TODO check units for conversion from RadiansPerSecondToRPS()
         //cout<<"Pose: "<<pose->getTranslation()->x()<<","<<pose->getTranslation()->y()<<","<<pose->getRotation()->getDegrees()<<","<<endl;
         
             output= mMotionPlanner->update(now, pose);
@@ -525,7 +527,7 @@ void Drive::readPeriodicInputs(){
     double prevLeftRotations=mPeriodicIO->left_rotations;
     double prevRightRotations=mPeriodicIO->right_rotations;
     
-    #ifdef FRC_ROBORIO
+    #ifdef CompetitionBot
     mPeriodicIO->left_rotations= leftMasterEncoder.GetPosition(); // TODO motor controller data
     mPeriodicIO->right_rotations=rightMasterEncoder.GetPosition(); // TODO motor controller data
     mPeriodicIO->left_velocity_rpm=leftMasterEncoder.GetVelocity(); // TODO motor controller data
@@ -533,10 +535,10 @@ void Drive::readPeriodicInputs(){
     
     #endif
     shared_ptr<Rotation2D> tmp =make_shared<Rotation2D>();
-    #ifdef FRC_ROBORIO
+    #ifdef CompetitionBot
     mPeriodicIO->gyro_heading=tmp->fromDegrees( navx.GetFusedHeading())->rotateBy(mGyroOffset); 
     #endif
-    #ifndef FRC_ROBORIO
+    #ifndef CompetitionBot
     mPeriodicIO->gyro_heading= tmp;
     #endif
     double deltaLeftRotations= ((mPeriodicIO->left_rotations-prevLeftRotations));
@@ -562,21 +564,21 @@ void Drive::writeToLog(){
 }
 
 double Drive::leftAppliedOutput(){
-    #ifdef FRC_ROBORIO
+    #ifdef CompetitionBot
     return leftMaster.GetAppliedOutput();
     #endif
     return 0.0;
 }
 
 double Drive::rightAppliedOutput(){
-    #ifdef FRC_ROBORIO
+    #ifdef CompetitionBot
     return rightMaster.GetAppliedOutput();
     #endif
     return 0.0;
 }
 
 void Drive::writePeriodicOutputs(){
-    #ifdef FRC_ROBORIO
+    #ifdef CompetitionBot
     if((p != kP)) { rightMasterPID.SetP(p); leftMasterPID.SetP(p); rightSlavePID.SetP(p); leftSlavePID.SetP(p); rightSlavePID2.SetP(p); leftSlavePID2.SetP(p); kP = p; }
     if((i != kI)) { rightMasterPID.SetI(i); leftMasterPID.SetI(i); rightSlavePID.SetI(i); leftSlavePID.SetI(i); rightSlavePID2.SetI(i); leftSlavePID2.SetI(i); kI = i; }
     if((d != kD)) { rightMasterPID.SetD(d); leftMasterPID.SetD(d);  rightSlavePID.SetD(d); leftSlavePID.SetD(d); rightSlavePID2.SetD(d); leftSlavePID2.SetD(d); kD = d; }
@@ -586,7 +588,7 @@ void Drive::writePeriodicOutputs(){
     #endif
     if(mDriveControlState==Open_Loop){
         //setting percent output for open loop
-        #ifdef FRC_ROBORIO
+        #ifdef CompetitionBot
         leftMasterPID.SetReference(mPeriodicIO->left_demand, rev::ControlType::kDutyCycle); //percent output from -1 to 1
         rightMasterPID.SetReference(mPeriodicIO->right_demand, rev::ControlType::kDutyCycle);
         
@@ -601,7 +603,7 @@ void Drive::writePeriodicOutputs(){
     } else{
         
         //setting velocity (rpm) for Trajectory following
-        #ifdef FRC_ROBORIO
+        #ifdef CompetitionBot
         //leftMasterPID.SetReference(mPeriodicIO->left_demand, rev::ControlType::kVelocity, 0, (mPeriodicIO->left_feedforward + Constants::kDriveLowGearVelocityKd*mPeriodicIO->left_accel)); 
         //rightMasterPID.SetReference(mPeriodicIO->right_demand, rev::ControlType::kVelocity, 0, mPeriodicIO->right_feedforward + Constants::kDriveLowGearVelocityKd*mPeriodicIO->right_accel);
 
@@ -679,10 +681,10 @@ string Drive::getFields(){
 }
 
 string Drive::toCSV(){
-    shared_ptr<Pose2D> pose = Robot::robotState.getLatestFieldToVehicle();
+    shared_ptr<Pose2D> pose = FRC_7054::RobotState::getInstance()->getLatestFieldToVehicle();
     return toString(frc::Timer::GetFPGATimestamp())+","+toString(mPeriodicIO->left_rotations)+","+toString(mPeriodicIO->right_rotations)+","+toString(mPeriodicIO->left_distance)+","+toString(mPeriodicIO->right_distance)+","+toString(mPeriodicIO->left_velocity_rpm)+","+toString(mPeriodicIO->right_velocity_rpm)+","+
     toString(mPeriodicIO->left_demand)+","+toString(mPeriodicIO->right_demand)+","+toString(mPeriodicIO->left_accel)+","+toString(mPeriodicIO->right_accel)+","+toString(mPeriodicIO->left_feedforward)+","+toString(mPeriodicIO->right_feedforward)+","+toString(pose->getTranslation()->x())+","+toString(pose->getTranslation()->y())+","+toString(pose->getRotation()->getDegrees())+","+toString(getLinearVelocity())
-    #ifdef FRC_ROBORIO
+    #ifdef CompetitionBot
     +","+toString(leftMaster.GetAppliedOutput())+","+toString(rightMaster.GetAppliedOutput())+","+toString(mPeriodicIO->left_demand-getLeftVelocityNativeUnits())+","+toString(mPeriodicIO->right_demand-getRightVelocityNativeUnits())
     #endif
     ;

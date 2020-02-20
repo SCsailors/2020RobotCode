@@ -30,6 +30,8 @@
 #include <States/SuperstructureGoal.h>
 #include <States/SuperstructureState.h>
 
+#include <StateMachines/SuperstructureStateMachine.h>
+
 #include <memory>
 
 namespace Subsystems {
@@ -45,9 +47,12 @@ class Superstructure : public Subsystems::Subsystem {
   std::shared_ptr<Subsystems::Turret> mTurret;
   std::shared_ptr<FRC_7054::RobotState> mRobotState;
   
-  frc::Solenoid mWheelieBar{Constants::kPCMID, Constants::kSolenoidID_Wheelie};
   frc::Solenoid mIntake{Constants::kPCMID, Constants::kSolenoidID_Intake};
   
+  StateMachines::SuperstructureStateMachine mStateMachine{};
+  StateMachines::SuperstructureStateMachine::WantedAction mWantedActionShooter = StateMachines::SuperstructureStateMachine::WantedAction::WANTED_IDLE;
+  StateMachines::SuperstructureStateMachine::WantedAction mWantedActionIntake = StateMachines::SuperstructureStateMachine::WantedAction::WANTED_IDLE;
+
   enum TurretControlModes {ROBOT_RELATIVE, FIELD_RELATIVE, VISION_AIMED, OPEN_LOOP, JOGGING};
 
   //Current State
@@ -62,7 +67,11 @@ class Superstructure : public Subsystems::Subsystem {
   bool mHasTarget = false;
   bool mOnTarget = false;
   int mTrackId = -1;
-  
+
+  //Solenoid states
+  bool mWheelieBarExtended = false;
+  bool mIntakeExtended = false;
+
   double mBallPathBottomFeedforwardV = 0.0;
   double mBallPathTopFeedforwardV = 0.0;
   double mCenteringIntakeFeedforwardV = 0.0;
@@ -104,23 +113,37 @@ class Superstructure : public Subsystems::Subsystem {
   int getTrackId();
   
   void updateCurrentState();
-
+  //
   void setWantAutoAim(std::shared_ptr<Rotation2D> field_to_turret_hint, bool enforce_min_distance, double min_distance);
   void setWantAutoAim(std::shared_ptr<Rotation2D> field_to_turret_hint);
   void setWantRobotRelativeTurret();
   void setWantFieldRelativeTurret(std::shared_ptr<Rotation2D> field_to_turret);
 
+  void setWantedActionShooter(StateMachines::SuperstructureStateMachine::WantedAction wantedAction){mWantedActionShooter = wantedAction;}
+  void setWantedActionIntake(StateMachines::SuperstructureStateMachine::WantedAction wantedAction){mWantedActionIntake = wantedAction;}
+
   void setTurretOpenLoop(double throttle);
+  
   void followSetpoint();
+
+  void updateWantedAction();
+  StateMachines::SuperstructureStateMachine::WantedAction SystemStateToWantedAction(StateMachines::SuperstructureStateMachine::SystemState state);
 
   bool isAtDesiredState();
   bool isShooting();
   
-  void extendWheelieBar();
-  void stowWheelieBar();
-
   void extendIntake();
   void stowIntake();
+
+  bool isIntakeExtended(){return mIntakeExtended;}
+
+  void setGoalNumBalls(double ballsToShoot);
+
+  void setStateMachineLEDPriority(bool priority);
+  void setStateMachineLEDMaxPriority(bool maxPriority);
+
+  StateMachines::SuperstructureStateMachine::SystemState getShooterState(){return mStateMachine.getSystemShooterState();}
+  StateMachines::SuperstructureStateMachine::SystemState getIntakeState(){return mStateMachine.getSystemIntakeState();}  
 
 };
 }

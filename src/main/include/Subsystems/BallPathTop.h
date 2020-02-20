@@ -49,9 +49,13 @@ class BallPathTop : public Subsystems::TalonSRXSubsystem {
   void updateFirst();
   void updateLast();
   void readPeriodicInputs() override;
+
+  void outputTelemetry() override;
   
   int getBallCount();
   bool hasBalls();
   bool hasFiveBalls();
+
+  void SetBallCount(int count);
 };
 }

@@ -15,6 +15,7 @@ const static double kHoodPaddingDegrees = 5.0;
 const static double kBallPathTopPaddingRPS = 100.0;
 const static double kBallPathBottomPaddingRPS = 100.0;
 const static double kCenteringIntakePaddingRPS = 100.0;
+const static double kNumBallsPadding = .001;
 const static std::vector<double> kPadding{
     kTurretPaddingDegrees, kShooterPaddingRPS, kHoodPaddingDegrees, kBallPathTopPaddingRPS, kBallPathBottomPaddingRPS, kCenteringIntakePaddingRPS};
 }

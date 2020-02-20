@@ -10,7 +10,7 @@
 using namespace Subsystems;
 std::shared_ptr<Subsystems::Hood> Hood::mInstance;
 
-Hood::Hood(Subsystems::TalonConstants constants) : Subsystems::TalonSRXSubsystem(constants) 
+Hood::Hood(Subsystems::SparkMaxConstants constants) : Subsystems::SparkMaxSubsystem(constants) 
 {
 
 }
@@ -19,7 +19,17 @@ std::shared_ptr<Subsystems::Hood> Hood::getInstance()
 {
     if (!mInstance)
     {
-        mInstance = std::make_shared<Subsystems::Hood>(*Constants::kHoodConstants.get());
+        Subsystems::SparkMaxConstants constants{};
+        constants.id = 23;
+        constants.kName = "Hood";
+        constants.kTicksPerUnitDistance = 8192.0 / 360.0; //Ticks to degrees;
+        constants.kMotorType = rev::CANSparkMax::MotorType::kBrushed;
+        constants.kEncoderType = rev::CANEncoder::EncoderType::kQuadrature;
+        constants.kCountsPerRev = 8192.0;
+        constants.kCurrentFreeLimit = 15.0;
+        constants.kCurrentStallLimit = 30.0;
+        constants.kSecondaryCurrentLimit = 40.0;
+        mInstance = std::make_shared<Subsystems::Hood>(constants);
     }
     return mInstance;
 }

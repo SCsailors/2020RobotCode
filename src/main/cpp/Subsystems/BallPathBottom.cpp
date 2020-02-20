@@ -11,13 +11,22 @@
 using namespace Subsystems;
 std::shared_ptr<Subsystems::BallPathBottom> BallPathBottom::mInstance;
 
-BallPathBottom::BallPathBottom(Subsystems::TalonConstants constants) : Subsystems::TalonSRXSubsystem(constants) {}
+BallPathBottom::BallPathBottom(Subsystems::TalonConstants constants) : Subsystems::TalonSRXSubsystem(constants) 
+{
+    std::cout<<"BallPathBottom Construction Timestamp: " << 2.0 <<std::endl;
+}
 
 std::shared_ptr<Subsystems::BallPathBottom> BallPathBottom::getInstance()
 {
     if (!mInstance)
     {
-        mInstance = std::make_shared<Subsystems::BallPathBottom>(*Constants::kBallPathBottomConstants.get());
+        Subsystems::TalonConstants constants{};
+        constants.id = 20;
+        constants.kName = "Ball Path Bottom";
+        constants.kTicksPerUnitDistance = 8192.0; //Ticks to rotations;
+        constants.kIsTalonSRX = true;
+        constants.kStatusFrame8UpdateRate = 50;
+        mInstance = std::make_shared<Subsystems::BallPathBottom>(constants);
     }
     return mInstance;
 }

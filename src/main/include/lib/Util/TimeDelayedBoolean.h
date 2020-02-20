@@ -7,21 +7,24 @@
 
 #pragma once
 
-#include <Subsystems/ServoMotorSubsystem.h>
+#include <frc/Timer.h>
 
-#include <frc/AnalogInput.h>
-#include <lib/Util/LatchedBoolean.h>
+namespace Utility{
 
-#include <memory>
-
-namespace Subsystems {
-
-class Hood : public Subsystems::SparkMaxSubsystem {
-  static std::shared_ptr<Subsystems::Hood> mInstance;
+class TimeDelayedBoolean {
+  frc::Timer t{};
+  bool m_old = false;
  public:
-  Hood(Subsystems::SparkMaxConstants constants);
-  static std::shared_ptr<Subsystems::Hood> getInstance();
-
-  double getAngle();
+  TimeDelayedBoolean(){}
+  bool update(bool value, double timeout)
+  {
+    if (!m_old && value)
+    {
+      t.Reset();
+      t.Start();
+    }
+    m_old = value;
+    return value && t.Get() >= timeout;
+  }
 };
 }

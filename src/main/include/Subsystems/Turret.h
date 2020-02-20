@@ -31,6 +31,8 @@ class Turret : public Subsystems::SparkMaxSubsystem {
   bool atHomingLocation();
   void handleMasterReset(bool reset) override;
   bool isHoming();
+  double getMinUnits();
+  double getMaxUnits();
   
 };
 }

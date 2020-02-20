@@ -5,6 +5,4 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-#include "StateMachines/Climber.h"
-
-Climber::Climber() {}
+#include "lib/Util/DelayedBoolean.h"

@@ -7,10 +7,12 @@
 
 #include "Auto/Actions/WaitUntilCrossXBoundaryCommand.h"
 
+#include <RobotState.h>
+
 WaitUntilCrossXBoundaryCommand::WaitUntilCrossXBoundaryCommand(double x) {
     mXBoundary=x;
 }
 
 bool WaitUntilCrossXBoundaryCommand::isFinished(){
-    return Robot::robotState.getLatestFieldToVehicle()->getTranslation()->x()>mXBoundary; 
+    return FRC_7054::RobotState::getInstance()->getLatestFieldToVehicle()->getTranslation()->x()>mXBoundary; 
 }

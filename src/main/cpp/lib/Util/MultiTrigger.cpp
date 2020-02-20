@@ -5,23 +5,10 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-#pragma once
+#include "lib/Util/MultiTrigger.h"
+using namespace Utility;
 
-#include <Subsystems/ServoMotorSubsystem.h>
-
-#include <frc/AnalogInput.h>
-#include <lib/Util/LatchedBoolean.h>
-
-#include <memory>
-
-namespace Subsystems {
-
-class Hood : public Subsystems::SparkMaxSubsystem {
-  static std::shared_ptr<Subsystems::Hood> mInstance;
- public:
-  Hood(Subsystems::SparkMaxConstants constants);
-  static std::shared_ptr<Subsystems::Hood> getInstance();
-
-  double getAngle();
-};
+bool MultiTrigger::holdStarted()
+{
+    return mWasHeld.update(isHeld());
 }

@@ -6,17 +6,33 @@
 /*----------------------------------------------------------------------------*/
 
 #pragma once
+#include "Constants.h"
 
+//ALWAYS include in .cpp file, not .h file
 #include "lib/Splines/QuinticHermiteSpline.h"
 //util
 #include "lib/Util/Units.h"
 #include "lib/Util/Util.h"
 #include "lib/Util/DriveAssist.h"
+#include "lib/Util/LatchedBoolean.h"
+#include "lib/Util/ButtonState.h"
+#include "lib/Util/MultiTrigger.h"
+#include "lib/Util/LatchedBoolean.h"
 
 //Subsystems
 #include "Subsystems/Drive.h"
 #include "Subsystems/RobotStateEstimator.h"
 #include "Subsystems/Subsystem.h"
+
+#include "Subsystems/BallPathBottom.h"
+#include "Subsystems/BallPathTop.h"
+#include "Subsystems/CenteringIntake.h"
+#include "Subsystems/Hood.h"
+#include "Subsystems/Infrastructure.h"
+#include "Subsystems/LED.h"
+#include "Subsystems/LimelightManager.h"
+#include "Subsystems/Shooter.h"
+#include "Subsystems/Superstructure.h"
 
 //Paths
 #include "Paths/TrajectoryGenerator.h"
@@ -30,13 +46,13 @@
 
 //Controls
 #include "Controls/ControlBoard.h"
+#include "Controls/SingleGamePadController.h"
+#include "Controls/TwoGamePadControllers.h"
 
 //Misc
 #include "Kinematics.h"
 #include "RobotState.h"
 #include "AutoModeSelector.h"
-
-#include "Constants.h"
 
 #include <string>
 #include <cmath>
@@ -62,7 +78,7 @@ class Robot : public frc::TimedRobot {
   bool isHighGear=false;
 
 //Util
-static Constants constants;
+
 static Util util;
 static Units units;
 static DriveAssist driveAssist;
@@ -70,20 +86,29 @@ static DriveAssist driveAssist;
 //Misc
 static Kinematics kinematics;
 
-static FRC_7054::RobotState robotState;
+std::shared_ptr<FRC_7054::RobotState> mRobotState;
 static AutoModeSelector autoModeSelector;
 
 //Subsystems
 
 static shared_ptr<Subsystems::Drive> drive;
 static shared_ptr<Subsystems::RobotStateEstimator> robotStateEstimator;
-//static Subsystems::Arm arm;
+std::shared_ptr<Subsystems::BallPathBottom> mBallPathBottom;
+std::shared_ptr<Subsystems::BallPathTop> mBallPathTop;
+std::shared_ptr<Subsystems::CenteringIntake> mCenteringIntake;
+std::shared_ptr<Subsystems::Hood> mHood;
+std::shared_ptr<Subsystems::Infrastructure> mInfrastructure;
+std::shared_ptr<Subsystems::LED> mLED;
+std::shared_ptr<Subsystems::LimelightManager> mLimelightManager;
+std::shared_ptr<Subsystems::Shooter> mShooter;
+std::shared_ptr<Subsystems::Superstructure> mSuperstructure;
+std::shared_ptr<Subsystems::Turret> mTurret;
+
+//Controls
+std::shared_ptr<ControlBoard::ControlBoardBase> mControlBoard;
 
 //Paths
 static TrajectoryGenerator trajectoryGenerator;
-
-//Controls
-static ControlBoard controlBoard;
 
 //change once AutoModeSelector and creators are added for the left and right 
 shared_ptr<AutoModeExecutor> mAutoModeExecutor;
@@ -92,11 +117,33 @@ vector<shared_ptr<Subsystems::Subsystem>> subsystems;
 
 shared_ptr<Looper> mSubsystemLoops;
 
+void manualControl();
+
  private:
   frc::SendableChooser<std::string> m_chooser;
   const std::string kAutoNameDefault = "Default";
   const std::string kAutoNameCustom = "My Auto";
   std::string m_autoSelected;
+
+  bool preshoot = false;
+  bool shooting = false;
+  double pre_shoot_start_time = 0.0;
+  double shoot_start_time = 0.0;
+  bool jogging = false;
+  bool intake_extended = false;
+  double extended_start_time = 0.0;
+  double prev_ball = 0.0;
+  bool prev_controller_one = true;
+
+  int i = 0;
+  int j = 0;
+  int k = 0;
+  int l = 0;
+  int m = 0;
+  int n = 0;
+  int o = 0;
+  int p = 0;
+
 };
 
 #include "Auto/Modes/CharacterizeHighGear.h"

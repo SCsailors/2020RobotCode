@@ -16,7 +16,23 @@ std::shared_ptr<Subsystems::Turret> Turret::getInstance()
 {
     if(!mInstance)
     {
-        mInstance = std::make_shared<Turret>(*Constants::kTurretConstants.get());
+        Subsystems::SparkMaxConstants constants{};
+        constants.id = 24;
+        constants.kName = "Turret";
+        constants.kTicksPerUnitDistance = 4096.0; //Ticks to degrees;
+        constants.kAllowableClosedLoopError = 5.0; //ticks
+        constants.kMaxVelocity = 1700.0; //Tune :ticks
+        constants.kMaxAcceleration = 3400.0; //Tune :ticks
+
+        constants.kEnableForwardSoftLimit = true;
+        constants.kForwardSoftLimit = 270.0;
+
+        constants.kEnableReverseSoftLimit = true;
+        constants.kReverseSoftLimit = -270.0;
+
+        constants.kIsAltEncoder = true;
+        constants.kCountsPerRev = 4096.0;
+        mInstance = std::make_shared<Turret>(constants);
     }
     return mInstance;
 }
@@ -42,4 +58,14 @@ void Turret::handleMasterReset(bool reset)
 bool Turret::isHoming()
 {
     return mHoming;
+}
+
+double Turret::getMinUnits()
+{
+    return mConstants.kMinUnitsLimit;
+}
+
+double Turret::getMaxUnits()
+{
+    return mConstants.kMaxUnitsLimit;
 }

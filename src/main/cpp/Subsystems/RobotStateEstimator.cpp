@@ -7,6 +7,7 @@
 
 #include "Subsystems/RobotStateEstimator.h"
 #include "Robot.h"
+#include <RobotState.h>
 #include "lib/Geometry/Pose2D.h"
 using namespace Subsystems;
 namespace Subsystems{
@@ -28,9 +29,9 @@ void RobotStateEstimator::OnLoop(double timestamp){
     double delta_left= left_distance-left_encoder_prev_distance_;
     double delta_right= right_distance-right_encoder_prev_distance_;
     shared_ptr<Rotation2D> gyro_angle = Robot::drive->getHeading();
-    shared_ptr<Twist2D> odometry_velocity = Robot::robotState.generateOdometryFromSensors(delta_left, delta_right, gyro_angle); 
+    shared_ptr<Twist2D> odometry_velocity = FRC_7054::RobotState::getInstance()->generateOdometryFromSensors(delta_left, delta_right, gyro_angle); 
     shared_ptr<Twist2D> predicted_velocity = Robot::kinematics.forwardKinematics(Robot::drive->getLeftLinearVelocity(), Robot::drive->getRightLinearvelocity());
-    Robot::robotState.addObservation(timestamp, odometry_velocity, predicted_velocity);
+    FRC_7054::RobotState::getInstance()->addObservation(timestamp, odometry_velocity, predicted_velocity);
     left_encoder_prev_distance_= left_distance;
     right_encoder_prev_distance_= right_distance;
 }
@@ -57,7 +58,7 @@ void RobotStateEstimator::writePeriodicOutputs(){
 
 void RobotStateEstimator::zeroSensors(){
     //Reset RobotState
-    Robot::robotState.reset(0.0, make_shared<Pose2D>());
+    FRC_7054::RobotState::getInstance()->reset(0.0, make_shared<Pose2D>());
 }
 
 void RobotStateEstimator::writeToLog(){

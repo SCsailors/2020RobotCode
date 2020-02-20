@@ -30,9 +30,14 @@ class TalonConfig {
   ctre::phoenix::motorcontrol::VelocityMeasPeriod VELOCITY_MEASUREMENT_PERIOD = ctre::phoenix::motorcontrol::VelocityMeasPeriod::Period_100Ms;
   int VELOCITY_MEASUREMENT_ROLLING_AVERAGE_WINDOW = 64;
 
+  
+
+};
+
+class TalonConfigBase {
+ public:
   std::shared_ptr<TalonConfig> kDefaultConfig;
   std::shared_ptr<TalonConfig> kSlaveConfig;
-
-
+  TalonConfigBase();
 };
 }

@@ -22,7 +22,7 @@ class Infrastructure : public Subsystems::Subsystem {
   bool manualControl = false;
  public:
   Infrastructure();
-  std::shared_ptr<Subsystems::Infrastructure> getInstance();
+  static std::shared_ptr<Subsystems::Infrastructure> getInstance();
 
   void OnStart(double timestamp) override;
   void OnLoop(double timestamp) override;

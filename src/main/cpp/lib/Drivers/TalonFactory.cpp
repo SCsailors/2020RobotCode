@@ -11,75 +11,63 @@ TalonFactory::TalonFactory() {}
 
 std::shared_ptr<TalonSRX> TalonFactory::createDefaultTalonSRX(int id)
 {
-    Drivers::TalonConfig config{};
+	std::cout<<"Entered TalonFactory CreateDefaultTalonSRX"<< std::endl;
+    Drivers::TalonConfigBase config{};
+	std::cout<<"created Config CreateDefaultTalonSRX"<< std::endl;
     return createTalonSRX(id, config.kDefaultConfig);
-}
-//template <typename T>
-std::shared_ptr<TalonSRX> TalonFactory::createSlaveTalonSRX(int id, std::shared_ptr<TalonSRX> leader)
-{
-    Drivers::TalonConfig config{};
-    std::shared_ptr<TalonSRX> talon = createTalonSRX(id, config.kSlaveConfig);
-    talon->Set(motorcontrol::ControlMode::Follower, 0.0);
-    talon->Follow(*leader.get());
-    return talon;
 }
 
 std::shared_ptr<TalonSRX> TalonFactory::createTalonSRX(int id, std::shared_ptr<TalonConfig> config)
 {
     std::shared_ptr<TalonSRX> talon = std::make_shared<TalonSRX>(id);
-    configTalon(id, config, talon);
+    std::cout<<"Made Talon SRX in TalonFactory CreateTalonSRX"<< std::endl;
+	configTalon(id, config, talon);
+	std::cout<<"Configed Talon TalonFactory CreateTalonSRX"<< std::endl;
     return talon;
 }
 
 template <typename T>
 void TalonFactory::configTalon(int id, std::shared_ptr<TalonConfig> config, T talon)
 {
-    talon->Set(ControlMode::PercentOutput, 0.0);
-
-    talon->ChangeMotionControlFramePeriod(config->MOTION_CONTROL_FRAME_PERIOD_MS);
-    talon->ClearMotionProfileHasUnderrun(kTimeoutMs);
-    talon->ClearMotionProfileTrajectories();
-
-    talon->ClearStickyFaults(kTimeoutMs);
-
-    talon->ConfigSetParameter(ctre::phoenix::ParamEnum::eClearPositionOnLimitF, 0.0, 0.0, 0.0, kTimeoutMs);
-    talon->ConfigSetParameter(ctre::phoenix::ParamEnum::eClearPositionOnLimitR, 0.0, 0.0, 0.0, kTimeoutMs);
-
-    talon->ConfigNominalOutputForward(0.0, kTimeoutMs);
-    talon->ConfigNominalOutputReverse(0.0, kTimeoutMs);
-    talon->ConfigNeutralDeadband(config->NEUTRAL_DEADBAND, kTimeoutMs);
-
-    talon->ConfigPeakOutputForward(1.0, kTimeoutMs);
-    talon->ConfigPeakOutputReverse(-1.0, kTimeoutMs);
-
-    talon->ConfigVelocityMeasurementPeriod(config->VELOCITY_MEASUREMENT_PERIOD, kTimeoutMs);
-    talon->ConfigVelocityMeasurementWindow(config->VELOCITY_MEASUREMENT_ROLLING_AVERAGE_WINDOW, kTimeoutMs);
-
-    talon->ConfigVoltageMeasurementFilter(32.0, kTimeoutMs);
-
-    talon->SetStatusFramePeriod(Status_1_General, config->GENERAL_STATUS_FRAME_RATE_MS, kTimeoutMs);
-    talon->SetStatusFramePeriod(Status_2_Feedback0, config->FEEDBACK_STATUS_FRAME_RATE_MS, kTimeoutMs);
-    talon->SetStatusFramePeriod(Status_3_Quadrature, config->QUAD_ENCODER_STATUS_FRAME_RATE_MS, kTimeoutMs);
-    talon->SetStatusFramePeriod(Status_4_AinTempVbat, config->ANALOG_TEMP_VBAT_STATUS_FRAME_RATE_MS, kTimeoutMs);
-    talon->SetStatusFramePeriod(Status_8_PulseWidth, config->PULSE_WIDTH_STATUS_FRAME_RATE_MS, kTimeoutMs);
-    talon->SetControlFramePeriod(ControlFrame::Control_3_General, config->CONTROL_FRAME_PERIOD_MS);
+	std::cout<<"TalonFactory Starting Config Talon"<< std::endl;
+    //talon->Set(ControlMode::PercentOutput, 0.0);
+	std::cout<<"TalonFactory Starting Config Talon"<< std::endl;
+    //talon->ChangeMotionControlFramePeriod(config->MOTION_CONTROL_FRAME_PERIOD_MS);
+    //talon->ClearMotionProfileHasUnderrun(kTimeoutMs);
+    //talon->ClearMotionProfileTrajectories();
+	std::cout<<"TalonFactory Config Talon: Motion Profile"<< std::endl;
+    //talon->ClearStickyFaults(kTimeoutMs);
+	std::cout<<"TalonFactory Config Talon: clear stickyfaults"<< std::endl;
+    //talon->ConfigSetParameter(ctre::phoenix::ParamEnum::eClearPositionOnLimitF, 0.0, 0.0, 0.0, kTimeoutMs);
+    //talon->ConfigSetParameter(ctre::phoenix::ParamEnum::eClearPositionOnLimitR, 0.0, 0.0, 0.0, kTimeoutMs);
+	std::cout<<"TalonFactory Config Talon: Clear Limit F and R"<< std::endl;
+    //talon->ConfigNominalOutputForward(0.0, kTimeoutMs);
+    //talon->ConfigNominalOutputReverse(0.0, kTimeoutMs);
+    //talon->ConfigNeutralDeadband(config->NEUTRAL_DEADBAND, kTimeoutMs);
+	std::cout<<"TalonFactory Config Talon: Config Output and Deadband"<< std::endl;
+    //talon->ConfigPeakOutputForward(1.0, kTimeoutMs);
+    //talon->ConfigPeakOutputReverse(-1.0, kTimeoutMs);
+	std::cout<<"TalonFactory Config Talon: peak output"<< std::endl;
+    //talon->ConfigVelocityMeasurementPeriod(config->VELOCITY_MEASUREMENT_PERIOD, kTimeoutMs);
+    //talon->ConfigVelocityMeasurementWindow(config->VELOCITY_MEASUREMENT_ROLLING_AVERAGE_WINDOW, kTimeoutMs);
+	
+    //talon->ConfigVoltageMeasurementFilter(32.0, kTimeoutMs);
+	std::cout<<"TalonFactory Config Talon: Velocity Measurement"<< std::endl;
+    //talon->SetStatusFramePeriod(Status_1_General, config->GENERAL_STATUS_FRAME_RATE_MS, kTimeoutMs);
+    //talon->SetStatusFramePeriod(Status_2_Feedback0, config->FEEDBACK_STATUS_FRAME_RATE_MS, kTimeoutMs);
+    //talon->SetStatusFramePeriod(Status_3_Quadrature, config->QUAD_ENCODER_STATUS_FRAME_RATE_MS, kTimeoutMs);
+    //talon->SetStatusFramePeriod(Status_4_AinTempVbat, config->ANALOG_TEMP_VBAT_STATUS_FRAME_RATE_MS, kTimeoutMs);
+    //talon->SetStatusFramePeriod(Status_8_PulseWidth, config->PULSE_WIDTH_STATUS_FRAME_RATE_MS, kTimeoutMs);
+    //talon->SetControlFramePeriod(ControlFrame::Control_3_General, config->CONTROL_FRAME_PERIOD_MS);
+	std::cout<<"TalonFactory Config Talon: Status Frames"<< std::endl;
 }
 
 std::shared_ptr<TalonFX> TalonFactory::createDefaultTalonFX(int id)
 {
-    Drivers::TalonConfig config{};
+    Drivers::TalonConfigBase config{};
     return createTalonFX(id, config.kDefaultConfig);
 }
 
-//template <typename T>
-std::shared_ptr<TalonFX> TalonFactory::createSlaveTalonFX(int id, std::shared_ptr<TalonFX> leader)
-{
-    Drivers::TalonConfig config{};
-    std::shared_ptr<TalonFX> talon = createTalonFX(id, config.kSlaveConfig);
-    talon->Set(motorcontrol::ControlMode::Follower, 0.0);
-    talon->Follow(*leader.get());
-    return talon; 
-}
 
 std::shared_ptr<TalonFX> TalonFactory::createTalonFX(int id, std::shared_ptr<TalonConfig> config)
 {

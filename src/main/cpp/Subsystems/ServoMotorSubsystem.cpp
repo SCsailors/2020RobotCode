@@ -6,7 +6,9 @@
 /*----------------------------------------------------------------------------*/
 
 #include "Subsystems/ServoMotorSubsystem.h"
+#include "frc/smartdashboard/SmartDashboard.h"
 #include <Constants.h>
+
 using namespace Subsystems;
 ServoMotorSubsystem::ServoMotorSubsystem(){}
 
@@ -36,6 +38,7 @@ double ServoMotorSubsystem::getVelocity()
 
 SparkMaxSubsystem::SparkMaxSubsystem(SparkMaxConstants constants)
 {
+    #ifdef CompetitionBot
     mConstants = constants;
     mMaster = Drivers::SparkMaxFactory::createDefaultSparkMax(mConstants.id, mConstants.kMotorType);
 
@@ -118,41 +121,77 @@ SparkMaxSubsystem::SparkMaxSubsystem(SparkMaxConstants constants)
     Drivers::SparkMaxFactory::handleCANError(mConstants.id, mMaster->SetClosedLoopRampRate(mConstants.kClosedLoopRampRate), ": Could not set Closed Loop Ramp Rate : ");
     Drivers::SparkMaxFactory::handleCANError(mConstants.id, mMaster->SetOpenLoopRampRate(mConstants.kOpenLoopRampRate), ": Could not set Open Loop Ramp Rate : ");
 
+    Drivers::SparkMaxFactory::handleCANError(mConstants.id, mMaster->SetSecondaryCurrentLimit(mConstants.kSecondaryCurrentLimit), ": Could not set Secondary Current Limit: ");
+    Drivers::SparkMaxFactory::handleCANError(mConstants.id, mMaster->SetSmartCurrentLimit(mConstants.kCurrentStallLimit, mConstants.kCurrentStallLimit), ": Could not set Smart Current Limit: ");
+
     mMaster->SetInverted(mConstants.inverted);
     mMaster->SetIdleMode(mConstants.kIdleMode);
-
+    if (mConstants.kSlaveIDs.size() == 0)
+    {
+        std::cout<<"SparkMaxSubsystem: skipping slave"<<std::endl;
+    } else
+    {
+        
     for (int i = 0; i <mConstants.kSlaveIDs.size()-1; i++)
     {
+        if ((mConstants.kSlaveIDs.at(i).id) == -1)
+        {
+            continue;
+        }
         mSlaves.push_back(Drivers::SparkMaxFactory::createFollowerSparkMax(mConstants.kSlaveIDs.at(i).id, mMaster, mConstants.kMotorType));
         mSlaves.at(i)->SetInverted(mConstants.kSlaveIDs.at(i).invert_motor);
         mSlaves.at(i)->SetIdleMode(mConstants.kIdleMode);
+    }        
     }
+    
+
 
     stop();
+    #endif
 }
 
 void SparkMaxSubsystem::readPeriodicInputs()
 {
+    
+    //std::cout << "SparkMaxSubsystem: " << mConstants.kName << ": read periodic inputs" << std::endl;
     mPeriodicIO.timestamp = frc::Timer::GetFPGATimestamp();
 
     mPeriodicIO.reset_occurred = false;
 
-    mMaster->ClearFaults();
-    
+    //mMaster->ClearFaults();
+    #ifdef CompetitionBot
+        mPeriodicIO.error_ticks = 0.0;
+
+        mPeriodicIO.position_ticks = (int) std::round( mEncoder->GetPosition());
+        mPeriodicIO.position_units = ticksToHomedUnits(mEncoder->GetPosition());
+
+        mPeriodicIO.velocity_ticks_per_100ms = (int) std::round( mEncoder->GetVelocity() );
+        mPeriodicIO.velocity_units = ticksPer100msToUnitsPerSecond(mEncoder->GetVelocity());
+
+        mPeriodicIO.output_percent = mMaster->GetAppliedOutput();
+        mPeriodicIO.output_voltage = mMaster->GetAppliedOutput()*mMaster->GetBusVoltage();
+        mPeriodicIO.master_current = mMaster->GetOutputCurrent();
+        mPeriodicIO.error_ticks = 0.0;
+    #endif
+    #ifndef CompetitionBot
+        mPeriodicIO.error_ticks = 0.0;
+
+    mPeriodicIO.position_ticks = 0;
+    mPeriodicIO.position_units = 0.0;
+
+    mPeriodicIO.velocity_ticks_per_100ms = 0;
+    mPeriodicIO.velocity_units = 0.0;
+
+    mPeriodicIO.output_percent = 0.0;
+    mPeriodicIO.output_voltage = 0.0;
+    mPeriodicIO.master_current = 0.0;
     mPeriodicIO.error_ticks = 0.0;
+    //frc::SmartDashboard::PutString("ServoMotorSubsystem: " + mConstants.kName, "true");
+    #endif
 
-    mPeriodicIO.position_ticks = (int)std::floor( mEncoder->GetPosition());
-    mPeriodicIO.position_units = ticksToHomedUnits(mEncoder->GetPosition());
-
-    mPeriodicIO.velocity_ticks_per_100ms = (int) std::floor( mEncoder->GetVelocity() );
-    mPeriodicIO.velocity_units = ticksPer100msToUnitsPerSecond(mEncoder->GetVelocity());
-
-    mPeriodicIO.output_percent = mMaster->GetAppliedOutput();
-    mPeriodicIO.output_voltage = mMaster->GetAppliedOutput()*mMaster->GetBusVoltage();
-    mPeriodicIO.master_current = mMaster->GetOutputCurrent();
-    mPeriodicIO.error_ticks = 0.0;
-    
-    if (mControlState != ControlState::OPEN_LOOP)
+    //if (mControlState != ControlState::OPEN_LOOP)
+    /*
+    if (false)
     {
         mPeriodicIO.active_trajectory_position = mPeriodicIO.position_ticks;
         if (mPeriodicIO.active_trajectory_position < mReverseSoftLimit)
@@ -164,26 +203,30 @@ void SparkMaxSubsystem::readPeriodicInputs()
         } 
 
         int newVel = mPeriodicIO.velocity_ticks_per_100ms;
-        if (util.epsilonEquals(newVel, mConstants.kMaxVelocity, std::max(1 , (int)std::floor(mConstants.kAllowableClosedLoopError))) || 
-                util.epsilonEquals(newVel, mPeriodicIO.active_trajectory_velocity, std::max(1, (int)std::floor(mConstants.kAllowableClosedLoopError))) )
+        if (util.epsilonEquals(std::round(newVel), mConstants.kMaxVelocity, std::max(1.0 , std::round(mConstants.kAllowableClosedLoopError))) || 
+                util.epsilonEquals(newVel, mPeriodicIO.active_trajectory_velocity, std::max(1, (int)std::round(mConstants.kAllowableClosedLoopError))) )
         {
             mPeriodicIO.active_trajectory_acceleration = 0;
         } else 
         {
+      
             mPeriodicIO.active_trajectory_acceleration = (newVel - mPeriodicIO.active_trajectory_velocity)* mConstants.kMaxAcceleration;//(mPeriodicIO.timestamp - prev_timestamp);
-        }
+    //    }
         
         mPeriodicIO.active_trajectory_velocity = newVel;
             
-    } else
-    {
-        mPeriodicIO.active_trajectory_acceleration = 0.0;
-        mPeriodicIO.active_trajectory_velocity = 0.0;
-        mPeriodicIO.active_trajectory_position = INFINITY;
-    }
+    //} else
+    //{
+    */
+        mPeriodicIO.active_trajectory_acceleration = 0;
+        mPeriodicIO.active_trajectory_velocity = 0;
+        mPeriodicIO.active_trajectory_position = std::numeric_limits<int>::max();
+    //}
 
     // only absolute
-    if (mConstants.kRecoverPositionOnReset)
+    //if (mConstants.kRecoverPositionOnReset)
+    /*
+    if (false)
     {
         mPeriodicIO.absolute_position = mPeriodicIO.position_ticks;
             mPeriodicIO.absolute_position_modded = mPeriodicIO.absolute_position % mConstants.kCountsPerRev;
@@ -211,17 +254,21 @@ void SparkMaxSubsystem::readPeriodicInputs()
         }
     } else 
     {
+    */
         mPeriodicIO.encoder_wraps = 0;
         mPeriodicIO.absolute_position = 0;
         mPeriodicIO.absolute_position_modded = 0;
-    }
+    //}
 
     prev_position_units = mPeriodicIO.position_ticks;
     prev_timestamp = mPeriodicIO.timestamp;
+    
 }
 
 void SparkMaxSubsystem::writePeriodicOutputs()
 {
+    #ifdef CompetitionBot
+    //std::cout << "SparkMaxSubsystem: " << mConstants.kName << ": write periodic outputs" << std::endl;
     if (mControlState == ControlState::MOTION_MAGIC)
     {
         mPIDController->SetReference(mPeriodicIO.demand, rev::ControlType::kSmartMotion, Constants::kMotionMagicPIDSlot, mPeriodicIO.feedforward);
@@ -235,13 +282,43 @@ void SparkMaxSubsystem::writePeriodicOutputs()
     {
         mPIDController->SetReference(mPeriodicIO.demand, rev::ControlType::kDutyCycle, 0, mPeriodicIO.feedforward);
     }
+    #endif  
 }
 
 void SparkMaxSubsystem::zeroSensors()
 {
-    mPeriodicIO.absolute_offset = (int)std::floor(mEncoder->GetPosition());
+    #ifdef CompetitionBot
+    std::cout << "SparkMaxSubsystem: " << mConstants.kName << ": zeroing sensors" << std::endl;
+    mPeriodicIO.absolute_offset = (int)std::round(mEncoder->GetPosition());
     mEncoder->SetPosition(0.0);
     mHasBeenZeroed = true;
+    #endif
+}
+
+void SparkMaxSubsystem::OnStart(double timestamp)
+{
+
+}
+
+void SparkMaxSubsystem::OnLoop(double timestamp)
+{
+
+}
+
+void SparkMaxSubsystem::OnStop(double timestamp)
+{
+
+}
+
+void SparkMaxSubsystem::outputTelemetry()
+{
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants.kName + "/ Position Units: ", mPeriodicIO.position_units);
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants.kName + "/ Velocity Units: ", mPeriodicIO.velocity_units);
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants.kName + "/ Percent Output: ", mPeriodicIO.output_percent);
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants.kName + "/ Voltage Output: ", mPeriodicIO.output_voltage);
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants.kName + "/ Current Output: ", mPeriodicIO.master_current);
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants.kName + "/ Demand: ", mPeriodicIO.demand);
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants.kName + "/ FeedForward: ", mPeriodicIO.feedforward);
 }
 
 bool SparkMaxSubsystem::hasFinishedTrajectory()
@@ -314,7 +391,7 @@ int SparkMaxSubsystem::estimateSensorPositionFromAbsolute()
 
 double SparkMaxSubsystem::getSetpoint()
 {
-    return (mControlState != ControlState::OPEN_LOOP)? ticksToUnits(mPeriodicIO.demand) : NAN;
+    return (mControlState != ControlState::OPEN_LOOP)? ticksToUnits(mPeriodicIO.demand) : mPeriodicIO.demand;
 }
 
 void SparkMaxSubsystem::setSetpointMotionMagic(double units, double feedforward_v)
@@ -402,16 +479,18 @@ double SparkMaxSubsystem::unitsPerSecondToTicksPer100ms(double units_per_second)
     return unitsToTicks(units_per_second) /10.0;
 }
 
+
 TalonSRXSubsystem::TalonSRXSubsystem(TalonConstants constants)
 {
+    #ifdef CompetitionBot
+    std::cout<<"TalonSRX Subsystem starting"<< std::endl;
     mConstants = constants;
-    //if (mConstants.kIsTalonSRX)
-    //{
-        mMaster = Drivers::TalonFactory::createDefaultTalonSRX(mConstants.id);
-    //} else 
-    //{
-        //mMaster = Drivers::TalonFactory::createDefaultTalonFX(mConstants.id);
-    //}
+    std::cout<<"TalonSRX Subsystem copied constants"<< std::endl;
+    std::cout <<"TalonSRX Subsystem access constants: " << mConstants.id <<std::endl;
+    std::cout<<"TalonSRX Subsystem accessed Constants"<< std::endl;
+    mMaster = Drivers::TalonFactory::createDefaultTalonSRX(mConstants.id);
+    std::cout<<"TalonSRX Subsystem created talon default"<< std::endl;
+    
     mForwardSoftLimit = ((mConstants.kMaxUnitsLimit - mConstants.kHomePosition)*mConstants.kTicksPerUnitDistance);    
     Drivers::TalonFactory::handleCANError(mConstants.id, mMaster->ConfigForwardSoftLimitThreshold((int) mForwardSoftLimit, Constants::kLongCANTimeoutMs), ": could not configure forward soft limit: ");
     Drivers::TalonFactory::handleCANError(mConstants.id, mMaster->ConfigForwardSoftLimitEnable(mConstants.kEnableForwardSoftLimit, Constants::kLongCANTimeoutMs), ": could not enable forward soft limit: ");
@@ -464,25 +543,42 @@ TalonSRXSubsystem::TalonSRXSubsystem(TalonConstants constants)
     mMaster->SetStatusFramePeriod(StatusFrameEnhanced::Status_2_Feedback0, 10, 20);
     mMaster->SetStatusFramePeriod(StatusFrameEnhanced::Status_10_MotionMagic, 10, 20);
     mMaster->SetStatusFramePeriod(StatusFrameEnhanced::Status_8_PulseWidth, mConstants.kStatusFrame8UpdateRate, 20);
-
+    
+    std::cout<<"ServoMotorSubsystem-TalonSRXSubsystem(): Starting Slaves"<<std::endl;
+    if (mConstants.kSlaveIDs.size() == 0){
+        std::cout<<"ServoMotorSubsystem-TalonSRXSubsystem(): Skipping Slaves"<<std::endl;
+    } else
+    {
+        
     for (int i = 0; i < mConstants.kSlaveIDs.size()-1; i++)
     {
-        //if (mConstants.kSlaveIDs.at(i).isTalonSRX)
-        //{
+        if ((mConstants.kSlaveIDs.at(i).id) == -1)
+        {
+            continue;
+        }
+        if (mConstants.kSlaveIDs.at(i).isTalonSRX)
+        {
             mSlaves.push_back(Drivers::TalonFactory::createSlaveTalonSRX(mConstants.kSlaveIDs.at(i).id, mMaster));
-        //} //else 
-        //{
-        //    mSlaves.push_back(Drivers::TalonFactory::createSlaveTalonFX(mConstants.kSlaveIDs.at(i).id, mMaster));
-        //}
+        
+        } else 
+        {
+            mSlaves.push_back(Drivers::TalonFactory::createSlaveTalonFX(mConstants.kSlaveIDs.at(i).id, mMaster));
+        }
+        std::cout<<"ServoMotorSubsystem-TalonSRXSubsystem(): added Slaves"<<std::endl;
         mSlaves.at(i)->SetInverted(mConstants.kSlaveIDs.at(i).invert_motor);
         mSlaves.at(i)->SetNeutralMode(mConstants.kNeutralMode);
-        
-        
+    }    
     }
+    
+    
+    std::cout<<"ServoMotorSubsystem-TalonSRXSubsystem(): finished Slaves"<<std::endl;
+    #endif
 }
  
 void TalonSRXSubsystem::readPeriodicInputs()
 {
+    #ifdef CompetitionBot
+    //std::cout << "TalonSRXSubsystem: " << mConstants.kName << ": read periodic inputs" << std::endl;
     mPeriodicIO.timestamp = frc::Timer::GetFPGATimestamp();
 
     if ( mMaster->HasResetOccurred() ) 
@@ -555,7 +651,7 @@ void TalonSRXSubsystem::readPeriodicInputs()
         }
 
         int estimated_pulsed_pos = ((mConstants.invert_sensor_phase ? -1 : 1)*mPeriodicIO.position_ticks) + mPeriodicIO.absolute_offset;
-        int new_wraps = (int) std::floor(estimated_pulsed_pos/4096.0);
+        int new_wraps = (int) std::round(estimated_pulsed_pos/4096.0);
 
         if (std::abs(mPeriodicIO.encoder_wraps - new_wraps) <= 1 )
         {
@@ -566,11 +662,14 @@ void TalonSRXSubsystem::readPeriodicInputs()
         mPeriodicIO.absolute_position = 0.0;
         mPeriodicIO.absolute_position_modded = 0.0;
     }
+    #endif
 }
 
  
 void TalonSRXSubsystem::writePeriodicOutputs()
 {
+    #ifdef CompetitionBot
+    //std::cout << "TalonSRXSubsystem: " << mConstants.kName << ": write periodic outputs" << std::endl;
     if (mControlState == ControlState::MOTION_MAGIC)
     {
         mMaster->Set(ControlMode::MotionMagic, mPeriodicIO.demand, DemandType::DemandType_ArbitraryFeedForward, mPeriodicIO.feedforward);
@@ -584,22 +683,34 @@ void TalonSRXSubsystem::writePeriodicOutputs()
     {
         mMaster->Set(ControlMode::PercentOutput, mPeriodicIO.demand, DemandType::DemandType_ArbitraryFeedForward, mPeriodicIO.feedforward);
     }
+    #endif
 }
 
  
 void TalonSRXSubsystem::zeroSensors()
 {
+    #ifdef CompetitionBot
+    //std::cout << "TalonSRXSubsystem: " << mConstants.kName << ": zeroing sensors" << std::endl;
     mMaster->SetSelectedSensorPosition(0.0, Constants::kCANTimeoutMs);
-    mPeriodicIO.absolute_offset = getAbsoluteEncoderRawPosition(mMaster->GetSensorCollection().GetPulseWidthPosition());
+    if (mConstants.kIsTalonSRX)
+    {
+        mPeriodicIO.absolute_offset = getAbsoluteEncoderRawPosition(mMaster->GetSensorCollection().GetPulseWidthPosition());
+    }
     mHasBeenZeroed = true;
+    #endif
 }
 
  
-void TalonSRXSubsystem::OnStart(double timestamp){}
+void TalonSRXSubsystem::OnStart(double timestamp)
+{
+    //std::cout << "TalonSRXSubsystem: " << mConstants.kName << ": OnStart" << std::endl;
+}
 
  
 void TalonSRXSubsystem::OnLoop(double timestamp)
 {
+    #ifdef CompetitionBot
+    //std::cout << "TalonSRXSubsystem: " << mConstants.kName << ": OnLoop" << std::endl;
     if (mPeriodicIO.reset_occurred)
     {
         std::cout << mConstants.kName << " : Master Talon reset occurred; resetting frame rates."<<std::endl;
@@ -613,23 +724,44 @@ void TalonSRXSubsystem::OnLoop(double timestamp)
         }
     }
     handleMasterReset(mPeriodicIO.reset_occurred);
-    for (auto slave : mSlaves)
+    if (mSlaves.size() == 0)
     {
-        if (slave->HasResetOccurred())
+
+    } else
+    {
+        for (auto slave : mSlaves)
         {
-            std::cout << mConstants.kName << " : Slave Talon reset occurred."<<std::endl;
+            if (slave->HasResetOccurred())
+            {
+                std::cout << mConstants.kName << " : Slave Talon reset occurred."<<std::endl;
+            }
         }
     }
+    #endif
 }
 
- 
+
 void TalonSRXSubsystem::OnStop(double timestamp)
 {
+    #ifdef CompetitionBot
+    //std::cout << "TalonSRXSubsystem: " << mConstants.kName << ": OnStop" << std::endl;
     stop();
+    #endif
 }
 
- 
-bool TalonSRXSubsystem::hasFinishedTrajectory()
+void TalonSubsystem::outputTelemetry()
+{
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants.kName + "/ Position Units: ", mPeriodicIO.position_units);
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants.kName + "/ Velocity Units: ", mPeriodicIO.velocity_units);
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants.kName + "/ Percent Output: ", mPeriodicIO.output_percent);
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants.kName + "/ Voltage Output: ", mPeriodicIO.output_voltage);
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants.kName + "/ Current Output: ", mPeriodicIO.master_current);
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants.kName + "/ Demand: ", mPeriodicIO.demand);
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants.kName + "/ FeedForward: ", mPeriodicIO.feedforward);
+}
+
+
+bool TalonSubsystem::hasFinishedTrajectory()
 {
     if (util.epsilonEquals((double) mPeriodicIO.active_trajectory_position, ticksToUnits(getSetpoint()), std::fmax(1.0, mConstants.kAllowableClosedLoopError)))
     {
@@ -638,22 +770,22 @@ bool TalonSRXSubsystem::hasFinishedTrajectory()
     return false;
 }
 
- 
-double TalonSRXSubsystem::getActiveTrajectoryUnits()
+
+double TalonSubsystem::getActiveTrajectoryUnits()
 {
     return ticksToHomedUnits(mPeriodicIO.active_trajectory_position);
 }
 
- 
-double TalonSRXSubsystem::getActiveTrajectoryUnitsPerSecond()
+
+double TalonSubsystem::getActiveTrajectoryUnitsPerSecond()
 {
     return ticksPer100msToUnitsPerSecond(mPeriodicIO.active_trajectory_velocity);
 }
 
- 
-double TalonSRXSubsystem::getPredictedPositionUnits(double lookahead_secs)
+
+double TalonSubsystem::getPredictedPositionUnits(double lookahead_secs)
 {
-    if (mMaster->GetControlMode() != ControlMode::MotionMagic)
+    if (mControlState != ControlState::MOTION_MAGIC)
     {
         return getPosition();
     }
@@ -670,14 +802,14 @@ double TalonSRXSubsystem::getPredictedPositionUnits(double lookahead_secs)
     }
 }
 
- 
-bool TalonSRXSubsystem::atHomingLocation()
+
+bool TalonSubsystem::atHomingLocation()
 {
     return false;
 }
 
- 
-void TalonSRXSubsystem::resetIfAtLimit()
+
+void TalonSubsystem::resetIfAtLimit()
 {
     if (atHomingLocation())
     {
@@ -685,41 +817,41 @@ void TalonSRXSubsystem::resetIfAtLimit()
     }
 }
 
- 
-int TalonSRXSubsystem::getAbsoluteEncoderRawPosition(int pulse_width_position)
+
+int TalonSubsystem::getAbsoluteEncoderRawPosition(int pulse_width_position)
 {
     int abs_raw_with_rollover = pulse_width_position % 4096;
     return abs_raw_with_rollover + (abs_raw_with_rollover < 0 ? abs_raw_with_rollover + 4096 : 0);
 }
 
- 
-bool TalonSRXSubsystem::hasBeenZeroed()
+
+bool TalonSubsystem::hasBeenZeroed()
 {
     return mHasBeenZeroed;
 }
 
- 
-void TalonSRXSubsystem::stop()
+
+void TalonSubsystem::stop()
 {
     setOpenLoop(0.0);
 }
 
- 
-int TalonSRXSubsystem::estimateSensorPositionFromAbsolute()
+
+int TalonSubsystem::estimateSensorPositionFromAbsolute()
 {
     int estimated_pulse_pos = (mPeriodicIO.encoder_wraps * 4096) + mPeriodicIO.absolute_position_modded;
     int estimate_position_ticks = (mConstants.invert_sensor_phase ? -1 : 1) * (estimated_pulse_pos -mPeriodicIO.absolute_offset);
     return estimate_position_ticks;
 }
 
- 
-double TalonSRXSubsystem::getSetpoint()
+
+double TalonSubsystem::getSetpoint()
 {
-    return (mControlState != ControlState::OPEN_LOOP) ? ticksToUnits(mPeriodicIO.demand) : NAN;
+    return (mControlState != ControlState::OPEN_LOOP) ? ticksToUnits(mPeriodicIO.demand) : mPeriodicIO.demand;
 }
 
- 
-void TalonSRXSubsystem::setSetpointMotionMagic(double units, double feedforward_v)
+
+void TalonSubsystem::setSetpointMotionMagic(double units, double feedforward_v)
 {
     mPeriodicIO.demand = constrainTicks(homeAwareUnitsToTicks(units));
     //check feedforward...
@@ -731,14 +863,14 @@ void TalonSRXSubsystem::setSetpointMotionMagic(double units, double feedforward_
     }
 }
 
- 
-void TalonSRXSubsystem::setSetpointMotionMagic(double units)
+
+void TalonSubsystem::setSetpointMotionMagic(double units)
 {
     setSetpointMotionMagic(units, 0.0);
 }
 
- 
-void TalonSRXSubsystem::setSetpointPositionPID(double units, double feedforward_v)
+
+void TalonSubsystem::setSetpointPositionPID(double units, double feedforward_v)
 {
     mPeriodicIO.demand = constrainTicks(homeAwareUnitsToTicks(units));
     //check feedforward...
@@ -750,8 +882,8 @@ void TalonSRXSubsystem::setSetpointPositionPID(double units, double feedforward_
     }
 }
 
- 
-void TalonSRXSubsystem::setSetpointVelocityPID(double units, double feedforward_v)
+
+void TalonSubsystem::setSetpointVelocityPID(double units, double feedforward_v)
 {
     mPeriodicIO.demand = constrainTicks(homeAwareUnitsToTicks(units));
     //check feedforward...
@@ -763,8 +895,8 @@ void TalonSRXSubsystem::setSetpointVelocityPID(double units, double feedforward_
     }
 }
 
- 
-void TalonSRXSubsystem::setOpenLoop(double percentage)
+
+void TalonSubsystem::setOpenLoop(double percentage)
 {
     mPeriodicIO.demand = percentage;
     if (mControlState != ControlState::OPEN_LOOP)
@@ -773,59 +905,56 @@ void TalonSRXSubsystem::setOpenLoop(double percentage)
     }
 }
 
- 
-double TalonSRXSubsystem::ticksToUnits(double ticks)
+
+double TalonSubsystem::ticksToUnits(double ticks)
 {
     return ticks/mConstants.kTicksPerUnitDistance;
 }
 
- 
-double TalonSRXSubsystem::ticksToHomedUnits(double ticks)
+
+double TalonSubsystem::ticksToHomedUnits(double ticks)
 {
     double val = ticksToUnits(ticks);
     return val + mConstants.kHomePosition;
 }
 
- 
-double TalonSRXSubsystem::unitsToTicks(double units)
+
+double TalonSubsystem::unitsToTicks(double units)
 {
     return units * mConstants.kTicksPerUnitDistance;
 }
 
- 
-double TalonSRXSubsystem::homeAwareUnitsToTicks(double units)
+
+double TalonSubsystem::homeAwareUnitsToTicks(double units)
 {
     return unitsToTicks(units-mConstants.kHomePosition);
 }
 
- 
-double TalonSRXSubsystem::constrainTicks(double ticks)
+
+double TalonSubsystem::constrainTicks(double ticks)
 {
     return util.limit(ticks, mReverseSoftLimit, mForwardSoftLimit);
 }
 
- 
-double TalonSRXSubsystem::ticksPer100msToUnitsPerSecond(double ticks_per_100ms)
+
+double TalonSubsystem::ticksPer100msToUnitsPerSecond(double ticks_per_100ms)
 {
     return ticksToUnits(ticks_per_100ms) * 10.0;
 }
 
- 
-double TalonSRXSubsystem::unitsPerSecondToTicksPer100ms(double units_per_second)
+
+double TalonSubsystem::unitsPerSecondToTicksPer100ms(double units_per_second)
 {
     return unitsToTicks(units_per_second) / 10.0;
 }
 
 TalonFXSubsystem::TalonFXSubsystem(TalonConstants constants)
 {
+    #ifdef CompetitionBot
     mConstants = constants;
-    //if (mConstants.kIsTalonSRX)
-    //{
-        mMaster = Drivers::TalonFactory::createDefaultTalonFX(mConstants.id);
-    //} else 
-    //{
-        //mMaster = Drivers::TalonFactory::createDefaultTalonFX(mConstants.id);
-    //}
+    
+    mMaster = Drivers::TalonFactory::createDefaultTalonFX(mConstants.id);
+
     mForwardSoftLimit = ((mConstants.kMaxUnitsLimit - mConstants.kHomePosition)*mConstants.kTicksPerUnitDistance);    
     Drivers::TalonFactory::handleCANError(mConstants.id, mMaster->ConfigForwardSoftLimitThreshold((int) mForwardSoftLimit, Constants::kLongCANTimeoutMs), ": could not configure forward soft limit: ");
     Drivers::TalonFactory::handleCANError(mConstants.id, mMaster->ConfigForwardSoftLimitEnable(mConstants.kEnableForwardSoftLimit, Constants::kLongCANTimeoutMs), ": could not enable forward soft limit: ");
@@ -866,10 +995,7 @@ TalonFXSubsystem::TalonFXSubsystem(TalonConstants constants)
     Drivers::TalonFactory::handleCANError(mConstants.id, mMaster->ConfigClosedloopRamp(mConstants.kClosedLoopRampRate, Constants::kLongCANTimeoutMs), ": could not configure closed loop ramp rate: ");
     Drivers::TalonFactory::handleCANError(mConstants.id, mMaster->ConfigOpenloopRamp(mConstants.kOpenLoopRampRate, Constants::kLongCANTimeoutMs), ": could not configure open loop ramp rate: ");
 
-//    Drivers::TalonFactory::handleCANError(mConstants.id, mMaster->ConfigContinuousCurrentLimit(mConstants.kContinuousCurrentLimit, Constants::kLongCANTimeoutMs), ": could not configure continuous current limit: ");
-//    Drivers::TalonFactory::handleCANError(mConstants.id, mMaster->ConfigPeakCurrentLimit(mConstants.kPeakCurrentLimit, Constants::kLongCANTimeoutMs), ": could not configure peak current limit: ");
-//    Drivers::TalonFactory::handleCANError(mConstants.id, mMaster->ConfigPeakCurrentDuration(mConstants.kPeakCurrentDuration, Constants::kLongCANTimeoutMs), ": could not configure peak current duration: ");
-
+    Drivers::TalonFactory::handleCANError(mConstants.id, mMaster->ConfigSupplyCurrentLimit(SupplyCurrentLimitConfiguration{true, (double) mConstants.kPeakCurrentLimit, (double) mConstants.kContinuousCurrentLimit, (double) mConstants.kPeakCurrentDuration}, Constants::kLongCANTimeoutMs), ": could not configure Supply Current Limit: ");
     
     mMaster->EnableVoltageCompensation(mConstants.kEnableVoltageCompensation);
     mMaster->SetInverted(mConstants.inverted);
@@ -879,24 +1005,38 @@ TalonFXSubsystem::TalonFXSubsystem(TalonConstants constants)
     mMaster->SetStatusFramePeriod(StatusFrameEnhanced::Status_10_MotionMagic, 10, 20);
     mMaster->SetStatusFramePeriod(StatusFrameEnhanced::Status_8_PulseWidth, mConstants.kStatusFrame8UpdateRate, 20);
 
+    if (mConstants.kSlaveIDs.size() == 0)
+    {
+        std::cout << "TalonFXSubsystem: Skipping Slaves" << std::endl;   
+    } else
+    {
+        
     for (int i = 0; i < mConstants.kSlaveIDs.size()-1; i++)
     {
-        //if (mConstants.kSlaveIDs.at(i).isTalonSRX)
-        //{
+        if ((mConstants.kSlaveIDs.at(i).id) == -1)
+        {
+            continue;
+        }
+        if (mConstants.kSlaveIDs.at(i).isTalonSRX)
+        {
+            mSlaves.push_back(Drivers::TalonFactory::createSlaveTalonSRX(mConstants.kSlaveIDs.at(i).id, mMaster));
+        } else 
+        {
             mSlaves.push_back(Drivers::TalonFactory::createSlaveTalonFX(mConstants.kSlaveIDs.at(i).id, mMaster));
-        //} //else 
-        //{
-        //    mSlaves.push_back(Drivers::TalonFactory::createSlaveTalonFX(mConstants.kSlaveIDs.at(i).id, mMaster));
-        //}
+        }
         mSlaves.at(i)->SetInverted(mConstants.kSlaveIDs.at(i).invert_motor);
         mSlaves.at(i)->SetNeutralMode(mConstants.kNeutralMode);
         
         
+    }    
     }
+    #endif
 }
  
 void TalonFXSubsystem::readPeriodicInputs()
 {
+    #ifdef CompetitionBot
+    //std::cout << "TalonFXSubsystem: " << mConstants.kName << ": read periodic inputs" << std::endl;
     mPeriodicIO.timestamp = frc::Timer::GetFPGATimestamp();
 
     if ( mMaster->HasResetOccurred() ) 
@@ -958,10 +1098,10 @@ void TalonFXSubsystem::readPeriodicInputs()
     mPeriodicIO.position_units = ticksToHomedUnits(mPeriodicIO.position_ticks);
     mPeriodicIO.velocity_ticks_per_100ms = mMaster->GetSelectedSensorVelocity();
     mPeriodicIO.velocity_units = ticksPer100msToUnitsPerSecond(mPeriodicIO.velocity_ticks_per_100ms);
-    /*
-    if (mConstants.kRecoverPositionOnReset)
+    
+    if (mConstants.kRecoverPositionOnReset && mConstants.kIsTalonSRX)
     {
-        mPeriodicIO.absolute_position = mMaster->GetSensorCollection().GetPulseWidthPosition();
+        mPeriodicIO.absolute_position = 0.0; //mMaster->GetSensorCollection().GetPulseWidthPosition();
         mPeriodicIO.absolute_position_modded = mPeriodicIO.absolute_position % 4096;
         if (mPeriodicIO.absolute_position_modded < 0)
         {
@@ -969,7 +1109,7 @@ void TalonFXSubsystem::readPeriodicInputs()
         }
 
         int estimated_pulsed_pos = ((mConstants.invert_sensor_phase ? -1 : 1)*mPeriodicIO.position_ticks) + mPeriodicIO.absolute_offset;
-        int new_wraps = (int) std::floor(estimated_pulsed_pos/4096.0);
+        int new_wraps = (int) std::round(estimated_pulsed_pos/4096.0);
 
         if (std::abs(mPeriodicIO.encoder_wraps - new_wraps) <= 1 )
         {
@@ -977,15 +1117,17 @@ void TalonFXSubsystem::readPeriodicInputs()
         }
     } else 
     {
-        */
         mPeriodicIO.absolute_position = 0.0;
         mPeriodicIO.absolute_position_modded = 0.0;
-    //}
+    }
+    #endif
 }
 
  
 void TalonFXSubsystem::writePeriodicOutputs()
 {
+    #ifdef CompetitionBot
+    //std::cout << "TalonFXSubsystem: " << mConstants.kName << ": write periodic outputs" << std::endl;
     if (mControlState == ControlState::MOTION_MAGIC)
     {
         mMaster->Set(ControlMode::MotionMagic, mPeriodicIO.demand, DemandType::DemandType_ArbitraryFeedForward, mPeriodicIO.feedforward);
@@ -999,22 +1141,34 @@ void TalonFXSubsystem::writePeriodicOutputs()
     {
         mMaster->Set(ControlMode::PercentOutput, mPeriodicIO.demand, DemandType::DemandType_ArbitraryFeedForward, mPeriodicIO.feedforward);
     }
+    #endif
 }
 
  
 void TalonFXSubsystem::zeroSensors()
 {
+    #ifdef CompetitionBot
+    //std::cout << "TalonFXSubsystem: " << mConstants.kName << ": zero sensors" << std::endl;
     mMaster->SetSelectedSensorPosition(0.0, Constants::kCANTimeoutMs);
-    //mPeriodicIO.absolute_offset = getAbsoluteEncoderRawPosition(mMaster->GetSensorCollection().GetPulseWidthPosition());
+    if (mConstants.kIsTalonSRX)
+    {
+        mPeriodicIO.absolute_offset = 0.0;//getAbsoluteEncoderRawPosition(mMaster->GetSensorCollection().GetPulseWidthPosition());
+    }
     mHasBeenZeroed = true;
+    #endif
 }
 
  
-void TalonFXSubsystem::OnStart(double timestamp){}
+void TalonFXSubsystem::OnStart(double timestamp)
+{
+    //std::cout << "TalonFXSubsystem: " << mConstants.kName << ": OnStart" << std::endl;
+}
 
  
 void TalonFXSubsystem::OnLoop(double timestamp)
 {
+    #ifdef CompetitionBot
+    //std::cout << "TalonFXSubsystem: " << mConstants.kName << ": OnLoop" << std::endl;
     if (mPeriodicIO.reset_occurred)
     {
         std::cout << mConstants.kName << " : Master Talon reset occurred; resetting frame rates."<<std::endl;
@@ -1035,198 +1189,14 @@ void TalonFXSubsystem::OnLoop(double timestamp)
             std::cout << mConstants.kName << " : Slave Talon reset occurred."<<std::endl;
         }
     }
+    #endif
 }
 
- 
+
 void TalonFXSubsystem::OnStop(double timestamp)
 {
+    #ifdef CompetitionBot
+    //std::cout << "TalonFXSubsystem: " << mConstants.kName << ": OnStop" << std::endl;
     stop();
-}
-
- 
-bool TalonFXSubsystem::hasFinishedTrajectory()
-{
-    if (util.epsilonEquals((double) mPeriodicIO.active_trajectory_position, ticksToUnits(getSetpoint()), std::fmax(1.0, mConstants.kAllowableClosedLoopError)))
-    {
-        return true;
-    }
-    return false;
-}
-
- 
-double TalonFXSubsystem::getActiveTrajectoryUnits()
-{
-    return ticksToHomedUnits(mPeriodicIO.active_trajectory_position);
-}
-
- 
-double TalonFXSubsystem::getActiveTrajectoryUnitsPerSecond()
-{
-    return ticksPer100msToUnitsPerSecond(mPeriodicIO.active_trajectory_velocity);
-}
-
- 
-double TalonFXSubsystem::getPredictedPositionUnits(double lookahead_secs)
-{
-    if (mMaster->GetControlMode() != ControlMode::MotionMagic)
-    {
-        return getPosition();
-    }
-
-    double predicted_units = ticksToHomedUnits(mPeriodicIO.active_trajectory_position +
-            lookahead_secs * mPeriodicIO.active_trajectory_velocity +
-            mPeriodicIO.active_trajectory_acceleration * lookahead_secs * lookahead_secs);
-    if(mPeriodicIO.demand >= mPeriodicIO.active_trajectory_position)
-    {
-        return std::fmin(predicted_units, ticksToHomedUnits(mPeriodicIO.demand));
-    } else
-    {
-        return std::fmax(predicted_units, ticksToHomedUnits(mPeriodicIO.demand));
-    }
-}
-
- 
-bool TalonFXSubsystem::atHomingLocation()
-{
-    return false;
-}
-
- 
-void TalonFXSubsystem::resetIfAtLimit()
-{
-    if (atHomingLocation())
-    {
-        zeroSensors();
-    }
-}
-
- 
-int TalonFXSubsystem::getAbsoluteEncoderRawPosition(int pulse_width_position)
-{
-    int abs_raw_with_rollover = pulse_width_position % 4096;
-    return abs_raw_with_rollover + (abs_raw_with_rollover < 0 ? abs_raw_with_rollover + 4096 : 0);
-}
-
- 
-bool TalonFXSubsystem::hasBeenZeroed()
-{
-    return mHasBeenZeroed;
-}
-
- 
-void TalonFXSubsystem::stop()
-{
-    setOpenLoop(0.0);
-}
-
- 
-int TalonFXSubsystem::estimateSensorPositionFromAbsolute()
-{
-    int estimated_pulse_pos = (mPeriodicIO.encoder_wraps * 4096) + mPeriodicIO.absolute_position_modded;
-    int estimate_position_ticks = (mConstants.invert_sensor_phase ? -1 : 1) * (estimated_pulse_pos -mPeriodicIO.absolute_offset);
-    return estimate_position_ticks;
-}
-
- 
-double TalonFXSubsystem::getSetpoint()
-{
-    return (mControlState != ControlState::OPEN_LOOP) ? ticksToUnits(mPeriodicIO.demand) : NAN;
-}
-
- 
-void TalonFXSubsystem::setSetpointMotionMagic(double units, double feedforward_v)
-{
-    mPeriodicIO.demand = constrainTicks(homeAwareUnitsToTicks(units));
-    //check feedforward...
-    mPeriodicIO.feedforward = unitsPerSecondToTicksPer100ms(feedforward_v) * (mConstants.kF.at(Constants::kMotionMagicPIDSlot) + mConstants.kD.at(Constants::kMotionMagicPIDSlot)/100.0)/1023.0;
-
-    if (mControlState != ControlState::MOTION_MAGIC)
-    {
-        mControlState = ControlState::MOTION_MAGIC;
-    }
-}
-
- 
-void TalonFXSubsystem::setSetpointMotionMagic(double units)
-{
-    setSetpointMotionMagic(units, 0.0);
-}
-
- 
-void TalonFXSubsystem::setSetpointPositionPID(double units, double feedforward_v)
-{
-    mPeriodicIO.demand = constrainTicks(homeAwareUnitsToTicks(units));
-    //check feedforward...
-    mPeriodicIO.feedforward = unitsPerSecondToTicksPer100ms(feedforward_v) * (mConstants.kF.at(Constants::kMotionMagicPIDSlot) + mConstants.kD.at(Constants::kMotionMagicPIDSlot)/100.0)/1023.0;
-
-    if (mControlState != ControlState::POSITION_PID)
-    {
-        mControlState = ControlState::POSITION_PID;
-    }
-}
-
- 
-void TalonFXSubsystem::setSetpointVelocityPID(double units, double feedforward_v)
-{
-    mPeriodicIO.demand = constrainTicks(homeAwareUnitsToTicks(units));
-    //check feedforward...
-    mPeriodicIO.feedforward = unitsPerSecondToTicksPer100ms(feedforward_v) * (mConstants.kF.at(Constants::kMotionMagicPIDSlot) + mConstants.kD.at(Constants::kMotionMagicPIDSlot)/100.0)/1023.0;
-
-    if (mControlState != ControlState::VELOCITY_PID)
-    {
-        mControlState = ControlState::VELOCITY_PID;
-    }
-}
-
- 
-void TalonFXSubsystem::setOpenLoop(double percentage)
-{
-    mPeriodicIO.demand = percentage;
-    if (mControlState != ControlState::OPEN_LOOP)
-    {
-        mControlState = ControlState::OPEN_LOOP;
-    }
-}
-
- 
-double TalonFXSubsystem::ticksToUnits(double ticks)
-{
-    return ticks/mConstants.kTicksPerUnitDistance;
-}
-
- 
-double TalonFXSubsystem::ticksToHomedUnits(double ticks)
-{
-    double val = ticksToUnits(ticks);
-    return val + mConstants.kHomePosition;
-}
-
- 
-double TalonFXSubsystem::unitsToTicks(double units)
-{
-    return units * mConstants.kTicksPerUnitDistance;
-}
-
- 
-double TalonFXSubsystem::homeAwareUnitsToTicks(double units)
-{
-    return unitsToTicks(units-mConstants.kHomePosition);
-}
-
- 
-double TalonFXSubsystem::constrainTicks(double ticks)
-{
-    return util.limit(ticks, mReverseSoftLimit, mForwardSoftLimit);
-}
-
- 
-double TalonFXSubsystem::ticksPer100msToUnitsPerSecond(double ticks_per_100ms)
-{
-    return ticksToUnits(ticks_per_100ms) * 10.0;
-}
-
- 
-double TalonFXSubsystem::unitsPerSecondToTicksPer100ms(double units_per_second)
-{
-    return unitsToTicks(units_per_second) / 10.0;
+    #endif
 }

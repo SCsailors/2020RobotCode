@@ -7,6 +7,8 @@
 
 #include "Auto/Actions/WaitUntilInsideRegion.h"
 
+#include <RobotState.h>
+
 WaitUntilInsideRegion::WaitUntilInsideRegion(shared_ptr<Translation2D> bottomLeft, shared_ptr<Translation2D> topRight, bool isOnLeft) {
     if (isOnLeft){
         mBottomLeft=make_shared<Translation2D>(bottomLeft->x(), -bottomLeft->y());
@@ -19,7 +21,7 @@ WaitUntilInsideRegion::WaitUntilInsideRegion(shared_ptr<Translation2D> bottomLef
 }
 
 bool WaitUntilInsideRegion::isFinished(){
-    shared_ptr<Translation2D> position= Robot::robotState.getLatestFieldToVehicle()->getTranslation();
+    shared_ptr<Translation2D> position= FRC_7054::RobotState::getInstance()->getLatestFieldToVehicle()->getTranslation();
     return position->x()>mBottomLeft->x() && position->y()>mBottomLeft->y()
         && position->x()<mTopRight->x() && position->y()< mTopRight->y();
 }

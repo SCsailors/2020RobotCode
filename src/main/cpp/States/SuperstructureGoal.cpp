@@ -8,7 +8,7 @@
 #include "States/SuperstructureGoal.h"
 #include "States/SuperstructureConstants.h"
 
-SuperstructureGoal::SuperstructureGoal(double turret, double shooter, double hood, double ballPathBottom, double ballPathTop, double centeringIntake) 
+SuperstructureGoal::SuperstructureGoal(double turret, double shooter, double hood, double ballPathBottom, double ballPathTop, double centeringIntake, int numBalls, bool extendIntake, bool extendWheelieBar) 
 {
     state.turret = turret;
     state.shooter = shooter;
@@ -16,6 +16,9 @@ SuperstructureGoal::SuperstructureGoal(double turret, double shooter, double hoo
     state.ballPathBottom = ballPathBottom;
     state.ballPathTop = ballPathTop;
     state.centeringIntake = centeringIntake;
+    state.numBalls = (double) numBalls;
+    state.extendIntake = extendIntake;
+    state.extendWheelieBar = extendWheelieBar;
 }
 
 SuperstructureGoal::SuperstructureGoal(SuperstructureState state)
@@ -29,7 +32,10 @@ bool SuperstructureGoal::equals(SuperstructureGoal other)
             this->state.shooter == other.state.shooter &&
             this->state.hood == other.state.hood &&
             this->state.ballPathBottom == other.state.ballPathBottom &&
-            this->state.ballPathTop == other.state.ballPathTop;
+            this->state.ballPathTop == other.state.ballPathTop &&
+            this->state.numBalls == other.state.numBalls &&
+            this->state.extendIntake == other.state.extendIntake &&
+            this->state.extendWheelieBar == other.state.extendWheelieBar;
 }
 
 bool SuperstructureGoal::isAtDesiredState(SuperstructureState currentState)
@@ -40,7 +46,8 @@ bool SuperstructureGoal::isAtDesiredState(SuperstructureState currentState)
         currentState.hood - state.hood,
         currentState.ballPathBottom - state.ballPathBottom,
         currentState.ballPathTop - state.ballPathTop,
-        currentState.centeringIntake - state.centeringIntake
+        currentState.centeringIntake - state.centeringIntake //,
+        //currentState.numBalls - state.numBalls
         };
     
     for (int i = 0; i < error.size(); i++)

@@ -19,6 +19,7 @@ Limelight::Limelight(LimelightConstants constants)
 
 void Limelight::readPeriodicInputs()
 {
+    #ifdef CompetitionBot
     mPeriodicIO.latency = mNetworkTable->GetEntry("tl").GetDouble(0.0)/ 1000.0 + Constants::kImageCaptureLatency;
     mPeriodicIO.givenLedMode = (int) mNetworkTable->GetEntry("ledmode").GetDouble(0.0); //need std::round?
     mPeriodicIO.givenPipeline = (int) mNetworkTable->GetEntry("pipeline").GetDouble(0.0);
@@ -30,10 +31,12 @@ void Limelight::readPeriodicInputs()
     mPeriodicIO.horPixels = mNetworkTable->GetEntry("thor").GetDouble(0.0);
     mPeriodicIO.vertPixels = mNetworkTable->GetEntry("tvert").GetDouble(0.0);
     mSeesTarget = mNetworkTable->GetEntry("tv").GetDouble(0.0) == 1.0;
+    #endif
 }
 
 void Limelight::writePeriodicOutputs()
 {
+    #ifdef CompetitionBot
     if(mPeriodicIO.givenLedMode != mPeriodicIO.ledMode || mPeriodicIO.givenPipeline != mPeriodicIO.pipeline)
     {
         std::cout << "Table changed from expected. Retrigger!"<< std::endl;
@@ -49,6 +52,7 @@ void Limelight::writePeriodicOutputs()
     
         mOutputsHaveChanged = false;
     }
+    #endif
 }
 
 void Limelight::outputTelemetry()
@@ -161,10 +165,11 @@ VisionTargeting::TargetInfo Limelight::getCameraXYZ()
 {
     if (mPeriodicIO.horPixels == 0.0 && mPeriodicIO.vertPixels == 0.0)
     {
-        std::cout <<"No Target: getCameraXYZ" << mConstants.kName << std::endl; 
+        
+        frc::SmartDashboard::PutBoolean("Subsystems/" + mConstants.kName + "/No Target: getCameraXYZ:", true); 
         return VisionTargeting::TargetInfo{};
     } 
-    
+    frc::SmartDashboard::PutBoolean("Subsystems/" + mConstants.kName + "/No Target: getCameraXYZ:", false);
     cv::Mat mRotationVector; //axis angle form
     cv::Mat mTranslationVector;
     std::vector<cv::Point2d> imagePoints;

@@ -6,6 +6,9 @@
 /*----------------------------------------------------------------------------*/
 
 #include "RobotState.h"
+#include "Robot.h"
+#include <cmath>
+#include <Constants.h>
 
 std::shared_ptr<FRC_7054::RobotState> FRC_7054::RobotState::mInstance;
  
@@ -81,7 +84,7 @@ void FRC_7054::RobotState::addObservation(double timestamp, shared_ptr<Twist2D> 
     vehicle_velocity_measured_=measured_velocity;
     vehicle_velocity_predicted_=predicted_velocity;
 
-    if (fabs(vehicle_velocity_measured_->dtheta < 2.0 *M_PI))
+    if (fabs(vehicle_velocity_measured_->dtheta < 2.0 *Constants::kPI))
     {
         //reject really high angular velocities from filter
         vehicle_velocity_measured_filtered_.add(vehicle_velocity_measured_);

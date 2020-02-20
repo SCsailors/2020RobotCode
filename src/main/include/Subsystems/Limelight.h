@@ -54,16 +54,16 @@ class Limelight : public Subsystems::Subsystem{
       PeriodicIO(){}
     //INPUTS
     
-      double latency;
-      int givenLedMode;
-      int givenPipeline;
-      double xOffset;
-      double yOffset;
-      double xOffsetRaw;
-      double yOffsetRaw;
-      double area; 
-      double horPixels;
-      double vertPixels;
+      double latency = 0.0;
+      int givenLedMode = 0;
+      int givenPipeline = 0;
+      double xOffset = 0.0;
+      double yOffset = 0.0;
+      double xOffsetRaw = 0.0;
+      double yOffsetRaw = 0.0;
+      double area = 0.0; 
+      double horPixels = 0.0;
+      double vertPixels = 0.0;
 
     //Outputs
       int ledMode = 1; // 0 -use pipeline mode, 1 - off, 2 - blink, 3 - on

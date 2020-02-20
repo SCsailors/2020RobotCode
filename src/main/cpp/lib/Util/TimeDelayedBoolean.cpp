@@ -5,9 +5,5 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-#pragma once
-
-class Climber {
- public:
-  Climber();
-};
+#include "lib/Util/TimeDelayedBoolean.h"
+using namespace Utility;

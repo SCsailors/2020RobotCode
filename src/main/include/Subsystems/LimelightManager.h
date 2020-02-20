@@ -24,8 +24,8 @@ class LimelightManager : public Subsystems::Subsystem {
   
   static std::shared_ptr<LimelightManager> mInstance;
   
-  Subsystems::Limelight mTurretLimelight{*Constants::kTurretLimelightConstants.get()};
-  Subsystems::Limelight mIntakeLimelight{*Constants::kIntakeLimelightConstants.get()};
+  Subsystems::Limelight mTurretLimelight{Subsystems::LimelightConstants{"Turret Limelight", "limelight-turret", 0.0, std::make_shared<Pose2D>(0.0,0.0,0.0), std::make_shared<Rotation2D>(0.0,0.0, true)}};
+  Subsystems::Limelight mIntakeLimelight{Subsystems::LimelightConstants{"Intake Limelight", "limelight-intake", 0.0, std::make_shared<Pose2D>(0.0,0.0,0.0), std::make_shared<Rotation2D>(0.0,0.0, true)}};
   std::vector<Subsystems::Limelight> mAllLimelights;
  public:
   LimelightManager();
@@ -49,5 +49,7 @@ class LimelightManager : public Subsystems::Subsystem {
   std::vector<VisionTargeting::TargetInfo> getTargetInfos();
 
   double getAverageLatency();
+  void setAllLEDS(Limelight::LedMode mode);
+  void setPipeline(int pipeline);
 };
 } // namespace Subsystems

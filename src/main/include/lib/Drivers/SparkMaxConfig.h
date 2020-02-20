@@ -19,7 +19,11 @@ class SparkMaxConfig {
   int STATUS_FRAME_0_RATE_MS = 10;
   int STATUS_FRAME_1_RATE_MS = 1000;
   int STATUS_FRAME_2_RATE_MS = 1000;
+};
 
+class SparkMaxConfigBase {
+ public:
+  SparkMaxConfigBase();
   std::shared_ptr<SparkMaxConfig> kDefaultConfig;
   std::shared_ptr<SparkMaxConfig> kSlaveConfig;
 };

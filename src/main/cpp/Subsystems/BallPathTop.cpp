@@ -6,6 +6,7 @@
 /*----------------------------------------------------------------------------*/
 
 #include "Subsystems/BallPathTop.h"
+#include "frc/smartdashboard/SmartDashboard.h"
 #include "Constants.h"
 
 using namespace Subsystems;
@@ -17,7 +18,14 @@ std::shared_ptr<Subsystems::BallPathTop> BallPathTop::getInstance()
 {
     if (!mInstance)
     {
-        mInstance = std::make_shared<Subsystems::BallPathTop>(*Constants::kBallPathTopConstants.get());
+        Subsystems::TalonConstants constants{};
+        constants.id = 21;
+        constants.kName = "Ball Path Top";
+        constants.inverted = true;
+        constants.kTicksPerUnitDistance = 8192.0; //Ticks to rotations;
+        constants.kIsTalonSRX = true;
+        constants.kStatusFrame8UpdateRate = 50;
+        mInstance = std::make_shared<Subsystems::BallPathTop>(constants);
     }
     return mInstance;
 }
@@ -82,6 +90,12 @@ void BallPathTop::readPeriodicInputs()
     
 }
 
+void BallPathTop::outputTelemetry()
+{
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants.kName + "/Ball Count: ", getBallCount());
+    TalonSubsystem::outputTelemetry();
+}
+
 int BallPathTop::getBallCount()
 {
     return mBallCount;
@@ -95,4 +109,19 @@ bool BallPathTop::hasBalls()
 bool BallPathTop::hasFiveBalls()
 {
     return mHasFiveBalls;
+}
+
+void BallPathTop::SetBallCount(int count)
+{
+    mBallCount = count;
+    if (mBallCount < 0)
+    {
+        mBallCount = 0;
+        frc::DriverStation::ReportError("mBallCount dropped below zero!");
+    } else if (mBallCount > 5)
+    {
+        mBallCount = 5;
+        frc::DriverStation::ReportError("mBallCount is greater than 5 Balls!");
+    }
+
 }

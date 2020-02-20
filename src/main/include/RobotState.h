@@ -61,7 +61,6 @@ class RobotState {
   * 
   * 4. Camera-to-goal: Measured by vision system.
   */
-
   shared_ptr<Pose2D> pose=make_shared<Pose2D>();
   int kObservationBufferSize=100;
   static std::shared_ptr<RobotState> mInstance;
@@ -130,5 +129,3 @@ class RobotState {
   string toString(double value);
 };
 }
-//has to be below otherwise the static variable in robot will be an undefined type--it took two hours to figure that out.
-#include "Robot.h"

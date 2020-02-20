@@ -8,7 +8,6 @@
 #pragma once
 
 #include "Auto/Actions/Action.h"
-#include "Robot.h"
 #include "lib/Util/CSVWriter.h"
 #include "lib/Physics/DriveCharacterization.h"
 #include "lib/Util/DriveSignal.h"

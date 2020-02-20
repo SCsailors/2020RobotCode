@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "Constants.h"
+
 #include "Subsystems/Subsystem.h"
 #include "lib/Geometry/Pose2D.h"
 #include "lib/Geometry/Rotation2D.h"
@@ -21,17 +23,18 @@
 #include <frc/SpeedControllerGroup.h>
 #include <frc/DoubleSolenoid.h>
 //if unit testing comment out line below
-#define FRC_ROBORIO true
+//#define FRC_ROBORIO true
 //if using practice bot comment out line below
-#define COMPETITIONBOT true
+//#define COMPETITIONBOT true
 
-#ifdef FRC_ROBORIO
+#ifdef CompetitionBot
 #include "rev/CANSparkMax.h"
 #include "rev/CANEncoder.h"
 #include "rev/CANPIDController.h"
 #include "rev/CANSparkMaxLowLevel.h"
 #include "AHRS.h"
 #endif 
+
 
 #include <memory>
 #include <cmath>
@@ -99,8 +102,9 @@ class Drive : public Subsystems::Subsystem {
   };
   
   //Hardware -
-#ifdef FRC_ROBORIO
+#ifdef CompetitionBot
   //AHRS navx{SPI::Port::kMXP, 200}; //TODO check if this is the correct way to have a custom update rate.
+  
   uint8_t UpdateRate=200;
   AHRS navx{SPI::Port::kMXP, UpdateRate};
   rev::CANSparkMax leftMaster{6, rev::CANSparkMax::MotorType::kBrushless};

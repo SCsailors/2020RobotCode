@@ -6,15 +6,19 @@
 /*----------------------------------------------------------------------------*/
 
 #include "lib/Util/Util.h"
+#include <frc/smartdashboard/SmartDashboard.h>
 
-Util::Util() {}
+Util::Util() 
+{
+    frc::SmartDashboard::PutBoolean("Util Constructed", true);
+}
 
 bool Util::epsilonEquals(double a, double b){
-    return (a-kEpsilon<=0)&&(a+kEpsilon>=b);
+    return (a-kEpsilon<=b)&&(a+kEpsilon>=b);
 }
 
 bool Util::epsilonEquals(double a, double b, double epsilon){
-    return (a-epsilon<=0)&&(a+epsilon>=b);
+    return (a-epsilon<=b)&&(a+epsilon>=b);
 }
 
 double Util::limit(double v, double min, double max){

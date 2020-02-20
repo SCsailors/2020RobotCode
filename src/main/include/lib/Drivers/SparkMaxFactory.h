@@ -99,7 +99,7 @@ class SparkMaxFactory {
 
   static std::shared_ptr<CANSparkMax> createFollowerSparkMax(int id, std::shared_ptr<CANSparkMax> leader, CANSparkMax::MotorType type)
   {
-	SparkMaxConfig config{};
+	SparkMaxConfigBase config{};
     std::shared_ptr<CANSparkMax> canSparkMax = createSparkMax(id, config.kSlaveConfig, type);
     handleCANError(id, canSparkMax->Follow(*leader.get()), "Setting Follower");
     return canSparkMax;
@@ -107,7 +107,7 @@ class SparkMaxFactory {
 
   static std::shared_ptr<CANSparkMax> createDefaultSparkMax(int id, CANSparkMax::MotorType type)
   {
-	  SparkMaxConfig config{};
+	  SparkMaxConfigBase config{};
 	  return createSparkMax(id, config.kDefaultConfig, type);
   }
   

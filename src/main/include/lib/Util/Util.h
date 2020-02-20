@@ -15,7 +15,7 @@ using namespace std;
 class Util {
  public:
  double pi= 3.14159265358979238463;
- double kEpsilon=1E-12;
+ double kEpsilon=1E-4;
   Util();
   double limit(double v, double min, double max);
   double limit(double v, double lim);
