@@ -7,13 +7,12 @@
 
 #include "States/SuperstructureState.h"
 
-SuperstructureState::SuperstructureState(double turret, double shooter, double hood, double ballPathBottom, double ballPathTop, double centeringIntake, int numBalls, bool extendIntake, bool extendWheelieBar) 
+SuperstructureState::SuperstructureState(double turret, double shooter, double hood, double ballPathTop, double centeringIntake, int numBalls, bool extendIntake, bool extendWheelieBar)
 {
     this->turret = turret;
     this->shooter = shooter;
     this->hood = hood;
     this->ballPathTop = ballPathTop;
-    this->ballPathBottom = ballPathBottom;
     this->centeringIntake = centeringIntake;
     this->numBalls = (double) numBalls;
     this->extendIntake = extendIntake;
@@ -26,7 +25,6 @@ SuperstructureState::SuperstructureState()
     shooter = 0.0;
     hood = 0.0;
     ballPathTop = 0.0;
-    ballPathBottom = 0.0;
     centeringIntake = 0.0;
     numBalls = 0.0;
     extendIntake = false;
@@ -39,7 +37,6 @@ void SuperstructureState::setFrom(SuperstructureState source)
     shooter = source.shooter;
     hood = source.hood;
     ballPathTop = source.ballPathTop;
-    ballPathBottom = source.ballPathBottom;
     centeringIntake = source.centeringIntake;
     numBalls = source.numBalls;
     extendIntake = source.extendIntake;
@@ -48,7 +45,7 @@ void SuperstructureState::setFrom(SuperstructureState source)
 
 std::string SuperstructureState::toString()
 {
-    return util.toString(turret) + ", " + util.toString(shooter) + ", " + util.toString(hood) + ", " + util.toString(ballPathTop) + ", " + util.toString(ballPathBottom) + ", " + util.toString(centeringIntake) + ", " + util.toString(numBalls) + ", " ;
+    return util.toString(turret) + ", " + util.toString(shooter) + ", " + util.toString(hood) + ", " + util.toString(ballPathTop) + ", " + util.toString(centeringIntake) + ", " + util.toString(numBalls) + ", " ;
 }
 
 bool SuperstructureState::hasBalls()
@@ -67,7 +64,6 @@ void SuperstructureState::reset()
     shooter = 0.0;
     hood = 0.0;
     ballPathTop = 0.0;
-    ballPathBottom = 0.0;
     centeringIntake = 0.0;
     numBalls = 0.0;
     extendIntake = false;
@@ -76,6 +72,6 @@ void SuperstructureState::reset()
 
 std::vector<double> SuperstructureState::asVector()
 {
-    std::vector<double> tmp{turret, shooter, hood, ballPathTop, ballPathBottom, centeringIntake, numBalls};
+    std::vector<double> tmp{turret, shooter, hood, ballPathTop, centeringIntake, numBalls};
     return tmp;
 }

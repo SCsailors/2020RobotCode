@@ -7,45 +7,47 @@
 
 #pragma once
 
-#include "Controls/ControlBoard.h"
-#include "Controls/XBoxController.h"
-#include "Constants.h"
+#include <Controls/ControlBoard.h>
+#include <Controls/XboxController.h>
 
-#include "lib/Util/LatchedBoolean.h"
-#include "lib/Util/MultiTrigger.h"
-#include "lib/Util/TimeDelayedBoolean.h"
-#include "lib/Util/DelayedBoolean.h"
+#include <lib/Util/MultiTrigger.h>
+#include <lib/Util/TimeDelayedBoolean.h>
+#include <lib/Util/LatchedBoolean.h>
+#include <lib/Util/DelayedBoolean.h>
+#include <lib/Util/Util.h>
 
 #include <memory>
 
-namespace ControlBoard{
 
-class TwoGamePadControllers : public ControlBoard::ControlBoardBase {
-  static std::shared_ptr<TwoGamePadControllers> mInstance;
+namespace ControlBoard{
+class GamePadTwoJoysticks : public ControlBoardBase {
+  static std::shared_ptr<GamePadTwoJoysticks> mInstance;
+  frc::Joystick mLeftJoystick{1};
+  frc::Joystick mRightJoystick{2};
+  XBoxController mController{Constants::kSingleJoystickPort}; 
   TurretCardinalEnum mLastCardinal = TurretCardinalEnum::NONE;
   Utility::DelayedBoolean mDPadValid;
   double mDPadDelay = .02;
-  XBoxController mDriveController{Constants::kSingleJoystickPort}; 
-  XBoxController mButtonController{Constants::kSecondJoystickPort};
-
+  bool wantsHighGear = false;
+  bool wantsManual = true;
+  
   Utility::MultiTrigger LT_Multi{Constants::kJoystickHoldTime};
   Utility::MultiTrigger RT_Multi{Constants::kJoystickHoldTime};
   Utility::MultiTrigger LB_Multi{Constants::kJoystickHoldTime};
   Utility::MultiTrigger RB_Multi{Constants::kJoystickHoldTime};
 
-  Utility::MultiTrigger LT_Multi_Drive{Constants::kJoystickHoldTime};
-  Utility::MultiTrigger RT_Multi_Drive{Constants::kJoystickHoldTime};
-
   Utility::LatchedBoolean A{};
   Utility::LatchedBoolean B{};
-  Utility::LatchedBoolean X{};
+  Utility::MultiTrigger X{Constants::kJoystickHoldTime};
   Utility::LatchedBoolean Y{};
   Utility::LatchedBoolean Start{};
   Utility::LatchedBoolean Back{};
+  Utility::LatchedBoolean HighGear{};
+  Utility::LatchedBoolean ManualShiftToggle{};
 
  public:
-  TwoGamePadControllers();
-  static std::shared_ptr<TwoGamePadControllers> getInstance();
+  GamePadTwoJoysticks();
+  static std::shared_ptr<GamePadTwoJoysticks> getInstance();
   double getThrottle() override;
   double getTurn() override;
   bool getQuickTurn() override;
@@ -58,10 +60,27 @@ class TwoGamePadControllers : public ControlBoard::ControlBoardBase {
   bool getIntake() override;
   bool getCancel() override;
   double getTurretJog() override;
+  bool isTurretJogging() override;
   TurretCardinal getTurretCardinal() override;
   void reset();
-  bool getAutoAim() override;
+  //bool getAutoAim() override;
   double getBallShootCount(bool preshoot) override;
   double shootCount = 5.0;
+
+  double getHood() override;
+  double getShooter() override;
+  bool getDriveShifterManual() override;
+  double getBallPath() override;
+  bool getBallPathToggle() override;
+  bool getClimbRun() override;
+
+  int i = 0;
+  int j = 0;
+  int k = 0;
+  int l = 0;
+  int m = 0;
+  int n = 0;
+  int o = 0;
+  int p = 0;
 };
 }

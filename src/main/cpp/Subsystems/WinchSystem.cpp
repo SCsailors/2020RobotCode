@@ -8,17 +8,20 @@
 #include "Subsystems/WinchSystem.h"
 using namespace Subsystems;
 std::shared_ptr<WinchSystem> WinchSystem::mInstance;
-WinchSystem::WinchSystem(TalonConstants constants) : TalonFXSubsystem(constants) {}
+WinchSystem::WinchSystem(std::shared_ptr<TalonConstants> constants) : TalonSRXSubsystem(constants) {}
 
 std::shared_ptr<WinchSystem> WinchSystem::getInstance()
 {
     if (!mInstance)
     {
-        TalonConstants constants{};
-        constants.kName = "Winch System";
-        constants.id = 26;
-        constants.kContinuousCurrentLimit = 20;
-        constants.kPeakCurrentLimit = 40;
+        std::shared_ptr<Subsystems::TalonConstants> constants = std::make_shared<Subsystems::TalonConstants>();
+        constants->kName = "Winch System";
+        std::shared_ptr<Subsystems::SlaveConstants> slave = std::make_shared<Subsystems::SlaveConstants>(27, false, true);
+        constants->kSlaveIDs.push_back(slave);
+        constants->id = 26;
+        constants->kContinuousCurrentLimit = 20;
+        constants->kPeakCurrentLimit = 40;
+        constants->kIsTalonSRX = true;
 
         mInstance = std::make_shared<WinchSystem>(constants);
     }
@@ -58,7 +61,15 @@ void WinchSystem::updateCurrentState()
 
 void WinchSystem::followSetpoint()
 {
-    setSetpointPositionPID(mDesiredState.winch, 0.0); //Tune Feedforward
+    setOpenLoop(mDesiredState.winch); //Tune Feedforward
+    if (mDesiredState.extend)
+    {
+        extendClimber();
+    } else
+    {
+        retractClimber();
+    }
+    
 }
 
 void WinchSystem::extendClimber()
@@ -77,4 +88,9 @@ void WinchSystem::retractClimber()
         mClimber.Set(false);
         mClimberExtended = false;
     }
+}
+
+bool WinchSystem::isClimberExtended()
+{
+    return mClimberExtended;
 }

@@ -30,8 +30,6 @@ TrajectoryGenerator Robot::trajectoryGenerator;
 
 void Robot::RobotInit() {
   
-  mBallPathBottom = Subsystems::BallPathBottom::getInstance();
-  
   mBallPathTop = Subsystems::BallPathTop::getInstance();
   mCenteringIntake = Subsystems::CenteringIntake::getInstance();
   mHood = Subsystems::Hood::getInstance();
@@ -41,7 +39,7 @@ void Robot::RobotInit() {
   mShooter = Subsystems::Shooter::getInstance();
   mSuperstructure = Subsystems::Superstructure::getInstance();
   mTurret = Subsystems::Turret::getInstance();
-  
+  mClimber = Subsystems::WinchSystem::getInstance();
   mRobotState = FRC_7054::RobotState::getInstance();
   
   //Controls
@@ -51,11 +49,11 @@ void Robot::RobotInit() {
     prev_controller_one = true;
   } else
   {
-    mControlBoard = std::make_shared<ControlBoard::TwoGamePadControllers>();
+    mControlBoard = std::make_shared<ControlBoard::GamePadTwoJoysticks>();
     prev_controller_one = false;
   }
 
-  mTurret->zeroSensors();
+  //mTurret->zeroSensors();
   mHood->zeroSensors();
   
   //auto camera0=frc::CameraServer::GetInstance()->StartAutomaticCapture(0);
@@ -66,7 +64,7 @@ void Robot::RobotInit() {
   mRobotState->reset();
 
   mLimelightManager->setAllLEDS(Subsystems::Limelight::LedMode::OFF);
- 
+  mInfrastructure->setManualControl(true);
   //shared_ptr<CharacterizeHighGear> characterizeHighGear=make_shared<CharacterizeHighGear>();
   //mAutoModeExecutor= make_shared<AutoModeExecutor>(characterizeHighGear);
   
@@ -81,7 +79,6 @@ void Robot::RobotInit() {
   
   subsystems.push_back(drive);
   subsystems.push_back(robotStateEstimator);
-  subsystems.push_back(mBallPathBottom);
   subsystems.push_back(mBallPathTop);
   subsystems.push_back(mCenteringIntake);
   subsystems.push_back(mHood);
@@ -94,11 +91,9 @@ void Robot::RobotInit() {
   subsystems.push_back(mLimelightManager);
   subsystems.push_back(mLED);
   
-  //m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
-  //m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
-  //frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
-  //generate Trajectories for auto
   frc::SmartDashboard::PutNumber("Subsystems/Ball Path Top/ get Ball Count: ", 0.0);
+  frc::SmartDashboard::PutBoolean("Enable PID Tuning", false);
+  frc::SmartDashboard::PutBoolean("One Controller?", true);
   trajectoryGenerator.generateTrajectories();
   std::cout<<"generated Trajectories"<<std::endl;
   //create and start subsystem loops
@@ -115,16 +110,18 @@ void Robot::RobotPeriodic() {
   mBallPathTop->SetBallCount(count);
   #endif
   mRobotState->outputToSmartDashboard();
-  //std::cout<<"RobotState: output to SmartDashboard"<<std::endl;
-  bool controller_one = frc::SmartDashboard::GetBoolean("One Controller?", true);
+  
+  controller_one = frc::SmartDashboard::GetBoolean("One Controller?", true);
   if (controller_one && controller_one != prev_controller_one)
   {
     mControlBoard = std::make_shared<ControlBoard::SingleGamePadController>();
   } else if (!controller_one && controller_one != prev_controller_one)
   {
-    mControlBoard = std::make_shared<ControlBoard::TwoGamePadControllers>();
+    mControlBoard = std::make_shared<ControlBoard::GamePadTwoJoysticks>();
   }
   prev_controller_one = controller_one;
+
+  frc::SmartDashboard::PutBoolean("Compressor Manual Control", mInfrastructure->isManualControl());
   //std::cout<<"ControlBoard: One or Two Controllers"<<std::endl;
 }
 
@@ -150,29 +147,12 @@ void Robot::AutonomousInit() {
   mSubsystemLoops->resetSensors();
   mSubsystemLoops->stopDisabledLoops();
   mSubsystemLoops->startEnabledLoops();
- /*
-  m_autoSelected = m_chooser.GetSelected();
-  // m_autoSelected = SmartDashboard::GetString("Auto Selector",
-  //     kAutoNameDefault);
-  std::cout << "Auto selected: " << m_autoSelected << std::endl;
-
-  if (m_autoSelected == kAutoNameCustom) {
-    // Custom Auto goes here
-  } else {
-    // Default Auto goes here
-  }
-  //execute auto mode
-  */
 
   mAutoModeExecutor->start();
 }
 
 void Robot::AutonomousPeriodic() {
-  if (m_autoSelected == kAutoNameCustom) {
-    // Custom Auto goes here
-  } else {
-    // Default Auto goes here
-  }
+
 }
 
 void Robot::TeleopInit() {
@@ -183,7 +163,14 @@ void Robot::TeleopInit() {
 }
 
 void Robot::TeleopPeriodic() {
-  manualControl();
+  if (frc::SmartDashboard::GetBoolean("Enable PID Tuning", false))
+  { //pid tuning: set pidf constants and run individual motors
+    TestControl();
+  } else
+  { //competition mode
+    manualControl();
+  }
+  
 }
 
 void Robot::manualControl()
@@ -201,7 +188,7 @@ void Robot::manualControl()
   frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ getBallShoot()", ballShootCount);
 
   bool quickTurn = mControlBoard->getQuickTurn();
-  bool wantsLowGear = mControlBoard->getWantsLowGear();
+  bool wantsHighGear = mControlBoard->getWantsHighGear();
   bool shoot = mControlBoard->getShoot();
   bool wheel = mControlBoard->getWheel();
   bool wantsRotation = mControlBoard->getWantsRotation();
@@ -210,9 +197,11 @@ void Robot::manualControl()
   bool cancel = mControlBoard->getCancel();
   bool isTurretJogging = mControlBoard->isTurretJogging();
   bool autoAim = mControlBoard->getAutoAim();
+  bool pathToggle = mControlBoard->getBallPathToggle();
+  bool climbRun = mControlBoard->getClimbRun();
 
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getQuickTurn()", quickTurn);
-  frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getWantsLowGear()", wantsLowGear);
+  frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getWantsLowGear()", wantsHighGear);
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getShoot()", shoot);
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getWheel()", wheel);
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getWantsRotation()", wantsRotation);
@@ -224,11 +213,54 @@ void Robot::manualControl()
 
   
   double timestamp = frc::Timer::GetFPGATimestamp();
-  //bool clear = mControlBoard->getCancel(); - set above
   
   //Drive
-  drive->setHighGear(!wantsLowGear);
-  std::shared_ptr<DriveSignal> signal = driveAssist.Drive(throttle, turn, quickTurn, drive->isHighGear());
+  bool manualShift = mControlBoard->getDriveShifterManual();
+  bool firstManual = manualDriveShifter.update(manualShift);
+  bool firstAuto = autoDriveShifter.update(manualShift);
+  
+  double ballPathOutput = mControlBoard->getBallPath();
+
+  //Auto Control ballPath
+  if (!util.epsilonEquals(0.0, ballPathOutput, .5))
+  { //On
+    mSuperstructure->setBallPathManual(true);
+    mBallPathTop->setOpenLoop(std::copysign(.8, ballPathOutput));  
+  } else
+  { //Off
+    mSuperstructure->setBallPathManual(false);
+  }
+  
+  //Manual Shfit or enable auto shift
+  if (manualShift)
+  { 
+    if (firstManual)
+    {
+      drive->setShifterState(Subsystems::Drive::Shifterstate::Manual);
+    }
+    
+    drive->setManualShifterState(wantsHighGear);
+  } else
+  {
+    if (firstAuto)
+    {
+      drive->setShifterState(Subsystems::Drive::Shifterstate::Auto_Shift);
+    }
+  }
+  
+  //Drive Signal
+  std::shared_ptr<DriveSignal> signal;
+  
+  if (controller_one)
+  {
+    signal = driveAssist.Drive(throttle, turn, quickTurn, drive->isHighGear());
+  } else
+  { //Throttle is Left, Turn is Right
+    signal = std::make_shared<DriveSignal>(mControlBoard->getThrottle(), mControlBoard->getTurn());
+  }
+  
+  frc::SmartDashboard::PutNumber("Drive Signal Left:", signal->getLeft());
+  frc::SmartDashboard::PutNumber("Drive Signal Right:", signal->getRight());
   drive->setOpenLoop(signal);
 
   //Shoot
@@ -296,15 +328,20 @@ void Robot::manualControl()
     preshoot = false;
     m++;
     frc::SmartDashboard::PutNumber("CheckPoint/ Cancel counter", m);
+  } else if (cancel && (pre_climb || climbing))
+  {
+    std::cout <<"Canceling climbing: "<<timestamp <<std::endl;
+    mClimber->setWantedAction(StateMachines::ClimberStateMachine::WantedAction::WANTED_POST_CLIMB);
+    pre_climb = false;
+    climbing = false;
   }
 
   //Turret
 
   //Jog turret-auto aiming disabled, need to add: getAutoAim, field relative, robot relative,
-  //currently only jogging
+  //currently only jogging - overrides aiming
   if (isTurretJogging)
   {
-    std::cout <<"Updating jog: "<<mControlBoard->getTurretJog() <<std::endl;
     mSuperstructure->jogTurret(mControlBoard->getTurretJog());
     jogging = true;
 
@@ -313,13 +350,30 @@ void Robot::manualControl()
     frc::SmartDashboard::PutNumber("CheckPoint/ Turret Jog number", mControlBoard->getTurretJog());
   } else
   {
-    //mSuperstructure->setWantAutoAim(Rotation2D::fromDegrees(180.0));
+    mLimelightManager->setAllLEDS(Subsystems::Limelight::LedMode::ON);
+    mSuperstructure->setWantAutoAim(Rotation2D::fromDegrees(0.0));
     jogging = false;
   }
 
   //wheel - later
 
-  //Climb - later
+  //Climb
+  if (climber && !climbing && !pre_climb)
+  { //pre_climb
+    mClimber->setWantedAction(StateMachines::ClimberStateMachine::WANTED_PRE_CLIMB);
+    climbing_finished = false;
+    pre_climb = true;
+  } else if (climbRun && pre_climb && !climbing)
+  { //running climber
+    mClimber->setWantedAction(StateMachines::ClimberStateMachine::WANTED_CLIMBING);
+    climbing = true;
+  } else if (!climbRun && climbing)
+  { //finished climbing
+    mClimber->setWantedAction(StateMachines::ClimberStateMachine::WANTED_POST_CLIMB);
+    climbing_finished = true;
+    pre_climb = false;
+    climbing = false;
+  }
 
   //Intake
   if (intake)
@@ -351,9 +405,77 @@ void Robot::manualControl()
   intake_extended = mSuperstructure->isIntakeExtended();
   frc::SmartDashboard::PutBoolean("CheckPoint/ intake extend number", intake_extended);
   
+  double hood = mControlBoard->getHood();
+  mHood->setOpenLoop(hood);
+  frc::SmartDashboard::PutNumber("Hood Joystick Percent", hood);
 }
 
-void Robot::TestPeriodic() {}
+void Robot::TestControl()
+{
+  mLimelightManager->setAllLEDS(Subsystems::Limelight::LedMode::ON);
+  mShooter->pidTuning();
+  mTurret->pidTuning();
+  mHood->pidTuning();
+  mBallPathTop->pidTuning();
+  mCenteringIntake->pidTuning();
+
+  bool wantsHighGear = mControlBoard->getWantsHighGear();
+  double throttle = mControlBoard->getThrottle();
+  double turn = mControlBoard->getTurn();
+  bool quickTurn = mControlBoard->getQuickTurn();
+
+  //drive->setHighGear(wantsHighGear);
+  bool manualShift = mControlBoard->getDriveShifterManual();
+  bool firstManual = manualDriveShifter.update(manualShift);
+  bool firstAuto = autoDriveShifter.update(manualShift);
+  
+  double ballPathOutput = mControlBoard->getBallPath();
+
+  if (!(util.epsilonEquals(0.0, ballPathOutput, .5)))
+  {
+    mSuperstructure->setBallPathManual(true);
+    mBallPathTop->setOpenLoop(.8);  
+  } else
+  {
+    mSuperstructure->setBallPathManual(false);
+    //mBallPathTop->setOpenLoop(0.0);
+  }
+  
+  if (manualShift)
+  {
+    if (firstManual)
+    {
+      drive->setShifterState(Subsystems::Drive::Shifterstate::Manual);
+    }
+    
+    drive->setManualShifterState(wantsHighGear);
+  } else
+  {
+    if (firstAuto)
+    {
+      drive->setShifterState(Subsystems::Drive::Shifterstate::Auto_Shift);
+    }
+  }
+  
+  std::shared_ptr<DriveSignal> signal;
+  
+  if (controller_one)
+  { //Curvature controlled arcade
+    signal = driveAssist.Drive(throttle, turn, quickTurn, drive->isHighGear());
+  } else
+  { //Throttle is Left, Turn is Right (tank)
+    signal = std::make_shared<DriveSignal>(mControlBoard->getThrottle(), mControlBoard->getTurn());
+  }
+  
+  frc::SmartDashboard::PutNumber("Drive Signal Left:", signal->getLeft());
+  frc::SmartDashboard::PutNumber("Drive Signal Right:", signal->getRight());
+  drive->setOpenLoop(signal);
+}
+
+void Robot::TestPeriodic() 
+{
+  
+}
 
 #ifndef RUNNING_FRC_TESTS
 int main() { return frc::StartRobot<Robot>(); }

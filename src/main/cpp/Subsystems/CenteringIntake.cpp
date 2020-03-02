@@ -11,19 +11,19 @@
 using namespace Subsystems;
 std::shared_ptr<Subsystems::CenteringIntake> CenteringIntake::mInstance;
 
-CenteringIntake::CenteringIntake(Subsystems::SparkMaxConstants constants) : Subsystems::SparkMaxSubsystem(constants) {}
+CenteringIntake::CenteringIntake(std::shared_ptr<Subsystems::SparkMaxConstants> constants) : Subsystems::SparkMaxSubsystem(constants) {}
 
 std::shared_ptr<Subsystems::CenteringIntake> CenteringIntake::getInstance()
 {
     if (!mInstance)
     {
-        Subsystems::SparkMaxConstants constants{};
-        constants.id = 22;
-        constants.kName = "Centering Intake";
-        constants.kCurrentStallLimit = 20;
-        constants.kSecondaryCurrentLimit = 30;
-        constants.inverted = true;
-        constants.kTicksPerUnitDistance = 42.0 / 9.0; //Rotation after gear reduction
+        std::shared_ptr<Subsystems::SparkMaxConstants> constants = std::make_shared<Subsystems::SparkMaxConstants>();
+        constants->id = 22;
+        constants->kName = "Centering Intake";
+        constants->kCurrentStallLimit = 20;
+        constants->kSecondaryCurrentLimit = 30;
+        constants->inverted = false;
+        constants->kTicksPerUnitDistance = 42.0 / 9.0; //Rotation after gear reduction
         mInstance = std::make_shared<Subsystems::CenteringIntake>(constants);
     }
     return mInstance;

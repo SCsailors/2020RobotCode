@@ -16,7 +16,7 @@
 #include <memory>
 
 namespace Subsystems {
-class WinchSystem : public TalonFXSubsystem {
+class WinchSystem : public TalonSRXSubsystem {
   static std::shared_ptr<WinchSystem> mInstance;
   StateMachines::ClimberStateMachine mStateMachine{};
   StateMachines::ClimberState mCurrentState{};
@@ -25,7 +25,7 @@ class WinchSystem : public TalonFXSubsystem {
 
   frc::Solenoid mClimber{Constants::kPCMID, Constants::kSolenoidID_Climber};
  public:
-  WinchSystem(TalonConstants constants);
+  WinchSystem(std::shared_ptr<TalonConstants> constants);
   static std::shared_ptr<WinchSystem> getInstance();
 
   void OnStart(double timestamp) override;

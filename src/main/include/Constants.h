@@ -10,7 +10,7 @@
 #include <lib/Geometry/Pose2D.h>
 #include <memory>
 
-//#define CompetitionBot 1
+#define CompetitionBot 1
 #define Not_Implemented 1
 
 namespace Constants {
@@ -61,6 +61,7 @@ namespace Constants {
   const int kColor21_Green = 5;
   const int kColor12_Red = 6;
   const int kColor22_Yellow = 7;
+  const int kDIO_PhotoEye = 8;
   //AIO Ports
 
   //MIN MAX State Times
@@ -72,13 +73,12 @@ namespace Constants {
   const double kMinIntaking = 0.0;
 
   //Default Superstructure Speeds and Angles TODO: TUNE
-  const double kBallPathBottomDefaultSpeed = .250;
-  const double kBallPathTopDefaultSpeed = .250;
-  const double kCenteringIntakeDefaultSpeed = .250;
-  const double kShooterCloseDefaultSpeed = 100.0;
-  const double kShooterMidDefaultSpeed = 200.0;
-  const double kShooterFarDefaultSpeed = 300.0;
-  const double kHoodDefaultAngle = 10.0;
+  const double kBallPathTopDefaultSpeed = .80;
+  const double kCenteringIntakeDefaultSpeed = .60;
+  const double kShooterCloseDefaultSpeed = 95.0;
+  const double kShooterMidDefaultSpeed = 110.0;
+  const double kShooterFarDefaultSpeed = 125.0;
+  const double kHoodDefaultAngle = 38.0;
   const double kBallPathBackTime = .25;
   const double kBallPathBackSpeed = -.25;
   const double kBallPathShootSpeed = .5;
@@ -92,14 +92,16 @@ namespace Constants {
   const int kSingleJoystickPort = 0;
   const int kSecondJoystickPort = 1;
   const double kJoystickHoldTime = .35;
-  const bool kJoystickOne = true; //figure out how to set this
+  const bool kJoystickOne = false; //figure out how to set this
   //TODO: Tune
-  const double kTurretJogMultiplier = 1.0;
+  const double kTurretJogMultiplier = 6.0;
   const double kTurretJogPower = 1.0;
   
 
 
   //Max drive Velocity and Acceleration
+  const double kDriveOpenRampRateLowGear = .20833;
+  const double kDriveOpenRampRateHighGear = .75;
   const double kDriveMaxVelocity=75.0;//max recorded 88 inches/second
   const double kDriveMaxAcceleration=30.0;//max recorded 200 inches/second^2
   const double kDriveMaxCentripetalAcceleration=100.0;
@@ -124,7 +126,7 @@ namespace Constants {
   const double kCenterToSideBumperDistance= 33.75/2.0;
 
   //Gearing and mechanical constexprants
-  const double kDriveDownShiftVelocity= 5.75*12.0; //inches per second
+  const double kDriveDownShiftVelocity= 4.5*12.0; //inches per second
   const double kDriveDownShiftAngularVelocity= kPI/2.0;
   const double kDriveUpShiftVelocity= 11.0*12.0; //inches per second
 

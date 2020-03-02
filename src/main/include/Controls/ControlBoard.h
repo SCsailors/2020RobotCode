@@ -55,7 +55,7 @@ class ControlBoardBase {
   virtual double getThrottle(){return 0.0;};
   virtual double getTurn(){return 0.0;};
   virtual bool getQuickTurn(){return false;};
-  virtual bool getWantsLowGear(){return false;};
+  virtual bool getWantsHighGear(){return false;};
   virtual bool getShoot(){return false;}
   virtual bool getWheel(){return false;}
   virtual bool getWantsRotation(){return false;}
@@ -76,8 +76,12 @@ class ControlBoardBase {
   virtual bool getAutoAim(){return false;}
   virtual double getBallShootCount(bool preshoot){return 0.0;}
   virtual void reset(){};
-
-  
+  virtual double getHood(){return 0.0;};
+  virtual double getShooter(){return 0.0;};
+  virtual bool getDriveShifterManual(){return true;}
+  virtual double getBallPath(){return 0.0;}
+  virtual bool getBallPathToggle(){return false;}
+  virtual bool getClimbRun(){return false;}
 
   Util util{}; 
   double turretDeadband = .4;

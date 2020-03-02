@@ -25,13 +25,15 @@ void Infrastructure::OnStart(double timestamp){}
 
 void Infrastructure::OnLoop(double timestamp)
 {
-    bool shooting = !(Subsystems::Superstructure::getInstance()->isAtDesiredState());
+    bool shooting = (Subsystems::Superstructure::getInstance()->getGoal().state.shooter > 5.0);
     
     if (shooting || !manualControl)
     {
+        frc::SmartDashboard::PutString("Compressor State: ", "Stopped");
         stopCompressor();
     } else 
     {
+        frc::SmartDashboard::PutString("Compressor State: ", "Running");
         startCompressor();
     }
     

@@ -10,7 +10,7 @@
 using namespace Subsystems;
 std::shared_ptr<Subsystems::Hood> Hood::mInstance;
 
-Hood::Hood(Subsystems::SparkMaxConstants constants) : Subsystems::SparkMaxSubsystem(constants) 
+Hood::Hood(std::shared_ptr<Subsystems::SparkMaxConstants> constants) : Subsystems::SparkMaxSubsystem(constants) 
 {
 
 }
@@ -19,16 +19,42 @@ std::shared_ptr<Subsystems::Hood> Hood::getInstance()
 {
     if (!mInstance)
     {
-        Subsystems::SparkMaxConstants constants{};
-        constants.id = 23;
-        constants.kName = "Hood";
-        constants.kTicksPerUnitDistance = 8192.0 / 360.0; //Ticks to degrees;
-        constants.kMotorType = rev::CANSparkMax::MotorType::kBrushed;
-        constants.kEncoderType = rev::CANEncoder::EncoderType::kQuadrature;
-        constants.kCountsPerRev = 8192.0;
-        constants.kCurrentFreeLimit = 15.0;
-        constants.kCurrentStallLimit = 30.0;
-        constants.kSecondaryCurrentLimit = 40.0;
+        std::shared_ptr<Subsystems::SparkMaxConstants> constants = std::make_shared<Subsystems::SparkMaxConstants>();
+        constants->id = 23;
+        constants->kName = "Hood";
+        constants->kTicksPerUnitDistance = 1.0 / 360.0; //Ticks to degrees;
+        constants->kMotorType = rev::CANSparkMax::MotorType::kBrushed;
+        constants->kEncoderType = rev::CANEncoder::EncoderType::kQuadrature;
+        constants->kCountsPerRev = 8192.0;
+        //constants->kMinUnitsLimit = 0.0;
+        constants->kMaxUnitsLimit = 80.0;
+
+        constants->kEnableForwardSoftLimit = true;
+        //constants->kEnableReverseSoftLimit = true;
+
+        constants->inverted = true;
+        constants->kHomePosition = 0.0;
+
+        constants->kP.at(1) = 20.0;
+        constants->kI.at(1) = .03;
+        constants->kD.at(1) = 40.0;
+        constants->kMaxIAccum.at(1) = 60.0;
+        constants->kIZone.at(1) = 1.0/36.0;
+        constants->kClosedLoopRampRate = .1;
+
+        constants->kCurrentFreeLimit = 15.0;
+        constants->kCurrentStallLimit = 30.0;
+        constants->kSecondaryCurrentLimit = 40.0;
+
+        constants->kMaxVelocity = 30.0; //rps
+        constants->kMaxAcceleration = 80.0; 
+        constants->kAllowableClosedLoopError = .0027; // 1 degree
+        constants->kP[3] = 0.0;
+        constants->kI[3] = 0.0;
+        constants->kD[3] = 0.0;
+        constants->kF[3] = .0001;
+
+
         mInstance = std::make_shared<Subsystems::Hood>(constants);
     }
     return mInstance;

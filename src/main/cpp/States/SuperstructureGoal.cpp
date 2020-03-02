@@ -8,12 +8,11 @@
 #include "States/SuperstructureGoal.h"
 #include "States/SuperstructureConstants.h"
 
-SuperstructureGoal::SuperstructureGoal(double turret, double shooter, double hood, double ballPathBottom, double ballPathTop, double centeringIntake, int numBalls, bool extendIntake, bool extendWheelieBar) 
+SuperstructureGoal::SuperstructureGoal(double turret, double shooter, double hood, double ballPathTop, double centeringIntake, int numBalls, bool extendIntake, bool extendWheelieBar) 
 {
     state.turret = turret;
     state.shooter = shooter;
     state.hood = hood;
-    state.ballPathBottom = ballPathBottom;
     state.ballPathTop = ballPathTop;
     state.centeringIntake = centeringIntake;
     state.numBalls = (double) numBalls;
@@ -31,7 +30,6 @@ bool SuperstructureGoal::equals(SuperstructureGoal other)
     return this->state.turret == other.state.turret &&
             this->state.shooter == other.state.shooter &&
             this->state.hood == other.state.hood &&
-            this->state.ballPathBottom == other.state.ballPathBottom &&
             this->state.ballPathTop == other.state.ballPathTop &&
             this->state.numBalls == other.state.numBalls &&
             this->state.extendIntake == other.state.extendIntake &&
@@ -44,7 +42,6 @@ bool SuperstructureGoal::isAtDesiredState(SuperstructureState currentState)
         currentState.turret - state.turret,
         currentState.shooter - state.shooter,
         currentState.hood - state.hood,
-        currentState.ballPathBottom - state.ballPathBottom,
         currentState.ballPathTop - state.ballPathTop,
         currentState.centeringIntake - state.centeringIntake //,
         //currentState.numBalls - state.numBalls

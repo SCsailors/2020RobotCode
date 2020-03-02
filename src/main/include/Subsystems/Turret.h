@@ -23,7 +23,7 @@ class Turret : public Subsystems::SparkMaxSubsystem {
   bool mHoming = false;
   bool kUseManualHomingRoutine = false;
  public:
-  Turret(Subsystems::SparkMaxConstants constants);
+  Turret(std::shared_ptr<Subsystems::SparkMaxConstants> constants);
   
   Turret(){};
   static std::shared_ptr<Subsystems::Turret> getInstance();

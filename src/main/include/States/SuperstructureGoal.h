@@ -13,11 +13,11 @@
 
 class SuperstructureGoal {
  public:
-  SuperstructureGoal(double turret, double shooter, double hood, double ballPathTop, double ballPathBottom, double centeringIntake, int numBalls, bool extendIntake, bool extendWheelieBar);
+  SuperstructureGoal(double turret, double shooter, double hood, double ballPathTop, double centeringIntake, int numBalls, bool extendIntake, bool extendWheelieBar);
   SuperstructureGoal(SuperstructureState state);
   SuperstructureGoal(){};
 
-  SuperstructureState state{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, false, false};
+  SuperstructureState state{ 0.0, 0.0, 0.0, 0.0, 0.0, 0, false, false};
   bool equals(SuperstructureGoal other);
   bool isAtDesiredState(SuperstructureState currentState);
 

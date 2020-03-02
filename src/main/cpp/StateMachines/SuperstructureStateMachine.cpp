@@ -13,6 +13,16 @@
 using namespace StateMachines;
 SuperstructureStateMachine::SuperstructureStateMachine() 
 {
+    frc::SmartDashboard::PutNumber("BallPathTop default", Constants::kBallPathTopDefaultSpeed);
+    frc::SmartDashboard::PutNumber("CenteringIntake default", Constants::kCenteringIntakeDefaultSpeed);
+    frc::SmartDashboard::PutNumber("Hood default", Constants::kHoodDefaultAngle);
+    frc::SmartDashboard::PutNumber("Shooter Close default", Constants::kShooterCloseDefaultSpeed);
+    frc::SmartDashboard::PutNumber("Shooter Med default", Constants::kShooterMidDefaultSpeed);
+    frc::SmartDashboard::PutNumber("Shooter Far default", Constants::kShooterFarDefaultSpeed);
+
+    frc::SmartDashboard::PutNumber("Top Ball Trigger Delay", .3);
+    frc::SmartDashboard::PutNumber("Bottom Ball Trigger Delay", 0.0);
+    frc::SmartDashboard::PutNumber("StopDelay Default", .2);
     mLED = Subsystems::LED::getInstance();
 }
 
@@ -147,13 +157,12 @@ SuperstructureGoal SuperstructureStateMachine::mergedShootingIntaking(double tim
     SuperstructureState tmpShooter = updateShooting(timestamp, wantedActionShooter, currentState, mRangeInches);
     SuperstructureState tmpIntaking = updateIntaking(timestamp, wantedActionIntake, currentState);
 
-    mDesiredGoal.state.ballPathBottom = resolveState(tmpShooter.ballPathBottom, tmpIntaking.ballPathBottom, currentState.ballPathBottom);
     mDesiredGoal.state.ballPathTop = resolveState(tmpShooter.ballPathTop, tmpIntaking.ballPathTop, currentState.ballPathTop);
     mDesiredGoal.state.centeringIntake = resolveState(tmpShooter.centeringIntake, tmpIntaking.centeringIntake, currentState.centeringIntake);
     mDesiredGoal.state.hood = resolveState(tmpShooter.hood, tmpIntaking.hood, currentState.hood);
     mDesiredGoal.state.shooter = resolveState(tmpShooter.shooter, tmpIntaking.shooter, currentState.shooter);
-    mDesiredGoal.state.turret = resolveState(tmpShooter.turret, tmpIntaking.turret, currentState.turret); //should be currentState.turret
-    mDesiredGoal.state.numBalls = resolveState(tmpShooter.numBalls, tmpIntaking.numBalls, currentState.numBalls); // should be currentState.numBalls
+    mDesiredGoal.state.turret = currentState.turret; //should be currentState.turret
+    mDesiredGoal.state.numBalls = currentState.numBalls; // should be currentState.numBalls
     
     if (changedIntake)
     {
@@ -251,7 +260,6 @@ void SuperstructureStateMachine::getIdleDesiredState(SuperstructureState current
     preExhausting = false;
     mLEDPriority = false;
 
-    desiredState.ballPathBottom = NAN;
     desiredState.ballPathTop = NAN;
     desiredState.centeringIntake = NAN;
     desiredState.hood = 0.0; //set to home
@@ -273,13 +281,12 @@ void SuperstructureStateMachine::getIdleDesiredState(SuperstructureState current
     }
     } else
     { //intake
-    desiredState.ballPathBottom = 0.0;
     desiredState.ballPathTop = 0.0;
     desiredState.centeringIntake = 0.0;
     desiredState.hood = NAN;
     desiredState.shooter = NAN;
-    desiredState.turret = currentState.turret;
-    desiredState.numBalls = currentState.numBalls;
+    //desiredState.turret = currentState.turret;
+    //desiredState.numBalls = currentState.numBalls;
     desiredState.extendIntake = false; //shouldn't be extended, but when merged, could be true
     
     changedIntake = true;
@@ -329,25 +336,55 @@ void SuperstructureStateMachine::getIntakingBallDesiredState(SuperstructureState
 {
     if (preExhausting)
     { //shouldn't even use these values because of shooter priority, but just in case
-        desiredState.ballPathBottom = 0.0;
         desiredState.ballPathTop = 0.0;
         desiredState.centeringIntake = 0.0;
         desiredState.hood = NAN;
         desiredState.shooter = NAN;
-        desiredState.turret = currentState.turret;
-        desiredState.numBalls = currentState.numBalls;
+        //desiredState.turret = currentState.turret;
+        //desiredState.numBalls = currentState.numBalls;
         desiredState.extendIntake = true; //change to false? It's not running while preExhausting    
         
         changedIntake = true;
     } else 
     {
-        desiredState.ballPathBottom = Constants::kBallPathBottomDefaultSpeed;
-        desiredState.ballPathTop = Constants::kBallPathTopDefaultSpeed;
-        desiredState.centeringIntake = Constants::kCenteringIntakeDefaultSpeed;
+        /*       
+        if (photoEyeState)
+        { //run balls to top - multiple balls at one time?
+            resetIntakeLogic();
+            ballPathforward = true;
+            runBallPath = true;
+
+        } else
+        {
+            runBallPath = false;
+        }
+        
+        if (!bottomPathTriggered && topBallTrigger.update(topPathState, frc::SmartDashboard::GetNumber("Top Ball Trigger Delay", .3)))
+        { //start balls going down
+                ballPathforward = false;
+                topPathTriggered = true;
+        } else if (topPathTriggered && bottomBallTrigger.update(bottomPathState, frc::SmartDashboard::GetNumber("Bottom Ball Trigger Delay", 0.0)))
+        { //stop balls at bottom
+            ballPathforward = true;
+            runBallPath = false;
+            bottomPathTriggered = true;
+        }
+        if (runBallPath)
+        {
+        
+            desiredState.ballPathTop = (ballPathforward? 1.0: -1.0) * frc::SmartDashboard::GetNumber("BallPathTop default", Constants::kBallPathTopDefaultSpeed);    
+        } else
+        { //stop ball path
+            desiredState.ballPathTop = 0.0;    
+        }
+        */
+        //frc::SmartDashboard::PutBoolean("SuperstructureStateMachine: run ballPath", runBallPath);
+        desiredState.ballPathTop = frc::SmartDashboard::GetNumber("BallPathTop default", Constants::kBallPathTopDefaultSpeed);
+        desiredState.centeringIntake = frc::SmartDashboard::GetNumber("CenteringIntake default", Constants::kCenteringIntakeDefaultSpeed);
         desiredState.hood = NAN;
         desiredState.shooter = NAN;
-        desiredState.turret = currentState.turret;
-        desiredState.numBalls = currentState.numBalls;
+        //desiredState.turret = currentState.turret;
+        //desiredState.numBalls = currentState.numBalls;
         desiredState.extendIntake = true;
     
         changedIntake = true;
@@ -409,38 +446,36 @@ void SuperstructureStateMachine::getPreExhaustingBallDesiredState(Superstructure
     double ShooterSpeed = 0.0;
     switch (mRange){
         case CLOSE:
-            ShooterSpeed = Constants::kShooterCloseDefaultSpeed;
+            ShooterSpeed = frc::SmartDashboard::GetNumber("Shooter Close default", Constants::kShooterCloseDefaultSpeed);
             break;
         case MID:
-            ShooterSpeed = Constants::kShooterMidDefaultSpeed;
+            ShooterSpeed = frc::SmartDashboard::GetNumber("Shooter Med default", Constants::kShooterMidDefaultSpeed);
             break;
         case FAR:
-            ShooterSpeed = Constants::kShooterFarDefaultSpeed;
+            ShooterSpeed = frc::SmartDashboard::GetNumber("Shooter Far default", Constants::kShooterFarDefaultSpeed);
             break;
     }
 
-    if (timeInState < Constants::kBallPathBackTime)
-    {
-        desiredState.ballPathBottom = Constants::kBallPathBackSpeed;
-        desiredState.ballPathTop = Constants::kBallPathBackSpeed;
-        shooterPriority = true;
 
-        desiredState.centeringIntake = currentState.centeringIntake;
-        desiredState.hood = Constants::kHoodDefaultAngle; //will be calculated here
-        desiredState.shooter = 0.0;
-        desiredState.turret = currentState.turret; //handled by vision
-    } else 
-    {
-        desiredState.ballPathBottom = NAN;
+
+        
+        //desiredState.ballPathTop = frc::SmartDashboard::GetNumber("BallPathTop default", Constants::kBallPathTopDefaultSpeed);
+        //shooterPriority = true;
+
+        //desiredState.centeringIntake = currentState.centeringIntake;
+        //desiredState.hood = frc::SmartDashboard::GetNumber("Hood default", Constants::kHoodDefaultAngle); //will be calculated here
+        //desiredState.shooter = 0.0;
+        
+        
         desiredState.ballPathTop = NAN;
         shooterPriority = false;
 
         desiredState.centeringIntake = NAN;
-        desiredState.hood = Constants::kHoodDefaultAngle; //will be calculated here
+        desiredState.hood = frc::SmartDashboard::GetNumber("Hood default", Constants::kHoodDefaultAngle); //will be calculated here
         desiredState.shooter = ShooterSpeed;
-        desiredState.turret = currentState.turret; //handled by vision
-        desiredState.numBalls = currentState.numBalls;
-    }
+        //desiredState.turret = currentState.turret; //handled by vision
+        //desiredState.numBalls = currentState.numBalls;
+    
 
     if (!mLEDMaxPriority)
     {
@@ -481,26 +516,42 @@ SuperstructureStateMachine::SystemState SuperstructureStateMachine::handleExhaus
 void SuperstructureStateMachine::getExhaustingBallDesiredState(SuperstructureState currentState, SuperstructureState &desiredState)
 {
     bool preExhausting = false;
+    
     //add look up tables for speed and angle based on range.
     double ShooterSpeed = 0.0;
     switch (mRange){
         case CLOSE:
-            ShooterSpeed = Constants::kShooterCloseDefaultSpeed;
+            ShooterSpeed = frc::SmartDashboard::GetNumber("Shooter Close default", Constants::kShooterCloseDefaultSpeed);
             break;
         case MID:
-            ShooterSpeed = Constants::kShooterMidDefaultSpeed;
+            ShooterSpeed = frc::SmartDashboard::GetNumber("Shooter Med default", Constants::kShooterMidDefaultSpeed);
             break;
         case FAR:
-            ShooterSpeed = Constants::kShooterFarDefaultSpeed;
+            ShooterSpeed = frc::SmartDashboard::GetNumber("Shooter Far default", Constants::kShooterFarDefaultSpeed);
             break;
     }
-    desiredState.ballPathBottom = Constants::kBallPathShootSpeed;
-    desiredState.ballPathTop = Constants::kBallPathShootSpeed;
+    if (topBallToggle.update(topPathState))
+    {
+        mStopDelay.Reset();
+        mStopDelay.Start();
+        stopIntake = true;
+    }
+
+    if (stopIntake && mStopDelay.Get() < frc::SmartDashboard::GetNumber("StopDelay Default", .2))
+    {
+        desiredState.ballPathTop = 0.0;
+    } else
+    {
+        desiredState.ballPathTop = frc::SmartDashboard::GetNumber("BallPathTop default", Constants::kBallPathTopDefaultSpeed);
+        stopIntake = false;
+    }
+    
+    
     desiredState.centeringIntake = currentState.centeringIntake;
-    desiredState.hood = Constants::kHoodDefaultAngle; //should just be set in Superstructure.h
+    desiredState.hood = frc::SmartDashboard::GetNumber("Hood default", Constants::kHoodDefaultAngle); //should just be set in Superstructure.h
     desiredState.shooter = ShooterSpeed;
-    desiredState.turret = currentState.turret; //handled else where
-    desiredState.numBalls = currentState.numBalls; // handled else where
+    //desiredState.turret = currentState.turret; //handled else where
+    //desiredState.numBalls = currentState.numBalls; // handled else where
     desiredState.extendWheelieBar = true;
     shooterPriority = true;
 
@@ -524,14 +575,38 @@ SuperstructureStateMachine::SystemState SuperstructureStateMachine::handleHaveBa
 }
 
 void SuperstructureStateMachine::getHaveBallDesiredState(SuperstructureState currentState, double timeInState, SuperstructureState &desiredState)
-{      
-    desiredState.ballPathBottom = 0.0;
-    desiredState.ballPathTop = 0.0;
+{   
+    /*
+    if (!haveBallsAdjFinished)
+    {
+        if (bottomPathState)
+        { //transition balls to going up
+                ballPathforward = true;
+                bottomPathTriggered = true;
+                
+        } else if (bottomPathTriggered && topPathState) 
+        { //stop balls at bottom   
+            topPathTriggered = true;
+            haveBallsAdjFinished = true;
+            
+        } else if (!(bottomPathTriggered && topPathTriggered))
+        { //nothing triggered moving balls back
+            ballPathforward = false;
+            
+        }
+
+        desiredState.ballPathTop = (ballPathforward? 1.0: -1.0) * frc::SmartDashboard::GetNumber("BallPathTop default", Constants::kBallPathTopDefaultSpeed);
+    } else
+    {
+    */
+        desiredState.ballPathTop = 0.0;
+    //}
+    
     desiredState.centeringIntake = 0.0;
     desiredState.hood = NAN;
     desiredState.shooter = NAN;
-    desiredState.turret = currentState.turret;
-    desiredState.numBalls = currentState.numBalls;
+    //desiredState.turret = currentState.turret;
+    //desiredState.numBalls = currentState.numBalls;
     desiredState.extendIntake = false;
 
     changedIntake = true;
@@ -591,4 +666,14 @@ void SuperstructureStateMachine::getHaveBallDesiredState(SuperstructureState cur
             mLED->setBallLEDState(mLEDStates.kIdle);
         }   
     }  
+}
+
+void SuperstructureStateMachine::resetIntakeLogic()
+{
+    ballPathforward = true;
+    runBallPath = false;
+    haveBallsAdjFinished = false;
+    topPathTriggered = false;
+    bottomPathTriggered = false;
+
 }

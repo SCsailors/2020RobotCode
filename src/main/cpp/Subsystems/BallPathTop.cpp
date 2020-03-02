@@ -12,19 +12,19 @@
 using namespace Subsystems;
 std::shared_ptr<Subsystems::BallPathTop> BallPathTop::mInstance;
 
-BallPathTop::BallPathTop(Subsystems::TalonConstants constants) : Subsystems::TalonSRXSubsystem(constants) {}
+BallPathTop::BallPathTop(std::shared_ptr<Subsystems::TalonConstants> constants) : Subsystems::TalonSRXSubsystem(constants) {}
 
 std::shared_ptr<Subsystems::BallPathTop> BallPathTop::getInstance()
 {
     if (!mInstance)
     {
-        Subsystems::TalonConstants constants{};
-        constants.id = 21;
-        constants.kName = "Ball Path Top";
-        constants.inverted = true;
-        constants.kTicksPerUnitDistance = 8192.0; //Ticks to rotations;
-        constants.kIsTalonSRX = true;
-        constants.kStatusFrame8UpdateRate = 50;
+        std::shared_ptr<Subsystems::TalonConstants> constants = std::make_shared<Subsystems::TalonConstants>();
+        constants->id = 21;
+        constants->kName = "Ball Path Top";
+        constants->inverted = false;
+        constants->kTicksPerUnitDistance = 8192.0; //Ticks to rotations;
+        constants->kIsTalonSRX = true;
+        constants->kStatusFrame8UpdateRate = 50;
         mInstance = std::make_shared<Subsystems::BallPathTop>(constants);
     }
     return mInstance;
@@ -80,7 +80,8 @@ void BallPathTop::readPeriodicInputs()
 
     mLastBreakState = mLastBreak.Get();
     mLastMakeState = mLastMake.Get();
-    
+    mPhotoEyeState = mPhotoEye.Get();
+
     updateLast();
     updateFirst();
     mHasBalls = mBallCount > 0;
@@ -92,7 +93,7 @@ void BallPathTop::readPeriodicInputs()
 
 void BallPathTop::outputTelemetry()
 {
-    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants.kName + "/Ball Count: ", getBallCount());
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants->kName + "/Ball Count: ", getBallCount());
     TalonSubsystem::outputTelemetry();
 }
 

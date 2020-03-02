@@ -7,6 +7,8 @@
 
 #include "lib/Vision/TargetInfo.h"
 #include "Constants.h"
+
+#include "frc/smartdashboard/SmartDashboard.h"
 using namespace VisionTargeting;
 
 TargetInfo::TargetInfo( cv::Mat trans, cv::Mat rot)
@@ -19,8 +21,13 @@ TargetInfo::TargetInfo( cv::Mat trans, cv::Mat rot)
     yTheta = rot.at<double>(1) * Constants::kRadsToDegrees;
     zTheta = rot.at<double>(2) * Constants::kRadsToDegrees;
 
-    std::cout<<"X: " << x << " Y: " << y << " Z: " << z << " xTheta: " << xTheta << " yTheta: " << yTheta << " zTheta: " << zTheta << std::endl;
-    
+    //std::cout<<"X: " << x << " Y: " << y << " Z: " << z << " xTheta: " << xTheta << " yTheta: " << yTheta << " zTheta: " << zTheta << std::endl;
+    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / X: ", x);
+    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / Y: ", y);
+    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / Z: ", z);
+    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / xTheta: ", xTheta);
+    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / yTheta: ", yTheta);
+    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / zTheta: ", zTheta);
 }
 
 TargetCorner::TargetCorner( double y, double z): y(y), z(z)

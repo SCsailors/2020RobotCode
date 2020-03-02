@@ -25,6 +25,8 @@ class SingleGamePadController : public ControlBoard::ControlBoardBase {
   TurretCardinalEnum mLastCardinal = TurretCardinalEnum::NONE;
   Utility::DelayedBoolean mDPadValid;
   double mDPadDelay = .02;
+  bool wantsHighGear = false;
+  bool wantsManual = true;
   XBoxController mController{Constants::kSingleJoystickPort}; 
   
   Utility::MultiTrigger LT_Multi{Constants::kJoystickHoldTime};
@@ -45,7 +47,7 @@ class SingleGamePadController : public ControlBoard::ControlBoardBase {
   double getThrottle() override;
   double getTurn() override;
   bool getQuickTurn() override;
-  bool getWantsLowGear() override;
+  bool getWantsHighGear() override;
 
   bool getShoot() override;
   bool getWheel() override;
@@ -57,9 +59,12 @@ class SingleGamePadController : public ControlBoard::ControlBoardBase {
   bool isTurretJogging() override;
   TurretCardinal getTurretCardinal() override;
   void reset();
-  bool getAutoAim() override;
+  //bool getAutoAim() override;
   double getBallShootCount(bool preshoot) override;
   double shootCount = 5.0;
+
+  double getHood() override;
+  bool getDriveShifterManual() override;
 
   int i = 0;
   int j = 0;

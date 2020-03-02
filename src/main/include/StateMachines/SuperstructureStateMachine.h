@@ -11,6 +11,8 @@
 
 #include "States/SuperstructureState.h"
 #include "States/SuperstructureGoal.h"
+#include "lib/Util/TimeDelayedBoolean.h"
+#include "lib/Util/LatchedBoolean.h"
 
 #include <lib/Util/Util.h>
 
@@ -26,6 +28,23 @@ class SuperstructureStateMachine {
   bool changedWheelie = false;
   bool shooterPriority = false;
   bool intakePriority = false;
+
+  bool photoEyeState = false;
+  bool topPathState = false;
+  bool bottomPathState = false;
+
+  bool topPathTriggered = false;
+  bool bottomPathTriggered = false;
+  bool ballPathforward = true;
+  bool runBallPath = false;
+
+  bool stopIntake = false;
+  frc::Timer mStopDelay{};
+
+  bool haveBallsAdjFinished = false;
+  Utility::TimeDelayedBoolean topBallTrigger{};
+  Utility::TimeDelayedBoolean bottomBallTrigger{};
+  Utility::LatchedBoolean topBallToggle{};
  public:
   enum WantedAction {
         WANTED_IDLE, 
@@ -104,6 +123,11 @@ class SuperstructureStateMachine {
   void setLEDPriority(bool priority){mLEDPriority = priority;}
   bool mLEDMaxPriority = false;
   void setLEDMaxPriority(bool maxPriority){mLEDMaxPriority = maxPriority;}
+  
+  void resetIntakeLogic();
+  void updateBottomPathState(bool state){bottomPathState = state;}
+  void updateTopPathState(bool state){topPathState = state;}
+  void updatePhotoEyeState(bool state){photoEyeState = state;}
   //add double getHoodForRange(range);
   //add double getSpeedForRange(range);
   //use either piecewise functions or multiple interpolating treemap (one for each speed) where all the data is already inputted.

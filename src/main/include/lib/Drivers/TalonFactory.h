@@ -29,8 +29,8 @@ class TalonFactory {
   {
     Drivers::TalonConfigBase config{};
     std::shared_ptr<TalonSRX> talon = createTalonSRX(id, config.kSlaveConfig);
-    talon->Set(motorcontrol::ControlMode::Follower, 0.0);
-    talon->Follow(*leader.get());
+    
+    talon->Follow(*leader);
     return talon;
   }
   
@@ -38,15 +38,24 @@ class TalonFactory {
 
   //Falcon 500/ TalonFX creators
   static std::shared_ptr<TalonFX> createDefaultTalonFX(int id);
-  template <typename T>
-  static std::shared_ptr<TalonFX> createSlaveTalonFX(int id, T leader)
+  
+  static std::shared_ptr<TalonFX> createSlaveTalonFX(int id, std::shared_ptr<TalonFX> leader)
   {
     Drivers::TalonConfigBase config{};
     std::shared_ptr<TalonFX> talon = createTalonFX(id, config.kSlaveConfig);
-    talon->Set(motorcontrol::ControlMode::Follower, 0.0);
-    talon->Follow(*leader.get());
+    
+    talon->Follow(*leader);
     return talon;
   }
+
+  static std::shared_ptr<TalonFX> createSlaveTalonFX(int id, std::shared_ptr<TalonSRX> leader)
+  {
+    Drivers::TalonConfigBase config{};
+    std::shared_ptr<TalonFX> talon = createTalonFX(id, config.kSlaveConfig);
+    talon->Follow(*leader);
+    return talon;
+  }
+
   static std::shared_ptr<TalonFX> createTalonFX(int id, std::shared_ptr<TalonConfig> config);
 
   template <typename T>

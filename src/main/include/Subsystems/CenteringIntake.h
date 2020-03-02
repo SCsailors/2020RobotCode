@@ -18,7 +18,7 @@ namespace Subsystems{
 class CenteringIntake : public Subsystems::SparkMaxSubsystem {
  static std::shared_ptr<Subsystems::CenteringIntake> mInstance;
  public:
-  CenteringIntake(Subsystems::SparkMaxConstants constants);
+  CenteringIntake(std::shared_ptr<Subsystems::SparkMaxConstants> constants);
   static std::shared_ptr<Subsystems::CenteringIntake> getInstance();
 };
 }

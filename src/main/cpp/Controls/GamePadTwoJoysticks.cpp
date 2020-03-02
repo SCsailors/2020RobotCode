@@ -5,37 +5,39 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-#include "Controls/SingleGamePadController.h"
+#include "Controls/GamePadTwoJoysticks.h"
 
 using namespace ControlBoard;
-std::shared_ptr<SingleGamePadController> SingleGamePadController::mInstance;
+std::shared_ptr<GamePadTwoJoysticks> GamePadTwoJoysticks::mInstance;
 
-SingleGamePadController::SingleGamePadController() 
+GamePadTwoJoysticks::GamePadTwoJoysticks() 
 {
     reset();
 }
 
-std::shared_ptr<SingleGamePadController> SingleGamePadController::getInstance()
+
+std::shared_ptr<GamePadTwoJoysticks> GamePadTwoJoysticks::getInstance()
 {
     if (!mInstance)
     {
-        mInstance = std::make_shared<SingleGamePadController>();
+        mInstance = std::make_shared<GamePadTwoJoysticks>();
     }
     return mInstance;
 }
 
-double SingleGamePadController::getThrottle()
+double GamePadTwoJoysticks::getThrottle()
 {
-    return mController.getJoystick(XBoxController::Side::LEFT, XBoxController::Axis::y);
+    return -mRightJoystick.GetY();
 }
 
-double SingleGamePadController::getTurn()
+double GamePadTwoJoysticks::getTurn()
 {
-    return mController.getJoystick(XBoxController::Side::LEFT, XBoxController::Axis::x);
+    return -mLeftJoystick.GetY();
 }
 
-bool SingleGamePadController::getQuickTurn()
+bool GamePadTwoJoysticks::getQuickTurn()
 {
+    /*
     if (LT_Multi.holdStarted())
     {
         i++;
@@ -43,11 +45,13 @@ bool SingleGamePadController::getQuickTurn()
     frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ quickTurn counter", i);
     //LT_Multi.update(mController.getTrigger(XBoxController::Side::LEFT));
     return LT_Multi.isHeld();
+    */
+    return false;
 }
 
-bool SingleGamePadController::getWantsHighGear()
+bool GamePadTwoJoysticks::getWantsHighGear()
 {
-    bool wantsHigh = Back.update(RT_Multi.holdStarted());
+    bool wantsHigh = HighGear.update(mLeftJoystick.GetRawButton(1));
     if (wantsHigh && !wantsHighGear)
     { //want manual shift
         wantsHighGear = true;
@@ -59,7 +63,7 @@ bool SingleGamePadController::getWantsHighGear()
     return wantsHighGear;
 }
 
-bool SingleGamePadController::getShoot()
+bool GamePadTwoJoysticks::getShoot()
 {
     bool a = A.update(mController.getButton(XBoxController::Button::A));
     if (a)
@@ -70,33 +74,34 @@ bool SingleGamePadController::getShoot()
     return a;
 }
 
-bool SingleGamePadController::getWheel()
+bool GamePadTwoJoysticks::getWheel()
 {
     return B.update(mController.getButton(XBoxController::Button::B));
 }
 
-bool SingleGamePadController::getWantsRotation()
+bool GamePadTwoJoysticks::getWantsRotation()
 {
     return Start.update(mController.getButton(XBoxController::Button::START));
 }
 
-bool SingleGamePadController::getClimber()
+bool GamePadTwoJoysticks::getClimber()
 {
-    return X.update(mController.getButton(XBoxController::Button::X));
+    X.update(mController.getButton(XBoxController::Button::X));
+    return X.wasTapped();
 }
 
-bool SingleGamePadController::getIntake()
+bool GamePadTwoJoysticks::getIntake()
 {
     return Y.update(mController.getButton(XBoxController::Button::Y));
 }
 
-bool SingleGamePadController::getCancel()
+bool GamePadTwoJoysticks::getCancel()
 {
     //RB_Multi.update(mController.getButton(XBoxController::Button::RB));
     return RB_Multi.holdStarted();
 }
 
-double SingleGamePadController::getTurretJog()
+double GamePadTwoJoysticks::getTurretJog()
 {
     double jog = mController.getJoystick(XBoxController::Side::RIGHT, XBoxController::Axis::x);
     if (util.epsilonEquals(jog, 0.0, turretDeadband))
@@ -109,12 +114,12 @@ double SingleGamePadController::getTurretJog()
     return Constants::kTurretJogMultiplier * (std::pow(adj_jog, Constants::kTurretJogPower));
 }
 
-bool SingleGamePadController::isTurretJogging()
+bool GamePadTwoJoysticks::isTurretJogging()
 {
     return !(util.epsilonEquals(mController.getJoystick(XBoxController::Side::RIGHT, XBoxController::Axis::x), 0.0, turretDeadband));
 }
 
-TurretCardinal SingleGamePadController::getTurretCardinal()
+TurretCardinal GamePadTwoJoysticks::getTurretCardinal()
 {
     int dPad = mController.getDPad();
     frc::SmartDashboard::PutNumber("DPad", dPad);
@@ -141,20 +146,20 @@ TurretCardinal SingleGamePadController::getTurretCardinal()
     
 }
 
-void SingleGamePadController::reset()
+void GamePadTwoJoysticks::reset()
 {
     mLastCardinal = TurretCardinalEnum::NONE;
     mDPadValid.reset(frc::Timer::GetFPGATimestamp(), mDPadDelay);
 }
 
 /*
-bool SingleGamePadController::getAutoAim()
+bool GamePadTwoJoysticks::getAutoAim()
 {
     return Back.update(mController.getButton(XBoxController::Button::BACK));
 }
 */
 //put this first
-double SingleGamePadController::getBallShootCount(bool preshoot)
+double GamePadTwoJoysticks::getBallShootCount(bool preshoot)
 {
     LT_Multi.update(mController.getTrigger(XBoxController::Side::LEFT));
     RT_Multi.update(mController.getTrigger(XBoxController::Side::RIGHT));
@@ -184,7 +189,7 @@ double SingleGamePadController::getBallShootCount(bool preshoot)
     return shootCount;
 }
 
-double SingleGamePadController::getHood()
+double GamePadTwoJoysticks::getHood()
 {
     double hood = mController.getJoystick(XBoxController::Side::RIGHT, XBoxController::Axis::y);
     if (util.epsilonEquals(hood, 0.0, turretDeadband))
@@ -197,10 +202,22 @@ double SingleGamePadController::getHood()
     return adj_hood;
 }
 
-bool SingleGamePadController::getDriveShifterManual()
+double GamePadTwoJoysticks::getShooter()
 {
-    
-    bool manual = Back.update(mController.getButton(ControlBoard::XBoxController::BACK));
+    double shooter = mController.getJoystick(XBoxController::Side::LEFT, XBoxController::Axis::y);
+    if (util.epsilonEquals(shooter, 0.0, turretDeadband))
+    {
+        return 0.0;
+    }
+    double pre_shooter = std::fabs(shooter);
+    //rescale
+    double adj_shooter = std::copysign((pre_shooter-turretDeadband)/ (1.0-turretDeadband), shooter);
+    return adj_shooter;
+}
+
+bool GamePadTwoJoysticks::getDriveShifterManual()
+{
+    bool manual = ManualShiftToggle.update(mLeftJoystick.GetRawButton(3));
     if (manual && !wantsManual)
     { //want manual shift
         wantsManual = true;
@@ -210,4 +227,19 @@ bool SingleGamePadController::getDriveShifterManual()
         wantsManual = false;
     }
     return wantsManual;
+}
+
+double GamePadTwoJoysticks::getBallPath()
+{
+    return mController.getJoystick(ControlBoard::XBoxController::Side::LEFT, ControlBoard::XBoxController::Axis::y);
+}
+
+bool GamePadTwoJoysticks::getBallPathToggle()
+{
+    return LB_Multi.holdStarted();
+}
+
+bool GamePadTwoJoysticks::getClimbRun()
+{
+    return X.isHeld();
 }

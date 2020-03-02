@@ -17,6 +17,7 @@ LimelightManager::LimelightManager()
 {
     mAllLimelights.push_back(mTurretLimelight);
     mAllLimelights.push_back(mIntakeLimelight);
+    std::cout << "Number of Limelights: " << mAllLimelights.size() << std::endl;
 }
 
 std::shared_ptr<LimelightManager> LimelightManager::getInstance()
@@ -32,21 +33,27 @@ void LimelightManager::OnStart(double timestamp)
 {
     setAllLEDS(Limelight::LedMode::OFF);
 
-    FRC_7054::RobotState::getInstance()->resetVision();
+    //FRC_7054::RobotState::getInstance()->resetVision();
 }
 
 void LimelightManager::OnLoop(double timestamp)
 {
-    FRC_7054::RobotState::getInstance()->addVisionUpdate(timestamp - getAverageLatency(), getTargetInfos(), getLimelights());
+    frc::SmartDashboard::PutNumber("CheckPoint/ VisionUpdate/ Timestamp: ", timestamp);
+    frc::SmartDashboard::PutNumber("CheckPoint/ VisionUpdate/ Timestamp of photo (latency): ", getAverageLatency());
+    //FRC_7054::RobotState::getInstance()->addVisionUpdate(timestamp - getAverageLatency(), getTargetInfos(), getLimelights());
+    //getTargetInfos();
 }
 
-void LimelightManager::OnStop(double timestamp){}
+void LimelightManager::OnStop(double timestamp)
+{
+    setAllLEDS(Limelight::LedMode::OFF);
+}
 
 void LimelightManager::readPeriodicInputs()
 {
     for (auto limelight : mAllLimelights)
     {
-        limelight.readPeriodicInputs();
+        limelight->readPeriodicInputs();
     }
 }
 
@@ -54,7 +61,7 @@ void LimelightManager::writePeriodicOutputs()
 {
     for (auto limelight : mAllLimelights)
     {
-        limelight.writePeriodicOutputs();
+        limelight->writePeriodicOutputs();
     }
 }
 
@@ -62,7 +69,7 @@ void LimelightManager::outputTelemetry()
 {
     for (auto limelight : mAllLimelights)
     {
-        limelight.outputTelemetry();
+        limelight->outputTelemetry();
     }
 }
 
@@ -70,21 +77,21 @@ void LimelightManager::triggerOutputs()
 {
     for (auto limelight : mAllLimelights)
     {
-        limelight.triggerOutputs();
+        limelight->triggerOutputs();
     }
 }
 
-Subsystems::Limelight LimelightManager::getTurretLimelight()
+std::shared_ptr<Subsystems::Limelight> LimelightManager::getTurretLimelight()
 {
     return mTurretLimelight;
 }
 
-Subsystems::Limelight LimelightManager::getIntakeLimelight()
+std::shared_ptr<Subsystems::Limelight> LimelightManager::getIntakeLimelight()
 {
     return mIntakeLimelight;
 }
 
-std::vector<Subsystems::Limelight> LimelightManager::getLimelights()
+std::vector<std::shared_ptr<Subsystems::Limelight>> LimelightManager::getLimelights()
 {
     return mAllLimelights;
 }
@@ -94,7 +101,7 @@ std::vector<VisionTargeting::TargetInfo> LimelightManager::getTargetInfos()
     std::vector<VisionTargeting::TargetInfo> mTargets;
     for (auto limelight : mAllLimelights)
     {
-        mTargets.push_back(limelight.getCameraXYZ());
+        mTargets.push_back(limelight->getCameraXYZ());
     }
 
     return mTargets;
@@ -107,7 +114,7 @@ double LimelightManager::getAverageLatency()
     double i = mAllLimelights.size();
     for (auto limelight : mAllLimelights)
     {
-        x += limelight.getLatency();   
+        x += limelight->getLatency();   
     }
     return x/i;
 }
@@ -116,7 +123,7 @@ void LimelightManager::setAllLEDS(Limelight::LedMode mode)
 {
     for (auto limelight : mAllLimelights)
     {
-        limelight.setLed(mode);
+        limelight->setLed(mode);
     }
 }
 
@@ -124,6 +131,6 @@ void LimelightManager::setPipeline(int pipeline)
 {
     for (auto limelight : mAllLimelights)
     {
-        limelight.setPipeline(pipeline);
+        limelight->setPipeline(pipeline);
     }
 }

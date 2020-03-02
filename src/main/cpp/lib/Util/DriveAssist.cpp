@@ -103,6 +103,40 @@ shared_ptr<DriveSignal> DriveAssist::Drive(double throttle, double wheel, bool i
         rightOut=-1.0;
     }
 
+    if (throttle >= 0.0 && wheel >= 0.0)
+    { //left needs to be bigger than right
+        if (leftOut > rightOut)
+        { //switch them
+            double tmpLeft = leftOut;
+            leftOut = rightOut;
+            rightOut = tmpLeft;
+        }
+    } else if (throttle >= 0.0 && wheel <= 0.0)
+    { //right bigger than left
+        if (leftOut < rightOut)
+        { //switch them
+            double tmpLeft = leftOut;
+            leftOut = rightOut;
+            rightOut = tmpLeft;
+        }
+    } else if (throttle <= 0.0 && wheel >= 0.0)
+    { //left more negative than right
+        if (leftOut < rightOut)
+        { //switch them
+            double tmpLeft = leftOut;
+            leftOut = rightOut;
+            rightOut = tmpLeft;
+        }
+    } else if (throttle <= 0.0 && wheel <= 0.0)
+    {//right more negative than left
+        if (leftOut > rightOut)
+        { //switch them
+            double tmpLeft = leftOut;
+            leftOut = rightOut;
+            rightOut = tmpLeft;
+        }
+    }
+
     
     shared_ptr<DriveSignal> Signal = make_shared<DriveSignal>(leftOut, rightOut);
     return Signal;

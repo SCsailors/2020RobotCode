@@ -10,28 +10,41 @@
 using namespace Subsystems;
 std::shared_ptr<Subsystems::Turret> Turret::mInstance;
 
-Turret::Turret(Subsystems::SparkMaxConstants constants): Subsystems::SparkMaxSubsystem(constants) {}
+Turret::Turret(std::shared_ptr<Subsystems::SparkMaxConstants> constants): Subsystems::SparkMaxSubsystem(constants) {}
 
 std::shared_ptr<Subsystems::Turret> Turret::getInstance()
 {
     if(!mInstance)
     {
-        Subsystems::SparkMaxConstants constants{};
-        constants.id = 24;
-        constants.kName = "Turret";
-        constants.kTicksPerUnitDistance = 4096.0; //Ticks to degrees;
-        constants.kAllowableClosedLoopError = 5.0; //ticks
-        constants.kMaxVelocity = 1700.0; //Tune :ticks
-        constants.kMaxAcceleration = 3400.0; //Tune :ticks
+        std::shared_ptr<Subsystems::SparkMaxConstants> constants = std::make_shared<Subsystems::SparkMaxConstants>();
+        constants->id = 24;
+        constants->kName = "Turret";
+        constants->kTicksPerUnitDistance =  1.0 * 461.0 / 360.0; //Rotations of motor to degrees; Division bigger, Multiplication smaller 
+        constants->kAllowableClosedLoopError = .5; //approximately .4 degrees
+        constants->kP[1] = 0.04;
+        constants->kI[1] = 0.0;
+        constants->kD[1] = 0.27;
+        constants->kF[1] = .0000;
+        
+        constants->kMaxVelocity = 6000.0; //Tune rpm
+        constants->kMaxAcceleration = 15000.0; //Tune rpm
+        constants->kP[3] = 0.0;
+        constants->kI[3] = 0.0;
+        constants->kD[3] = 0.0;
+        constants->kF[3] = .0001;
+        
+         
 
-        constants.kEnableForwardSoftLimit = true;
-        constants.kForwardSoftLimit = 270.0;
+        constants->kEnableForwardSoftLimit = true;
+        constants->kMaxUnitsLimit = 165.0;
 
-        constants.kEnableReverseSoftLimit = true;
-        constants.kReverseSoftLimit = -270.0;
+        constants->kEnableReverseSoftLimit = true;
+        constants->kMinUnitsLimit = -45.0;
 
-        constants.kIsAltEncoder = true;
-        constants.kCountsPerRev = 4096.0;
+        constants->kClosedLoopRampRate = .5;
+
+        //constants->kIsAltEncoder = false;
+        //constants->kCountsPerRev = 4096.0;
         mInstance = std::make_shared<Turret>(constants);
     }
     return mInstance;
@@ -62,10 +75,10 @@ bool Turret::isHoming()
 
 double Turret::getMinUnits()
 {
-    return mConstants.kMinUnitsLimit;
+    return mConstants->kMinUnitsLimit;
 }
 
 double Turret::getMaxUnits()
 {
-    return mConstants.kMaxUnitsLimit;
+    return mConstants->kMaxUnitsLimit;
 }

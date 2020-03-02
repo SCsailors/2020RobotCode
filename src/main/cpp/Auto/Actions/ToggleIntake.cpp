@@ -5,20 +5,5 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-#pragma once
-#include <Subsystems/ServoMotorSubsystem.h>
+#include "Auto/Actions/ToggleIntake.h"
 
-#include <frc/AnalogInput.h>
-#include <lib/Util/LatchedBoolean.h>
-
-#include <memory>
-
-namespace Subsystems {
-
-class BallPathBottom : public Subsystems::TalonSRXSubsystem {
-  static std::shared_ptr<Subsystems::BallPathBottom> mInstance;
- public:
-  BallPathBottom(Subsystems::TalonConstants constants);
-  static std::shared_ptr<Subsystems::BallPathBottom> getInstance();
-};
-}

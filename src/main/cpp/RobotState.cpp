@@ -129,10 +129,10 @@ void FRC_7054::RobotState::resetVision()
     vision_target_turret.reset();
 }
 
-std::shared_ptr<Pose2D> FRC_7054::RobotState::getCameraToVisionTargetPose(VisionTargeting::TargetInfo target, bool turret, Subsystems::Limelight source)
+std::shared_ptr<Pose2D> FRC_7054::RobotState::getCameraToVisionTargetPose(VisionTargeting::TargetInfo target, bool turret, std::shared_ptr<Subsystems::Limelight> source)
 {
     //compensate for camera pitch
-    std::shared_ptr<Translation2D> xz_plane_translation = std::make_shared<Translation2D>( target.getX(), target.getZ() )->rotateBy( source.getHorizontalPlaneToLens() );
+    std::shared_ptr<Translation2D> xz_plane_translation = std::make_shared<Translation2D>( target.getX(), target.getZ() )->rotateBy( source->getHorizontalPlaneToLens() );
     double x = xz_plane_translation->x();
     double y = target.getY();
     double z = xz_plane_translation->y();
@@ -144,41 +144,50 @@ std::shared_ptr<Pose2D> FRC_7054::RobotState::getCameraToVisionTargetPose(Vision
     return pose;
 }
 
-void FRC_7054::RobotState::updateGoalTracker(double timestamp, std::vector<std::shared_ptr<Pose2D>> goalPose, VisionTargeting::GoalTracker goalTracker, Subsystems::Limelight source)
+void FRC_7054::RobotState::updateGoalTracker(double timestamp, std::vector<std::shared_ptr<Pose2D>> goalPose, VisionTargeting::GoalTracker goalTracker, std::shared_ptr<Subsystems::Limelight> source)
 {
+    std::vector<std::shared_ptr<Pose2D>> goalPoses;
     //check if z axis needs to be rotated by camera angle
     if (goalPose.empty())
     {
-        std::cout<<"failed to update Goal Tracker: " << source.getName() <<std::endl;
+        std::cout<<"failed to update Goal Tracker: " << source->getName() <<std::endl;
         return;
     }
-    std::shared_ptr<Pose2D> fieldToVisionTarget = getFieldToTurret(timestamp)->transformBy(source.getTurretToLens()->transformBy(goalPose.at(0)));
-    std::vector<std::shared_ptr<Pose2D>> goalPoses{fieldToVisionTarget};
-    goalTracker.update(timestamp, goalPoses);
+    for (auto pose : goalPose)
+    {
+        std::shared_ptr<Pose2D> fieldToVisionTarget = getFieldToTurret(timestamp)->transformBy(source->getTurretToLens()->transformBy(pose));
+        goalPoses.push_back(fieldToVisionTarget);
+        goalTracker.update(timestamp, goalPoses);
+    }
+    
 }
 
-void FRC_7054::RobotState::addVisionUpdate(double timestamp, std::vector<VisionTargeting::TargetInfo> observations, std::vector<Subsystems::Limelight> limelights)
+void FRC_7054::RobotState::addVisionUpdate(double timestamp, std::vector<VisionTargeting::TargetInfo> observations, std::vector<std::shared_ptr<Subsystems::Limelight>> limelights)
 {
     if (observations.empty())
     {
+        frc::SmartDashboard::PutBoolean("CheckPoint/ VisionUpdate/ empty", true);
         //empty update Goal trackers to remove old targets
         vision_target_intake.update(timestamp, emptyVector);
         vision_target_turret.update(timestamp, emptyVector);
         return;
     }
-
+/*
     mCameraToVisionTargetPosesIntake.clear();
     mCameraToVisionTargetPosesTurret.clear();
-
+    
     for (auto target : observations)
     {
         mCameraToVisionTargetPosesTurret.push_back( getCameraToVisionTargetPose(target, true, limelights.at(0) ) );
         mCameraToVisionTargetPosesIntake.push_back( getCameraToVisionTargetPose(target, false, limelights.at(1) ) );
     }
-
+    frc::SmartDashboard::PutBoolean("CheckPoint/ VisionUpdate/ added xyz poses", true);
+    
+    /*
     //update Goal trackers with actual data
     updateGoalTracker(timestamp, mCameraToVisionTargetPosesTurret, vision_target_turret, limelights.at(0));
     updateGoalTracker(timestamp, mCameraToVisionTargetPosesIntake, vision_target_intake, limelights.at(1));    
+    */
 }
 
 std::shared_ptr<Pose2D> FRC_7054::RobotState::getFieldToVisionTarget(bool turret)

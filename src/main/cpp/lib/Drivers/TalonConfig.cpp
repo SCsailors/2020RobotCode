@@ -10,16 +10,16 @@ using namespace Drivers;
 
 TalonConfig::TalonConfig() 
 {
-    std::cout<<"TalonConfig: Started Constructor"<< std::endl;
+    //std::cout<<"TalonConfig: Started Constructor"<< std::endl;
 }
 
 TalonConfigBase::TalonConfigBase()
 {
-    std::cout<<"TalonConfigBase: Started Constructor"<< std::endl;
+    //std::cout<<"TalonConfigBase: Started Constructor"<< std::endl;
     kSlaveConfig = std::make_shared<TalonConfig>();
     kDefaultConfig = std::make_shared<TalonConfig>();
     
-    std::cout<<"TalonConfigBase: constructed slave and default"<< std::endl;
+    //std::cout<<"TalonConfigBase: constructed slave and default"<< std::endl;
     //Increase as much as possible, but too high and leds behave strangely
     kSlaveConfig->CONTROL_FRAME_PERIOD_MS = 100;
     kSlaveConfig->MOTION_CONTROL_FRAME_PERIOD_MS = 1000;
@@ -28,5 +28,5 @@ TalonConfigBase::TalonConfigBase()
     kSlaveConfig->QUAD_ENCODER_STATUS_FRAME_RATE_MS = 1000;
     kSlaveConfig->ANALOG_TEMP_VBAT_STATUS_FRAME_RATE_MS = 1000;
     kSlaveConfig->PULSE_WIDTH_STATUS_FRAME_RATE_MS = 1000;
-    std::cout<<"TalonConfigBase: configed slave"<< std::endl;
+    //std::cout<<"TalonConfigBase: configed slave"<< std::endl;
 }

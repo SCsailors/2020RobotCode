@@ -9,7 +9,6 @@
 
 #include <Subsystems/Subsystem.h>
 
-#include <Subsystems/BallPathBottom.h>
 #include <Subsystems/BallPathTop.h>
 #include <Subsystems/CenteringIntake.h>
 #include <Subsystems/Hood.h>
@@ -40,7 +39,6 @@ class Superstructure : public Subsystems::Subsystem {
   static std::shared_ptr<Subsystems::Superstructure> mInstance;
   
   std::shared_ptr<Subsystems::BallPathTop> mBallPathTop;
-  std::shared_ptr<Subsystems::BallPathBottom> mBallPathBottom;
   std::shared_ptr<Subsystems::CenteringIntake> mCenteringIntake;
   std::shared_ptr<Subsystems::Hood> mHood;
   std::shared_ptr<Subsystems::Shooter> mShooter;
@@ -49,7 +47,7 @@ class Superstructure : public Subsystems::Subsystem {
   
   frc::Solenoid mIntake{Constants::kPCMID, Constants::kSolenoidID_Intake};
   
-  StateMachines::SuperstructureStateMachine mStateMachine{};
+  
   StateMachines::SuperstructureStateMachine::WantedAction mWantedActionShooter = StateMachines::SuperstructureStateMachine::WantedAction::WANTED_IDLE;
   StateMachines::SuperstructureStateMachine::WantedAction mWantedActionIntake = StateMachines::SuperstructureStateMachine::WantedAction::WANTED_IDLE;
 
@@ -72,13 +70,13 @@ class Superstructure : public Subsystems::Subsystem {
   bool mWheelieBarExtended = false;
   bool mIntakeExtended = false;
 
-  double mBallPathBottomFeedforwardV = 0.0;
   double mBallPathTopFeedforwardV = 0.0;
   double mCenteringIntakeFeedforwardV = 0.0;
   double mHoodFeedforwardV = 0.0;
   double mShooterFeedforwardV = 0.0;
   double mTurretFeedforwardV = 0.0;
   double mTurretThrottle = 0.0;
+  double mTurretJog = 0.0;
 
   VisionTargeting::AimingParameters mLatestAimingParameters{};
   double mCorrectedRangeToTarget = 0.0;
@@ -88,6 +86,7 @@ class Superstructure : public Subsystems::Subsystem {
   TurretControlModes mTurretMode = TurretControlModes::ROBOT_RELATIVE;
   Util util{};
  public:
+  StateMachines::SuperstructureStateMachine mStateMachine{};
   Superstructure();
   static std::shared_ptr<Subsystems::Superstructure> getInstance();
   
@@ -141,6 +140,9 @@ class Superstructure : public Subsystems::Subsystem {
 
   void setStateMachineLEDPriority(bool priority);
   void setStateMachineLEDMaxPriority(bool maxPriority);
+
+  bool ballPathManual = false;
+  void setBallPathManual(bool manual){ballPathManual = manual;}
 
   StateMachines::SuperstructureStateMachine::SystemState getShooterState(){return mStateMachine.getSystemShooterState();}
   StateMachines::SuperstructureStateMachine::SystemState getIntakeState(){return mStateMachine.getSystemIntakeState();}  

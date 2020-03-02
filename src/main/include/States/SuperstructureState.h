@@ -19,12 +19,11 @@ class SuperstructureState {
   double shooter = 0.0; //RPS
   double hood = 0.0; //degrees
   double ballPathTop = 0.0; //RPS
-  double ballPathBottom = 0.0; //RPS 
   double centeringIntake = 0.0; //RPS
   double numBalls = 0.0;
   bool extendIntake = false;
   bool extendWheelieBar = false;
-  SuperstructureState(double turret, double shooter, double hood, double ballPathTop, double ballPathBottom, double centeringIntake, int numBalls, bool extendIntake, bool extendWheelieBar);
+  SuperstructureState(double turret, double shooter, double hood, double ballPathTop, double centeringIntake, int numBalls, bool extendIntake, bool extendWheelieBar);
   SuperstructureState();
   void setFrom(SuperstructureState source);
   std::string toString();

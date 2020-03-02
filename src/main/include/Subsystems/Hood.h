@@ -19,7 +19,7 @@ namespace Subsystems {
 class Hood : public Subsystems::SparkMaxSubsystem {
   static std::shared_ptr<Subsystems::Hood> mInstance;
  public:
-  Hood(Subsystems::SparkMaxConstants constants);
+  Hood(std::shared_ptr<Subsystems::SparkMaxConstants> constants);
   static std::shared_ptr<Subsystems::Hood> getInstance();
 
   double getAngle();

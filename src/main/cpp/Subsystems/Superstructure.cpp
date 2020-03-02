@@ -6,19 +6,21 @@
 /*----------------------------------------------------------------------------*/
 
 #include "Subsystems/Superstructure.h"
+#include "Subsystems/LimelightManager.h"
 #include "Constants.h"
 using namespace Subsystems;
 std::shared_ptr<Subsystems::Superstructure> Superstructure::mInstance;
 
 Superstructure::Superstructure() 
 {
-    mBallPathBottom = Subsystems::BallPathBottom::getInstance();
     mBallPathTop = Subsystems::BallPathTop::getInstance();
     mCenteringIntake = Subsystems::CenteringIntake::getInstance();
     mHood = Subsystems::Hood::getInstance();
     mShooter = Subsystems::Shooter::getInstance();
     mTurret = Subsystems::Turret::getInstance();
     mRobotState = FRC_7054::RobotState::getInstance();
+
+    frc::SmartDashboard::PutNumber("Subsystems /" + mTurret->mConstants->kName + "/ Turret Offset degrees", 0.0);
 }
 
 std::shared_ptr<Subsystems::Superstructure> Superstructure::getInstance()
@@ -34,17 +36,23 @@ void Superstructure::OnStart(double timestamp){}
 
 void Superstructure::OnLoop(double timestamp)
 {
-    updateCurrentState(); //gets data from subsystems
-
-    //calculate intake, hood, and shooter setpoints and set it to goal
-    setGoal(mStateMachine.mergedShootingIntaking(timestamp, mWantedActionShooter, mWantedActionIntake, mCurrentState, mLatestAimingParameters.getRange()));
-    updateWantedAction(); //update wanted action because state transitions in superstructure state machine could change it
+    //mStateMachine.updatePhotoEyeState(mBallPathTop->getPhotoEyeState());
+    mStateMachine.updateTopPathState(mBallPathTop->getFirstBreakState());
+    mStateMachine.updateBottomPathState(mBallPathTop->getLastBreakState());
     
-    //update turret 
-    maybeUpdateGoalFromVision(timestamp);
-    maybeUpdateGoalFromFieldRelativeGoal(timestamp);
-    //set updated data
-    followSetpoint();
+    updateCurrentState(); //gets data from subsystems
+    if (!frc::SmartDashboard::GetBoolean("Enable PID Tuning", false))
+    {
+        //calculate intake, hood, and shooter setpoints and set it to goal
+        setGoal(mStateMachine.mergedShootingIntaking(timestamp, mWantedActionShooter, mWantedActionIntake, mCurrentState, mLatestAimingParameters.getRange()));
+        updateWantedAction(); //update wanted action because state transitions in superstructure state machine could change it
+        
+        //update turret 
+        maybeUpdateGoalFromVision(timestamp);
+        maybeUpdateGoalFromFieldRelativeGoal(timestamp);
+        //set updated data
+        followSetpoint();
+    }
 }
 
 void Superstructure::OnStop(double timestamp)
@@ -71,6 +79,7 @@ SuperstructureGoal Superstructure::getSetpoint()
 void Superstructure::jogTurret(double delta)
 {
     mTurretMode = TurretControlModes::JOGGING;
+    frc::SmartDashboard::PutNumber("Turret Jog Delta", delta);
     mGoal.state.turret = mCurrentState.turret + delta;
     mTurretFeedforwardV = 0.0;
 }
@@ -80,15 +89,16 @@ void Superstructure::setGoal(SuperstructureGoal goal)
     if (mTurretMode == TurretControlModes::VISION_AIMED && mHasTarget)
     {
         //keep existing turret setpoint.
-    } else
+    } 
+    /*
+    else
     {
         mGoal.state.turret = goal.state.turret;
     }
-
+    */
     mGoal.state.hood = goal.state.hood;
     mGoal.state.shooter = goal.state.shooter;
     mGoal.state.centeringIntake = goal.state.centeringIntake;
-    mGoal.state.ballPathBottom = goal.state.ballPathBottom;
     mGoal.state.ballPathTop = goal.state.ballPathTop;
     mGoal.state.numBalls = goal.state.numBalls; //should just be passed through
     mGoal.state.extendIntake = goal.state.extendIntake;
@@ -121,7 +131,7 @@ void Superstructure::maybeUpdateGoalFromFieldRelativeGoal(double timestamp)
 
     if (mGoal.state.turret < mTurret->getMinUnits())
     {
-        mGoal.state.turret += mTurret->getMinUnits();
+        mGoal.state.turret = mTurret->getMinUnits();
     } 
     if (mGoal.state.turret > mTurret->getMaxUnits())
     {
@@ -138,6 +148,20 @@ void Superstructure::maybeUpdateGoalFromVision(double timestamp)
         return;
     }
 
+    std::shared_ptr<Rotation2D> angle = Subsystems::LimelightManager::getInstance()->getTurretLimelight()->getAngleToTarget();
+    
+    mGoal.state.turret = mCurrentState.turret + angle->getDegrees();
+    
+    if (mGoal.state.turret < mTurret->getMinUnits())
+        {
+            mGoal.state.turret = mTurret->getMinUnits();
+        } 
+        if (mGoal.state.turret > mTurret->getMaxUnits())
+        {
+            mGoal.state.turret = mTurret->getMaxUnits();
+        }
+        mHasTarget = true;
+    /*
     mLatestAimingParameters = mRobotState->getAimingParameters(true, -1, Constants::kMaxGoalTrackAge);
     if (mLatestAimingParameters.getRange() != 0.0)
     {
@@ -187,6 +211,7 @@ void Superstructure::maybeUpdateGoalFromVision(double timestamp)
         mHasTarget = false;
         mOnTarget = false;
     }
+    */
     
 }
 
@@ -233,7 +258,6 @@ void Superstructure::updateCurrentState()
     mCurrentState.turret = mTurret->getAngle();
     mCurrentState.hood = mHood->getAngle();
     mCurrentState.shooter = mShooter->getVelocity();
-    mCurrentState.ballPathBottom = mBallPathBottom->getSetpoint();
     mCurrentState.ballPathTop = mBallPathTop->getSetpoint();
     mCurrentState.centeringIntake = mCenteringIntake->getSetpoint();
 
@@ -277,7 +301,6 @@ void Superstructure::followSetpoint()
     frc::SmartDashboard::PutNumber("Superstructure Turret Goal: ", mGoal.state.turret);
     frc::SmartDashboard::PutNumber("Superstructure Hood Goal: ", mGoal.state.hood);
     frc::SmartDashboard::PutNumber("Superstructure Centering Intake Goal: ", mGoal.state.centeringIntake);
-    frc::SmartDashboard::PutNumber("Superstructure BallPath Bottom Goal: ", mGoal.state.ballPathBottom);
     frc::SmartDashboard::PutNumber("Superstructure BallPath Top Goal: ", mGoal.state.ballPathTop);
     frc::SmartDashboard::PutNumber("Superstructure Shooter Goal: ", mGoal.state.shooter);
 
@@ -286,21 +309,41 @@ void Superstructure::followSetpoint()
 
     frc::SmartDashboard::PutNumber("Superstructure numBalls Goal: ", mGoal.state.numBalls);
     
-    if (mTurretMode == TurretControlModes::VISION_AIMED || mTurretMode == TurretControlModes::JOGGING)
+    frc::SmartDashboard::PutNumber("Superstructure Turret Mode: ", mTurretMode);
+    double turret_offset = frc::SmartDashboard::GetNumber("Subsystems /" + mTurret->mConstants->kName + "/ Turret Offset degrees", 0.0);
+    if (mTurretMode == TurretControlModes::JOGGING)
     {
         mTurret->setSetpointPositionPID(mGoal.state.turret, mTurretFeedforwardV);
+    } else if (util.epsilonEquals(mGoal.state.turret, mCurrentState.turret, mTurret->mConstants->kAllowableClosedLoopError / mTurret->mConstants->kTicksPerUnitDistance) )
+    {
+        mTurret->setOpenLoop(0.0);
+    }
+    else if (mTurretMode == TurretControlModes::VISION_AIMED )
+    {
+        mTurret->setSetpointPositionPID(mGoal.state.turret + turret_offset, mTurretFeedforwardV);
     } else if (mTurretMode == TurretControlModes::OPEN_LOOP)
     {
         mTurret->setOpenLoop(mTurretThrottle);
     } else
-    {
+    { //robot or field relative (anything bigger than a few degrees)
         mTurret->setSetpointMotionMagic(mGoal.state.turret);
     }
+    
+    if (util.epsilonEquals(mGoal.state.hood, mCurrentState.hood, mHood->mConstants->kAllowableClosedLoopError / mHood->mConstants->kTicksPerUnitDistance))
+    {
+        mHood->setOpenLoop(0.0);
+    } else
+    {
+        mHood->setSetpointPositionPID(mGoal.state.hood, mHoodFeedforwardV);
+    }
 
-    mHood->setSetpointPositionPID(mGoal.state.hood, mHoodFeedforwardV);
     mShooter->setSetpointVelocityPID(mGoal.state.shooter, mShooterFeedforwardV);
-    mBallPathBottom->setOpenLoop(mGoal.state.ballPathBottom);
-    mBallPathTop->setOpenLoop(mGoal.state.ballPathTop);
+    frc::SmartDashboard::PutBoolean("BallPathManual", ballPathManual);
+    if (!ballPathManual)
+    {
+        mBallPathTop->setOpenLoop(mGoal.state.ballPathTop);
+    }
+    
     mCenteringIntake->setOpenLoop(mGoal.state.centeringIntake);
 
     if (mGoal.state.extendIntake)
@@ -342,6 +385,8 @@ StateMachines::SuperstructureStateMachine::WantedAction Superstructure::SystemSt
         case StateMachines::SuperstructureStateMachine::HAVE_BALLS:
             return StateMachines::SuperstructureStateMachine::WANTED_HAVE_BALLS;
     }
+
+    return StateMachines::SuperstructureStateMachine::WANTED_IDLE;
 }
 
 bool Superstructure::isAtDesiredState()

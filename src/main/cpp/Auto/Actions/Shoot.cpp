@@ -5,21 +5,4 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-#pragma once
-
-#include <Subsystems/ServoMotorSubsystem.h>
-
-#include <frc/AnalogInput.h>
-#include <lib/Util/LatchedBoolean.h>
-
-#include <memory>
-
-namespace Subsystems{
-
-class Shooter : public Subsystems::TalonFXSubsystem {
-  static std::shared_ptr<Subsystems::Shooter> mInstance;
- public:
-  Shooter(std::shared_ptr<Subsystems::TalonConstants> constants);
-  static std::shared_ptr<Subsystems::Shooter> getInstance();
-};
-}
+#include "Auto/Actions/Shoot.h"

@@ -112,9 +112,9 @@ class RobotState {
   shared_ptr<Twist2D> getSmoothedVelocity();
   
   void resetVision();
-  std::shared_ptr<Pose2D> getCameraToVisionTargetPose(VisionTargeting::TargetInfo target, bool turret, Subsystems::Limelight source);
-  void updateGoalTracker(double timestamp, std::vector<std::shared_ptr<Pose2D>> goalPose, VisionTargeting::GoalTracker goalTracker, Subsystems::Limelight source);
-  void addVisionUpdate(double timestamp, std::vector<VisionTargeting::TargetInfo> observations, std::vector<Subsystems::Limelight> limelights);
+  std::shared_ptr<Pose2D> getCameraToVisionTargetPose(VisionTargeting::TargetInfo target, bool turret, std::shared_ptr<Subsystems::Limelight> source);
+  void updateGoalTracker(double timestamp, std::vector<std::shared_ptr<Pose2D>> goalPose, VisionTargeting::GoalTracker goalTracker, std::shared_ptr<Subsystems::Limelight> source);
+  void addVisionUpdate(double timestamp, std::vector<VisionTargeting::TargetInfo> observations, std::vector<std::shared_ptr<Subsystems::Limelight>> limelights);
 
 
   std::vector<double> kPossibleNormals{0.0, 180.0};

@@ -104,13 +104,6 @@ void ClimberStateMachine::getPreClimbDesiredState(ClimberState currentState, dou
 
 ClimberStateMachine::SystemState ClimberStateMachine::handleClimbingStateTransitions(double timestamp, double timeInState, WantedAction wantedAction, ClimberState currentState)
 {
-    if (mDesiredState.isAtDesiredState(currentState))
-    {
-        mWantedAction = WantedAction::WANTED_POST_CLIMB;
-        ClimbingToPostClimb = true;
-        return SystemState::POST_CLIMB;
-    }
-
     return defaultTransition(wantedAction);
 }
 

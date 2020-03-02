@@ -9,29 +9,30 @@
 
 #include "Constants.h"
 using namespace Subsystems;
-Limelight::Limelight(LimelightConstants constants) 
+Limelight::Limelight(std::shared_ptr<LimelightConstants> constants) 
 {
     mConstants = constants;
-    mNetworkTable = nt::NetworkTableInstance::GetDefault().GetTable(mConstants.kName);
+    mNetworkTable = nt::NetworkTableInstance::GetDefault().GetTable(mConstants->kTableName);
 
 
 }
 
 void Limelight::readPeriodicInputs()
 {
-    #ifdef CompetitionBot
+    frc::SmartDashboard::PutNumber(mConstants->kName + "/reading inputs", i++);
+    //#ifdef CompetitionBot
     mPeriodicIO.latency = mNetworkTable->GetEntry("tl").GetDouble(0.0)/ 1000.0 + Constants::kImageCaptureLatency;
     mPeriodicIO.givenLedMode = (int) mNetworkTable->GetEntry("ledmode").GetDouble(0.0); //need std::round?
     mPeriodicIO.givenPipeline = (int) mNetworkTable->GetEntry("pipeline").GetDouble(0.0);
     mPeriodicIO.xOffset = mNetworkTable->GetEntry("tx").GetDouble(0.0);
     mPeriodicIO.yOffset = mNetworkTable->GetEntry("ty").GetDouble(0.0);
-    mPeriodicIO.xOffset = mNetworkTable->GetEntry("tx0").GetDouble(0.0);
-    mPeriodicIO.yOffset = mNetworkTable->GetEntry("ty0").GetDouble(0.0);    
+    mPeriodicIO.xOffsetRaw = mNetworkTable->GetEntry("tx0").GetDouble(0.0);
+    mPeriodicIO.yOffsetRaw = mNetworkTable->GetEntry("ty0").GetDouble(0.0);    
     mPeriodicIO.area = mNetworkTable->GetEntry("ta").GetDouble(0.0);
     mPeriodicIO.horPixels = mNetworkTable->GetEntry("thor").GetDouble(0.0);
     mPeriodicIO.vertPixels = mNetworkTable->GetEntry("tvert").GetDouble(0.0);
     mSeesTarget = mNetworkTable->GetEntry("tv").GetDouble(0.0) == 1.0;
-    #endif
+    //#endif
 }
 
 void Limelight::writePeriodicOutputs()
@@ -39,7 +40,7 @@ void Limelight::writePeriodicOutputs()
     #ifdef CompetitionBot
     if(mPeriodicIO.givenLedMode != mPeriodicIO.ledMode || mPeriodicIO.givenPipeline != mPeriodicIO.pipeline)
     {
-        std::cout << "Table changed from expected. Retrigger!"<< std::endl;
+        //std::cout << "Table changed from expected. Retrigger!"<< std::endl;
         mOutputsHaveChanged = true;
     }
     if (mOutputsHaveChanged)
@@ -57,12 +58,13 @@ void Limelight::writePeriodicOutputs()
 
 void Limelight::outputTelemetry()
 {
-    frc::SmartDashboard::PutNumber(mConstants.kName +"/Pipeline Latency (ms)", mPeriodicIO.latency);
-    frc::SmartDashboard::PutBoolean(mConstants.kName + "/Has Target", mSeesTarget);
+    frc::SmartDashboard::PutNumber(mConstants->kName +"/Pipeline Latency (ms)", mPeriodicIO.latency);
+    frc::SmartDashboard::PutBoolean(mConstants->kName + "/Has Target", mSeesTarget);
 }
 
 void Limelight::setLed(LedMode mode)
 { 
+    frc::SmartDashboard::PutNumber(mConstants->kName + "/ mode", mode);
     if (mode !=mPeriodicIO.ledMode)
     {
         mPeriodicIO.ledMode = mode;
@@ -166,10 +168,10 @@ VisionTargeting::TargetInfo Limelight::getCameraXYZ()
     if (mPeriodicIO.horPixels == 0.0 && mPeriodicIO.vertPixels == 0.0)
     {
         
-        frc::SmartDashboard::PutBoolean("Subsystems/" + mConstants.kName + "/No Target: getCameraXYZ:", true); 
+        frc::SmartDashboard::PutBoolean("Subsystems/" + mConstants->kName + "/No Target: getCameraXYZ:", true); 
         return VisionTargeting::TargetInfo{};
     } 
-    frc::SmartDashboard::PutBoolean("Subsystems/" + mConstants.kName + "/No Target: getCameraXYZ:", false);
+    frc::SmartDashboard::PutBoolean("Subsystems/" + mConstants->kName + "/No Target: getCameraXYZ:", false);
     cv::Mat mRotationVector; //axis angle form
     cv::Mat mTranslationVector;
     std::vector<cv::Point2d> imagePoints;
@@ -180,12 +182,12 @@ VisionTargeting::TargetInfo Limelight::getCameraXYZ()
     if (mPeriodicIO.horPixels > mPeriodicIO.vertPixels) 
     {
         //hex goal
-        std::cout<<"Using Hex Model: getCameraXYZ()"<< mConstants.kName<<std::endl;
+        //std::cout<<"Using Hex Model: getCameraXYZ()"<< mConstants->kName<<std::endl;
         cv::solvePnP(mHexModelPoints, imagePoints, mCameraMatrix, mDistCoeffs, mRotationVector, mTranslationVector, false, cv::SOLVEPNP_P3P); 
     } else 
     {
         //rectangular goal
-        std::cout<<"Using Rect Model: getCameraXYZ()"<< mConstants.kName<<std::endl;
+        //std::cout<<"Using Rect Model: getCameraXYZ()"<< mConstants->kName<<std::endl;
         cv::solvePnP(mRectModelPoints, imagePoints, mCameraMatrix, mDistCoeffs, mRotationVector, mTranslationVector, false, cv::SOLVEPNP_P3P);
     }
     return VisionTargeting::TargetInfo{mTranslationVector, mRotationVector};
@@ -197,4 +199,11 @@ void Limelight::TargetCornerToCVPoint2d(std::vector<VisionTargeting::TargetCorne
     {
         imagePoints.push_back( cv::Point2d( corner.getY(), corner.getZ() ) );
     }
+}
+
+std::shared_ptr<Rotation2D> Limelight::getAngleToTarget()
+{
+    
+    frc::SmartDashboard::PutNumber("Limelight Angle to Target", mPeriodicIO.xOffset);
+    return Rotation2D::fromDegrees(mPeriodicIO.xOffset);
 }

@@ -23,6 +23,8 @@
 
 #include <frc/Timer.h>
 #include <frc/DriverStation.h>
+#include <frc/smartdashboard/SendableChooser.h>
+#include <frc/smartdashboard/SmartDashboard.h>
 
 namespace Subsystems {
 class SlaveConstants {
@@ -37,7 +39,7 @@ class SlaveConstants {
 class ServoMotorSubsystemConstants {
  public:
   ServoMotorSubsystemConstants(){}
-  std::vector<SlaveConstants> kSlaveIDs{SlaveConstants{}};
+  std::vector<std::shared_ptr<SlaveConstants>> kSlaveIDs;
   int id = -1;
   std::string kName = "ERROR_ASSIGN_A_NAME";
   double kHomePosition = 0.0; //Units
@@ -46,10 +48,11 @@ class ServoMotorSubsystemConstants {
   bool invert_sensor_phase = false;
   double kMinUnitsLimit = -std::numeric_limits<double>::max();
   double kMaxUnitsLimit = std::numeric_limits<double>::max();
+  bool readInputs = true;
   
 
   //see Constants.h for which slot is for which purpose 
-  std::vector<double> kP{0.0, 0.0, 0.0, 0.0};
+  std::vector<double> kP{0.1, 0.1, 0.1, 0.1};
   std::vector<double> kI{0.0, 0.0, 0.0, 0.0};
   std::vector<double> kD{0.0, 0.0, 0.0, 0.0};
   std::vector<double> kF{0.0, 0.0, 0.0, 0.0};
@@ -93,18 +96,19 @@ class SparkMaxConstants : public ServoMotorSubsystemConstants {
  public:
   SparkMaxConstants(){}
   std::vector<double> kDFilter{0.0, 0.0, 0.0, 0.0};
-  rev::ControlType kControlType{rev::ControlType::kDutyCycle};
-  rev::CANSparkMax::MotorType kMotorType{rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax::IdleMode kIdleMode{rev::CANSparkMax::IdleMode::kBrake};
+  rev::ControlType kControlType = rev::ControlType::kDutyCycle;
+  rev::CANSparkMax::MotorType kMotorType = rev::CANSparkMax::MotorType::kBrushless;
+  rev::CANSparkMax::IdleMode kIdleMode = rev::CANSparkMax::IdleMode::kBrake;
 
   rev::CANDigitalInput::LimitSwitchPolarity kForwardLimitSwitchPolarity{rev::CANDigitalInput::LimitSwitchPolarity::kNormallyOpen};
   bool kEnableForwardLimitSwitch = false;
   rev::CANDigitalInput::LimitSwitchPolarity kReverseLimitSwitchPolarity{rev::CANDigitalInput::LimitSwitchPolarity::kNormallyOpen};
   bool kEnableReverseLimitSwitch = false;
 
-  rev::CANEncoder::EncoderType kEncoderType{rev::CANEncoder::EncoderType::kHallSensor}; 
-  rev::CANEncoder::AlternateEncoderType kAltEncoderType{rev::CANEncoder::AlternateEncoderType::kQuadrature};
+  rev::CANEncoder::EncoderType kEncoderType = rev::CANEncoder::EncoderType::kHallSensor; 
+  rev::CANEncoder::AlternateEncoderType kAltEncoderType = rev::CANEncoder::AlternateEncoderType::kQuadrature;
   bool kIsAltEncoder = false;
+  bool kIsAbsEncoder = false;
   //add analog sensor as alternate feedback sensor
   //check to see if the encoders have to have their units converted
   int kCountsPerRev = 42.0;
@@ -152,19 +156,32 @@ class ServoMotorSubsystem : public Subsystems::Subsystem {
   virtual void handleMasterReset(bool reset){}
   double mForwardSoftLimit; 
   double mReverseSoftLimit;
-  enum ControlState{OPEN_LOOP, MOTION_MAGIC, POSITION_PID, VELOCITY_PID, MOTION_PROFILING};
+  enum ControlState{MOTION_PROFILING, POSITION_PID, VELOCITY_PID, MOTION_MAGIC, OPEN_LOOP};
   ControlState mControlState = ControlState::OPEN_LOOP;
-  PeriodicIO mPeriodicIO{};
+  std::shared_ptr<PeriodicIO> mPeriodicIO = std::make_shared<PeriodicIO>();
   bool mHasBeenZeroed = false;
   Util util{};
+
+  double kp = 0.0;
+  double ki = 0.0;
+  double kd = 0.0;
+  double kf = 0.0;
+  double demand = 0.0;
+  double feedforward = 0.0;
+  bool PIDTuning = false;
+
+  double p, i, d, f;
+
+  ControlState mPIDMode = ControlState::OPEN_LOOP;
+  frc::SendableChooser<ControlState> mModeChooser;
 };
 
 class SparkMaxSubsystem : public ServoMotorSubsystem {
     double prev_position_units = NAN;
     double prev_timestamp = 0.0;
   public:
-    SparkMaxSubsystem(SparkMaxConstants constants);
-    SparkMaxSubsystem(){}
+    SparkMaxSubsystem(std::shared_ptr<SparkMaxConstants> constants);
+    SparkMaxSubsystem() : ServoMotorSubsystem() {}
     void readPeriodicInputs() override;
     void writePeriodicOutputs() override;
     void zeroSensors() override;
@@ -199,15 +216,17 @@ class SparkMaxSubsystem : public ServoMotorSubsystem {
     double constrainTicks(double ticks);
     double ticksPer100msToUnitsPerSecond(double ticks_per_100ms);
     double unitsPerSecondToTicksPer100ms(double units_per_second);
-    
-    SparkMaxConstants mConstants{};
+    void pidTuning();
+
+    std::shared_ptr<SparkMaxConstants> mConstants;
     std::shared_ptr<rev::CANSparkMax> mMaster;
     std::vector<std::shared_ptr<rev::CANSparkMax>> mSlaves;
     std::shared_ptr<rev::CANEncoder> mEncoder = NULL;
     std::shared_ptr<rev::CANDigitalInput> mForwardLimitSwitch = NULL;
     std::shared_ptr<rev::CANDigitalInput> mReverseLimitSwitch = NULL;
     std::shared_ptr<rev::CANPIDController> mPIDController = NULL;
-     
+    int i = 0;
+    int k = 0;
 };
 
 
@@ -217,7 +236,7 @@ class TalonSubsystem : public ServoMotorSubsystem {
     
 
     
-    TalonSubsystem(){};
+    TalonSubsystem() : ServoMotorSubsystem() {};
 
     void outputTelemetry() override;
 
@@ -250,19 +269,14 @@ class TalonSubsystem : public ServoMotorSubsystem {
     double ticksPer100msToUnitsPerSecond(double ticks_per_100ms);
     double unitsPerSecondToTicksPer100ms(double units_per_second);
     
-    TalonConstants mConstants{};
+    std::shared_ptr<TalonConstants> mConstants;
     
-    //change to template, but for now do one leave it as TalonSRX for autocompletion.
-    std::shared_ptr<BaseTalon> mMaster;
-    std::vector<std::shared_ptr<BaseTalon>> mSlaves;
-    //std::shared_ptr<T> mMaster;
-    //std::vector<std::shared_ptr<T>> mSlaves;
     StickyFaults mFaults{};
 };
 
 class TalonSRXSubsystem : public TalonSubsystem {
   public:
-    TalonSRXSubsystem(TalonConstants constants);
+    TalonSRXSubsystem(std::shared_ptr<TalonConstants> constants);
     void readPeriodicInputs() override;
     void writePeriodicOutputs() override;
     void zeroSensors() override;
@@ -271,15 +285,18 @@ class TalonSRXSubsystem : public TalonSubsystem {
     void OnStart(double timestamp) override;
     void OnLoop(double timestamp) override;
     void OnStop(double timestamp) override;
+    void pidTuning();
     
     std::shared_ptr<TalonSRX> mMaster;
-
+    std::vector<std::shared_ptr<BaseTalon>> mSlaves;
+    int i = 0;
+    int k = 0;
 };
 
 
 class TalonFXSubsystem : public TalonSubsystem {
   public:
-    TalonFXSubsystem(TalonConstants constants);
+    TalonFXSubsystem(std::shared_ptr<TalonConstants> constants);
     void readPeriodicInputs() override;
     void writePeriodicOutputs() override;
     void zeroSensors() override;
@@ -289,6 +306,12 @@ class TalonFXSubsystem : public TalonSubsystem {
     void OnStop(double timestamp) override;
     
     std::shared_ptr<TalonFX> mMaster;
+    std::vector<std::shared_ptr<BaseTalon>> mSlaves;
+    int i = 0;
+    int k = 0;
+
+    void pidTuning();
+    
     
 };
 

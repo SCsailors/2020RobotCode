@@ -24,7 +24,6 @@
 #include "Subsystems/RobotStateEstimator.h"
 #include "Subsystems/Subsystem.h"
 
-#include "Subsystems/BallPathBottom.h"
 #include "Subsystems/BallPathTop.h"
 #include "Subsystems/CenteringIntake.h"
 #include "Subsystems/Hood.h"
@@ -33,6 +32,7 @@
 #include "Subsystems/LimelightManager.h"
 #include "Subsystems/Shooter.h"
 #include "Subsystems/Superstructure.h"
+#include "Subsystems/WinchSystem.h"
 
 //Paths
 #include "Paths/TrajectoryGenerator.h"
@@ -48,6 +48,7 @@
 #include "Controls/ControlBoard.h"
 #include "Controls/SingleGamePadController.h"
 #include "Controls/TwoGamePadControllers.h"
+#include "Controls/GamePadTwoJoysticks.h"
 
 //Misc
 #include "Kinematics.h"
@@ -93,7 +94,6 @@ static AutoModeSelector autoModeSelector;
 
 static shared_ptr<Subsystems::Drive> drive;
 static shared_ptr<Subsystems::RobotStateEstimator> robotStateEstimator;
-std::shared_ptr<Subsystems::BallPathBottom> mBallPathBottom;
 std::shared_ptr<Subsystems::BallPathTop> mBallPathTop;
 std::shared_ptr<Subsystems::CenteringIntake> mCenteringIntake;
 std::shared_ptr<Subsystems::Hood> mHood;
@@ -103,6 +103,7 @@ std::shared_ptr<Subsystems::LimelightManager> mLimelightManager;
 std::shared_ptr<Subsystems::Shooter> mShooter;
 std::shared_ptr<Subsystems::Superstructure> mSuperstructure;
 std::shared_ptr<Subsystems::Turret> mTurret;
+std::shared_ptr<Subsystems::WinchSystem> mClimber;
 
 //Controls
 std::shared_ptr<ControlBoard::ControlBoardBase> mControlBoard;
@@ -118,12 +119,9 @@ vector<shared_ptr<Subsystems::Subsystem>> subsystems;
 shared_ptr<Looper> mSubsystemLoops;
 
 void manualControl();
+void TestControl();
 
  private:
-  frc::SendableChooser<std::string> m_chooser;
-  const std::string kAutoNameDefault = "Default";
-  const std::string kAutoNameCustom = "My Auto";
-  std::string m_autoSelected;
 
   bool preshoot = false;
   bool shooting = false;
@@ -134,6 +132,15 @@ void manualControl();
   double extended_start_time = 0.0;
   double prev_ball = 0.0;
   bool prev_controller_one = true;
+  bool controller_one = true;
+  bool ballPathToggle = false;
+
+  bool pre_climb = false;
+  bool climbing = false;
+  bool climbing_finished = false;
+
+  Utility::LatchedBoolean manualDriveShifter{};
+  Utility::LatchedBoolean autoDriveShifter{false};
 
   int i = 0;
   int j = 0;

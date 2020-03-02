@@ -36,10 +36,10 @@ double TwoGamePadControllers::getTurn()
 bool TwoGamePadControllers::getQuickTurn()
 {
     LT_Multi_Drive.update(mDriveController.getTrigger(XBoxController::Side::LEFT));
-    return LT_Multi_Drive.holdStarted();
+    return LT_Multi_Drive.isHeld();
 }
 
-bool TwoGamePadControllers::getWantsLowGear()
+bool TwoGamePadControllers::getWantsHighGear()
 {
     RT_Multi_Drive.update(mDriveController.getTrigger(XBoxController::Side::RIGHT));
     return RT_Multi.holdStarted();

@@ -18,10 +18,13 @@
 #include "lib/Trajectory/TrajectoryIterator.h"
 #include "Planners/DriveMotionPlanner.h"
 
+#include "lib/Util/TimeDelayedBoolean.h"
+
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/Timer.h>
 #include <frc/SpeedControllerGroup.h>
-#include <frc/DoubleSolenoid.h>
+#include <frc/Solenoid.h>
+
 //if unit testing comment out line below
 //#define FRC_ROBORIO true
 //if using practice bot comment out line below
@@ -56,8 +59,13 @@ class Drive : public Subsystems::Subsystem {
   enum Shifterstate{
     Force_Low_Gear,
     Force_High_Gear,
-    Auto_Shift
-  };
+    Auto_Shift,
+    Manual
+  }; 
+
+  Shifterstate mShifterState = Shifterstate::Manual;
+  bool mManualWantsHighGear = false;
+  const double kShiftDelay = .1;
 
    double kP=0.013;//6E-7;//1E-7;//1E-4*.5;
    double kI=0.0;//1.864E-6*.35;
@@ -75,8 +83,10 @@ class Drive : public Subsystems::Subsystem {
    double iz;
    double a;
    shared_ptr<DriveMotionPlanner::Output> output;
-   
   
+  Utility::TimeDelayedBoolean mAutoUpShift{};
+  Utility::TimeDelayedBoolean mAutoDownShift{};
+
   class PeriodicIO{
     public:
     PeriodicIO();
@@ -103,15 +113,15 @@ class Drive : public Subsystems::Subsystem {
   
   //Hardware -
 #ifdef CompetitionBot
-  //AHRS navx{SPI::Port::kMXP, 200}; //TODO check if this is the correct way to have a custom update rate.
+  //AHRS NavX{SPI::Port::kMXP, 200}; //TODO check if this is the correct way to have a custom update rate.
   
   uint8_t UpdateRate=200;
-  AHRS navx{SPI::Port::kMXP, UpdateRate};
-  rev::CANSparkMax leftMaster{6, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax rightMaster{5, rev::CANSparkMax::MotorType::kBrushless};
+  AHRS NavX{frc::SerialPort::kUSB1, AHRS::SerialDataType::kProcessedData, UpdateRate};
+  rev::CANSparkMax leftMaster{10, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax rightMaster{12, rev::CANSparkMax::MotorType::kBrushless};
 
-  rev::CANSparkMax leftSlave1{8, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax rightSlave1{7, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax leftSlave1{11, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax rightSlave1{13, rev::CANSparkMax::MotorType::kBrushless};
   double mHighGearRatio= 2.668;
   double mGearingRatio=13.34;// TODO tune this
   rev::CANEncoder leftMasterEncoder=leftMaster.GetEncoder();
@@ -126,31 +136,16 @@ class Drive : public Subsystems::Subsystem {
   
   rev::CANPIDController leftSlavePID=leftSlave1.GetPIDController();
   rev::CANPIDController rightSlavePID=rightSlave1.GetPIDController();
-  
-  #ifdef COMPETITIONBOT
-    rev::CANSparkMax leftSlave2{10, rev::CANSparkMax::MotorType::kBrushless};
-    rev::CANSparkMax rightSlave2{9, rev::CANSparkMax::MotorType::kBrushless};
-
-    rev::CANEncoder leftSlaveEncoder2=leftSlave2.GetEncoder();
-    rev::CANEncoder rightSlaveEncoder2=rightSlave2.GetEncoder();
-
-    rev::CANPIDController leftSlavePID2=leftSlave2.GetPIDController();
-    rev::CANPIDController rightSlavePID2=rightSlave2.GetPIDController();
-  
-  #endif
 
   void configureSparkMaxPID();
 
 
-frc::DoubleSolenoid gearSolenoid{0,1};
+//frc::DoubleSolenoid gearSolenoid{0,1};
+frc::Solenoid mGearShifter{Constants::kPCMID, Constants::kSolenoidID_DriveGear};
 #endif
   //PIDTuner.cpp sets it to true when it's run
   bool PIDTuning=false;
   
-
-
-
-
   //Control states
   DriveControlState mDriveControlState;
 
@@ -229,8 +224,8 @@ frc::DoubleSolenoid gearSolenoid{0,1};
   template<typename T>
   string toString(T value);
 
-  
-
+  void setShifterState(Shifterstate state){mShifterState = state;}
+  void setManualShifterState(bool wantsHighGear){mManualWantsHighGear = wantsHighGear;}
 
 };
 }

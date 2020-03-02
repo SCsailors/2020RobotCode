@@ -75,7 +75,7 @@ class Limelight : public Subsystems::Subsystem{
   };
 
   std::shared_ptr<NetworkTable> mNetworkTable;
-  LimelightConstants mConstants;
+  std::shared_ptr<LimelightConstants> mConstants;
   PeriodicIO mPeriodicIO{};
   bool mOutputsHaveChanged = true;
   std::vector<double> mZeroArray{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -96,20 +96,22 @@ class Limelight : public Subsystems::Subsystem{
   
   std::vector<VisionTargeting::TargetCorner> mTargetCorners;
   bool mSeesTarget = false;
+
+  int i = 0;
  public:
   
   enum LedMode { PIPELINE, OFF, BLINK, ON};
 
-  Limelight(LimelightConstants constants);
+  Limelight(std::shared_ptr<LimelightConstants> constants);
   Limelight(){}
 
-  std::shared_ptr<Pose2D> getTurretToLens(){return mConstants.kTurretToLens;}
+  std::shared_ptr<Pose2D> getTurretToLens(){return mConstants->kTurretToLens;}
 
-  double getLensHeight(){return mConstants.kHeight;}
+  double getLensHeight(){return mConstants->kHeight;}
 
-  std::shared_ptr<Rotation2D> getHorizontalPlaneToLens(){return mConstants.kHorizontalPlaneToLens;}
+  std::shared_ptr<Rotation2D> getHorizontalPlaneToLens(){return mConstants->kHorizontalPlaneToLens;}
 
-  std::string getName(){return mConstants.kName; }
+  std::string getName(){return mConstants->kName; }
 
   void readPeriodicInputs() override;
 
@@ -139,6 +141,7 @@ class Limelight : public Subsystems::Subsystem{
   void filterTargetCorners(std::vector<VisionTargeting::TargetCorner> torgetCorners); //filters down to 4 outside corners
 
   VisionTargeting::TargetInfo getCameraXYZ();
+  std::shared_ptr<Rotation2D> getAngleToTarget();
 };
 
 

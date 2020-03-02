@@ -23,10 +23,14 @@ namespace Subsystems
 class LimelightManager : public Subsystems::Subsystem {
   
   static std::shared_ptr<LimelightManager> mInstance;
+
+  std::shared_ptr<Subsystems::LimelightConstants> mTurretLimelightConstants = std::make_shared<Subsystems::LimelightConstants>("Turret Limelight", "limelight-turret", 0.0, std::make_shared<Pose2D>(0.0,0.0,0.0), std::make_shared<Rotation2D>(0.0,0.0, true));
+  std::shared_ptr<Subsystems::LimelightConstants> mIntakeLimelightConstants = std::make_shared<Subsystems::LimelightConstants>("Intake Limelight", "limelight-intake", 0.0, std::make_shared<Pose2D>(0.0,0.0,0.0), std::make_shared<Rotation2D>(0.0,0.0, true));
   
-  Subsystems::Limelight mTurretLimelight{Subsystems::LimelightConstants{"Turret Limelight", "limelight-turret", 0.0, std::make_shared<Pose2D>(0.0,0.0,0.0), std::make_shared<Rotation2D>(0.0,0.0, true)}};
-  Subsystems::Limelight mIntakeLimelight{Subsystems::LimelightConstants{"Intake Limelight", "limelight-intake", 0.0, std::make_shared<Pose2D>(0.0,0.0,0.0), std::make_shared<Rotation2D>(0.0,0.0, true)}};
-  std::vector<Subsystems::Limelight> mAllLimelights;
+  std::shared_ptr<Subsystems::Limelight> mTurretLimelight = std::make_shared<Subsystems::Limelight>(mTurretLimelightConstants);
+  std::shared_ptr<Subsystems::Limelight> mIntakeLimelight = std::make_shared<Subsystems::Limelight>(mIntakeLimelightConstants);
+
+  std::vector<std::shared_ptr<Subsystems::Limelight>> mAllLimelights;
  public:
   LimelightManager();
   static std::shared_ptr<LimelightManager> getInstance();
@@ -42,9 +46,9 @@ class LimelightManager : public Subsystems::Subsystem {
   void outputTelemetry() override;
   void triggerOutputs();
 
-  Subsystems::Limelight getTurretLimelight();
-  Subsystems::Limelight getIntakeLimelight();
-  std::vector<Subsystems::Limelight> getLimelights();
+  std::shared_ptr<Subsystems::Limelight> getTurretLimelight();
+  std::shared_ptr<Subsystems::Limelight> getIntakeLimelight();
+  std::vector<std::shared_ptr<Subsystems::Limelight>> getLimelights();
 
   std::vector<VisionTargeting::TargetInfo> getTargetInfos();
 

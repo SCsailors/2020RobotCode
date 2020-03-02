@@ -23,11 +23,13 @@ class BallPathTop : public Subsystems::TalonSRXSubsystem {
   frc::DigitalInput mFirstMake{Constants::kDIO_FirstMake};
   frc::DigitalInput mLastBreak{Constants::kDIO_LastBreak};
   frc::DigitalInput mLastMake{Constants::kDIO_LastMake};
+  frc::DigitalInput mPhotoEye{Constants::kDIO_PhotoEye};
 
   bool mFirstBreakState = false;
   bool mFirstMakeState = false;
   bool mLastBreakState = false;
   bool mLastMakeState = false;
+  bool mPhotoEyeState = false;
 
   bool mPrevFirstBreakState = false;
   //bool mPrevFirstMakeState = false;
@@ -43,7 +45,7 @@ class BallPathTop : public Subsystems::TalonSRXSubsystem {
   
   static std::shared_ptr<Subsystems::BallPathTop> mInstance;
  public:
-  BallPathTop(Subsystems::TalonConstants constants);
+  BallPathTop(std::shared_ptr<Subsystems::TalonConstants> constants);
   static std::shared_ptr<Subsystems::BallPathTop> getInstance();
 
   void updateFirst();
@@ -57,5 +59,9 @@ class BallPathTop : public Subsystems::TalonSRXSubsystem {
   bool hasFiveBalls();
 
   void SetBallCount(int count);
+
+  bool getPhotoEyeState(){return mPhotoEyeState;}
+  bool getLastBreakState(){return mLastBreakState;}
+  bool getFirstBreakState(){return mFirstBreakState;}
 };
 }

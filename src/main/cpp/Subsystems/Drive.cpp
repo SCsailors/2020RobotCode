@@ -32,7 +32,7 @@ Drive::Drive() {
     frc::SmartDashboard::PutNumber("Drive FF", kFF);
     frc::SmartDashboard::PutNumber("Drive Acceleration", kA);
     
-    //Initialize hardware here wrap all spark and navx in #ifdef CompetitionBot / #endif because there aren't binaries for on workstation unit testing
+    //Initialize hardware here wrap all spark and NavX in #ifdef CompetitionBot / #endif because there aren't binaries for on workstation unit testing
     #ifdef CompetitionBot
     configureSparkMaxPID();    
      leftMaster.SetPeriodicFramePeriod(rev::CANSparkMaxLowLevel::PeriodicFrame::kStatus0, 5);
@@ -55,23 +55,11 @@ Drive::Drive() {
      
      leftSlave1.SetPeriodicFramePeriod(rev::CANSparkMaxLowLevel::PeriodicFrame::kStatus2, 10000);
      rightSlave1.SetPeriodicFramePeriod(rev::CANSparkMaxLowLevel::PeriodicFrame::kStatus2, 10000);
-
-     
-     leftSlave2.SetPeriodicFramePeriod(rev::CANSparkMaxLowLevel::PeriodicFrame::kStatus0, 10000);
-     rightSlave2.SetPeriodicFramePeriod(rev::CANSparkMaxLowLevel::PeriodicFrame::kStatus0, 10000);
-
-     
-     leftSlave2.SetPeriodicFramePeriod(rev::CANSparkMaxLowLevel::PeriodicFrame::kStatus1, 10000);
-     rightSlave2.SetPeriodicFramePeriod(rev::CANSparkMaxLowLevel::PeriodicFrame::kStatus1, 10000);
-
-     
-     leftSlave2.SetPeriodicFramePeriod(rev::CANSparkMaxLowLevel::PeriodicFrame::kStatus2, 10000);
-     rightSlave2.SetPeriodicFramePeriod(rev::CANSparkMaxLowLevel::PeriodicFrame::kStatus2, 10000);
      
      
      
-     leftMaster.SetOpenLoopRampRate(1.0);
-     rightMaster.SetOpenLoopRampRate(1.0);
+     leftMaster.SetOpenLoopRampRate(Constants::kDriveOpenRampRateLowGear);
+     rightMaster.SetOpenLoopRampRate(Constants::kDriveOpenRampRateLowGear);
      leftMaster.SetClosedLoopRampRate(0.001);
      rightMaster.SetClosedLoopRampRate(0.001);
      leftMaster.SetInverted(true);
@@ -79,21 +67,14 @@ Drive::Drive() {
      leftMaster.EnableVoltageCompensation(12.0);
      rightMaster.EnableVoltageCompensation(12.0);
      leftSlave1.EnableVoltageCompensation(12.0);
-     leftSlave2.EnableVoltageCompensation(12.0);
 
      rightSlave1.EnableVoltageCompensation(12.0);
-     rightSlave2.EnableVoltageCompensation(12.0);
 
      //rightMaster.SetInverted(true);
      leftSlave1.Follow(leftMaster, false);
      rightSlave1.Follow(rightMaster, false);
 
-
-
-      leftSlave2.Follow(leftMaster, false);
-     rightSlave2.Follow(rightMaster, false);
-    
-    
+    //mShifterState = Force_Low_Gear; //for auton and motion profiles, maybe high gear?
      
     #endif
 
@@ -163,22 +144,6 @@ void Drive::configureSparkMaxPID(){
     leftSlavePID.SetIMaxAccum(10.0);
     leftSlavePID.SetOutputRange(-1.0, 1.0);
 
-    leftSlavePID2.SetP(kP);
-    leftSlavePID2.SetI(kI);
-    leftSlavePID2.SetD(kD);
-    leftSlavePID2.SetFF(kFF);
-    leftSlavePID2.SetIZone(kIZ);
-    leftSlavePID2.SetIMaxAccum(10.0);
-    leftSlavePID2.SetOutputRange(-1.0, 1.0);
-    
-    leftSlavePID2.SetP(kP);
-    leftSlavePID2.SetI(kI);//1e-6
-    leftSlavePID2.SetD(kD);
-    leftSlavePID2.SetFF(kFF);
-    leftSlavePID2.SetIZone(kIZ);
-    leftSlavePID2.SetIMaxAccum(10.0);
-    leftSlavePID2.SetOutputRange(-1.0, 1.0);
-
 }
 
 #endif
@@ -220,11 +185,22 @@ void Drive::OnLoop(double timestamp){
         }
         
     }
-
-    if(mAutoShift){
-        //handleAutoShift();
-    } else{
-        //setHighGear(false);
+    frc::SmartDashboard::PutBoolean("AutoShift Value", mAutoShift);
+    
+    switch (mShifterState)
+    {
+        case Manual:
+            setHighGear(mManualWantsHighGear);
+            break;
+        case Force_Low_Gear:
+            setHighGear(false);
+            break;
+        case Force_High_Gear:
+            setHighGear(true);
+            break;
+        case Auto_Shift:
+            handleAutoShift();
+            break;
     }
 }
 
@@ -264,8 +240,13 @@ void Drive::setOpenLoop(shared_ptr<DriveSignal> signal){
         mDriveControlState=Open_Loop;
 
     }
+    
     mPeriodicIO->left_demand= signal->getLeft();
     mPeriodicIO->right_demand= signal->getRight();
+    frc::SmartDashboard::PutNumber("DRIVE / LEFT Demand", mPeriodicIO->left_demand);
+    frc::SmartDashboard::PutNumber("DRIVE / RIGHT Demand", mPeriodicIO->right_demand);
+    frc::SmartDashboard::PutNumber("DRIVE / ControlMode", mDriveControlState);
+    
     mPeriodicIO->left_feedforward=0.0;
     mPeriodicIO->right_feedforward=0.0;
 }
@@ -303,24 +284,28 @@ bool Drive::isHighGear(){
     return mIsHighGear;
 }
 
-void Drive::setHighGear(bool wantsHighGear){
-    if(wantsHighGear!= mIsHighGear){
+void Drive::setHighGear(bool wantsHighGear){ 
+    if(wantsHighGear != mIsHighGear){
 
-        if(wantsHighGear){
+        if(!mIsHighGear){
             mIsHighGear=true;
             #ifdef CompetitionBot  
-            gearSolenoid.Set(frc::DoubleSolenoid::Value::kForward); // TODO check if forward is high gear
+            mGearShifter.Set(false); // TODO check if forward is high gear
+            leftMaster.SetOpenLoopRampRate(Constants::kDriveOpenRampRateHighGear); //limit ramp rates to have constant acceleration
+            rightMaster.SetOpenLoopRampRate(Constants::kDriveOpenRampRateHighGear);
             #endif
-        } else if (!wantsHighGear) {
+        } else if (mIsHighGear) {
 
             mIsHighGear=false;
             #ifdef CompetitionBot  
-            gearSolenoid.Set(frc::DoubleSolenoid::Value::kReverse);
+            mGearShifter.Set(true);
+            leftMaster.SetOpenLoopRampRate(Constants::kDriveOpenRampRateLowGear); //limit ramp rates to have constant acceleration
+            rightMaster.SetOpenLoopRampRate(Constants::kDriveOpenRampRateLowGear);
             #endif
         }
 
     }
-    frc::SmartDashboard::PutString("Drive/ Setting HighGear", mIsHighGear? "HighGear": "LowGear");
+    frc::SmartDashboard::PutString("Drive/ Setting Drive Gear?", mIsHighGear? "HighGear": "LowGear");
 }
 
 bool Drive::isBrakeMode(){
@@ -366,7 +351,7 @@ shared_ptr<Rotation2D> Drive::getHeading(){
 void Drive::setHeading(shared_ptr<Rotation2D> heading){
     mPeriodicIO->gyro_heading=heading;
     #ifdef CompetitionBot
-     mGyroOffset= heading->rotateBy(heading->fromDegrees(navx.GetFusedHeading())->inverse());
+     mGyroOffset= heading->rotateBy(heading->fromDegrees(NavX.GetFusedHeading())->inverse());
     #endif
     
 }
@@ -495,9 +480,9 @@ void Drive::updatePathFollower(){
 void Drive::handleAutoShift(){ //TODO stop from thrashing: gets up to speed, shifts, then down shifts immediately
     double linear_velocity= fabs(getLinearVelocity());
     double angular_velocity= fabs(getAngularVelocity());
-    if(mIsHighGear&& linear_velocity<Constants::kDriveDownShiftVelocity){ // && angular_velocity< constants->kDriveDownShiftAngularVelocity
+    if(mAutoDownShift.update(mIsHighGear && linear_velocity < Constants::kDriveDownShiftVelocity, kShiftDelay)){ // && angular_velocity< constants->kDriveDownShiftAngularVelocity
         setHighGear(false);
-    } else if (!mIsHighGear && linear_velocity> Constants::kDriveDownShiftVelocity){
+    } else if (mAutoUpShift.update(!mIsHighGear && linear_velocity > Constants::kDriveDownShiftVelocity, kShiftDelay)){
         setHighGear(true);
     }
 }
@@ -536,7 +521,7 @@ void Drive::readPeriodicInputs(){
     #endif
     shared_ptr<Rotation2D> tmp =make_shared<Rotation2D>();
     #ifdef CompetitionBot
-    mPeriodicIO->gyro_heading=tmp->fromDegrees( navx.GetFusedHeading())->rotateBy(mGyroOffset); 
+    mPeriodicIO->gyro_heading=tmp->fromDegrees( NavX.GetFusedHeading())->rotateBy(mGyroOffset); 
     #endif
     #ifndef CompetitionBot
     mPeriodicIO->gyro_heading= tmp;
@@ -579,11 +564,34 @@ double Drive::rightAppliedOutput(){
 
 void Drive::writePeriodicOutputs(){
     #ifdef CompetitionBot
-    if((p != kP)) { rightMasterPID.SetP(p); leftMasterPID.SetP(p); rightSlavePID.SetP(p); leftSlavePID.SetP(p); rightSlavePID2.SetP(p); leftSlavePID2.SetP(p); kP = p; }
-    if((i != kI)) { rightMasterPID.SetI(i); leftMasterPID.SetI(i); rightSlavePID.SetI(i); leftSlavePID.SetI(i); rightSlavePID2.SetI(i); leftSlavePID2.SetI(i); kI = i; }
-    if((d != kD)) { rightMasterPID.SetD(d); leftMasterPID.SetD(d);  rightSlavePID.SetD(d); leftSlavePID.SetD(d); rightSlavePID2.SetD(d); leftSlavePID2.SetD(d); kD = d; }
-    if((iz != kIZ)) { rightMasterPID.SetIZone(iz); leftMasterPID.SetIZone(iz); rightSlavePID.SetIZone(iz); leftSlavePID.SetIZone(iz); rightSlavePID2.SetIZone(iz); leftSlavePID2.SetIZone(iz); kIZ = iz; }
-    if((ff != kFF)) { rightMasterPID.SetFF(ff); leftMasterPID.SetFF(ff);  rightSlavePID.SetFF(ff); leftSlavePID.SetFF(ff); rightSlavePID2.SetFF(ff); leftSlavePID2.SetFF(ff); kFF = ff; }
+    frc::SmartDashboard::PutNumber("NavX/ GetPitch()", NavX.GetPitch());
+  frc::SmartDashboard::PutNumber("NavX/ GetRoll()", NavX.GetRoll());
+  frc::SmartDashboard::PutNumber("NavX/ GetYaw()", NavX.GetYaw());
+  
+  frc::SmartDashboard::PutNumber("NavX/ GetCompassHeading()", NavX.GetCompassHeading());
+  frc::SmartDashboard::PutNumber("NavX/ GetAngle()", NavX.GetAngle());
+  frc::SmartDashboard::PutNumber("NavX/ GetFusedHeading()", NavX.GetFusedHeading());
+
+  frc::SmartDashboard::PutNumber("NavX/ GetWorldLinearAccelX()", NavX.GetWorldLinearAccelX());
+  frc::SmartDashboard::PutNumber("NavX/ GetWorldLinearAccelY()", NavX.GetWorldLinearAccelY());
+  frc::SmartDashboard::PutNumber("NavX/ GetWorldLinearAccelZ()", NavX.GetWorldLinearAccelZ());
+
+  frc::SmartDashboard::PutNumber("NavX/ GetVelocityX()", NavX.GetVelocityX());
+  frc::SmartDashboard::PutNumber("NavX/ GetVelocityY()", NavX.GetVelocityY());
+  frc::SmartDashboard::PutNumber("NavX/ GetVelocityZ()", NavX.GetVelocityZ());
+
+  frc::SmartDashboard::PutNumber("NavX/ GetDisplacementX()", NavX.GetDisplacementX());
+  frc::SmartDashboard::PutNumber("NavX/ GetDisplacementY()", NavX.GetDisplacementY());
+  frc::SmartDashboard::PutNumber("NavX/ GetDisplacementZ()", NavX.GetDisplacementZ());
+
+  frc::SmartDashboard::PutBoolean("NavX/ IsMoving()", NavX.IsMoving());
+  frc::SmartDashboard::PutBoolean("NavX/ IsRotating()", NavX.IsRotating());
+
+    if((p != kP)) { rightMasterPID.SetP(p); leftMasterPID.SetP(p); rightSlavePID.SetP(p); leftSlavePID.SetP(p);  kP = p; }
+    if((i != kI)) { rightMasterPID.SetI(i); leftMasterPID.SetI(i); rightSlavePID.SetI(i); leftSlavePID.SetI(i);  kI = i; }
+    if((d != kD)) { rightMasterPID.SetD(d); leftMasterPID.SetD(d);  rightSlavePID.SetD(d); leftSlavePID.SetD(d);  kD = d; }
+    if((iz != kIZ)) { rightMasterPID.SetIZone(iz); leftMasterPID.SetIZone(iz); rightSlavePID.SetIZone(iz); leftSlavePID.SetIZone(iz); kIZ = iz; }
+    if((ff != kFF)) { rightMasterPID.SetFF(ff); leftMasterPID.SetFF(ff);  rightSlavePID.SetFF(ff); leftSlavePID.SetFF(ff);  kFF = ff; }
     if((a!=kA)){ kA=a; }
     #endif
     if(mDriveControlState==Open_Loop){
@@ -591,7 +599,12 @@ void Drive::writePeriodicOutputs(){
         #ifdef CompetitionBot
         leftMasterPID.SetReference(mPeriodicIO->left_demand, rev::ControlType::kDutyCycle); //percent output from -1 to 1
         rightMasterPID.SetReference(mPeriodicIO->right_demand, rev::ControlType::kDutyCycle);
-        
+        //leftMaster.Set(mPeriodicIO->left_demand);
+        //rightMaster.Set(mPeriodicIO->right_demand);
+
+
+        frc::SmartDashboard::PutNumber("Drive/DriveOutputs/ Left demand", mPeriodicIO->left_demand);
+        frc::SmartDashboard::PutNumber("Drive/DriveOutputs/ Right demand", mPeriodicIO->right_demand);
 
         frc::SmartDashboard::PutNumber("Drive/DriveOutputs/ Left Output Percent", leftMaster.GetAppliedOutput());
         frc::SmartDashboard::PutNumber("Drive/DriveOutputs/ Right Output Percent", rightMaster.GetAppliedOutput());
