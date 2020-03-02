@@ -23,13 +23,13 @@ class BallPathTop : public Subsystems::TalonSRXSubsystem {
   frc::DigitalInput mFirstMake{Constants::kDIO_FirstMake};
   frc::DigitalInput mLastBreak{Constants::kDIO_LastBreak};
   frc::DigitalInput mLastMake{Constants::kDIO_LastMake};
-  frc::DigitalInput mPhotoEye{Constants::kDIO_PhotoEye};
+  frc::DigitalInput mPreBottom{Constants::kDIO_PreBottom};
 
   bool mFirstBreakState = false;
   bool mFirstMakeState = false;
   bool mLastBreakState = false;
   bool mLastMakeState = false;
-  bool mPhotoEyeState = false;
+  bool mPreBottomState = false;
 
   bool mPrevFirstBreakState = false;
   //bool mPrevFirstMakeState = false;
@@ -60,7 +60,7 @@ class BallPathTop : public Subsystems::TalonSRXSubsystem {
 
   void SetBallCount(int count);
 
-  bool getPhotoEyeState(){return mPhotoEyeState;}
+  bool getPreBottomState(){return mPreBottomState;}
   bool getLastBreakState(){return mLastBreakState;}
   bool getFirstBreakState(){return mFirstBreakState;}
 };

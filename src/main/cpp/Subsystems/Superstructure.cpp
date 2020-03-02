@@ -36,7 +36,7 @@ void Superstructure::OnStart(double timestamp){}
 
 void Superstructure::OnLoop(double timestamp)
 {
-    //mStateMachine.updatePhotoEyeState(mBallPathTop->getPhotoEyeState());
+    mStateMachine.updatePreBottomPathState(mBallPathTop->getPreBottomState());
     mStateMachine.updateTopPathState(mBallPathTop->getFirstBreakState());
     mStateMachine.updateBottomPathState(mBallPathTop->getLastBreakState());
     

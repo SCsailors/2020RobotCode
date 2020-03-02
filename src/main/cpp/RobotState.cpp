@@ -147,7 +147,7 @@ std::shared_ptr<Pose2D> FRC_7054::RobotState::getCameraToVisionTargetPose(Vision
 void FRC_7054::RobotState::updateGoalTracker(double timestamp, std::vector<std::shared_ptr<Pose2D>> goalPose, VisionTargeting::GoalTracker goalTracker, std::shared_ptr<Subsystems::Limelight> source)
 {
     std::vector<std::shared_ptr<Pose2D>> goalPoses;
-    //check if z axis needs to be rotated by camera angle
+    //check if z axis needs to be rotated by camera angle, should be rotated above
     if (goalPose.empty())
     {
         std::cout<<"failed to update Goal Tracker: " << source->getName() <<std::endl;
@@ -157,8 +157,9 @@ void FRC_7054::RobotState::updateGoalTracker(double timestamp, std::vector<std::
     {
         std::shared_ptr<Pose2D> fieldToVisionTarget = getFieldToTurret(timestamp)->transformBy(source->getTurretToLens()->transformBy(pose));
         goalPoses.push_back(fieldToVisionTarget);
-        goalTracker.update(timestamp, goalPoses);
+        
     }
+    goalTracker.update(timestamp, goalPoses);
     
 }
 
@@ -167,6 +168,7 @@ void FRC_7054::RobotState::addVisionUpdate(double timestamp, std::vector<VisionT
     if (observations.empty())
     {
         frc::SmartDashboard::PutBoolean("CheckPoint/ VisionUpdate/ empty", true);
+        //std::cout << "Removing Old Targets: observations empty" << std::endl;
         //empty update Goal trackers to remove old targets
         vision_target_intake.update(timestamp, emptyVector);
         vision_target_turret.update(timestamp, emptyVector);

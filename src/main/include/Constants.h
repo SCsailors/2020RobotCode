@@ -61,7 +61,7 @@ namespace Constants {
   const int kColor21_Green = 5;
   const int kColor12_Red = 6;
   const int kColor22_Yellow = 7;
-  const int kDIO_PhotoEye = 8;
+  const int kDIO_PreBottom = 8;
   //AIO Ports
 
   //MIN MAX State Times
