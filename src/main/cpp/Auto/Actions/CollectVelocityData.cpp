@@ -6,6 +6,7 @@
 /*----------------------------------------------------------------------------*/
 
 #include "Auto/Actions/CollectVelocityData.h"
+#include "Subsystems/FalconDrive.h"
 
 CollectVelocityData::CollectVelocityData(vector<shared_ptr<DriveCharacterization::VelocityDataPoint>> data, bool highgear, bool reverse, bool turn) {
     mVelocityData=data;
@@ -19,7 +20,7 @@ bool CollectVelocityData::isFinished(){
 }
 
 void CollectVelocityData::start(){
-    Robot::drive->setHighGear(mHighGear);
+    Subsystems::FalconDrive::getInstance()->setHighGear(mHighGear);
     mStartTime=frc::Timer::GetFPGATimestamp();
     cout<<"Starting velocity data collection"<<endl;
 }
@@ -34,8 +35,8 @@ void CollectVelocityData::update(){
     }
     mPercentPower= kRampRate*(frc::Timer::GetFPGATimestamp()-mStartTime);
     
-    Robot::drive->setOpenLoop(make_shared<DriveSignal>((mReverse? -1.0:1.0)*mPercentPower, (mReverse? -1.0:1.0)*(mTurn? -1.0:1.0)*mPercentPower));
-    velocity= (fabs(Robot::drive->getLeftRadsPerSec())+fabs(Robot::drive->getRightRadsPerSec()))/2.0; //now in radians per second of drive wheels
+    Subsystems::FalconDrive::getInstance()->setOpenLoop(make_shared<DriveSignal>((mReverse? -1.0:1.0)*mPercentPower, (mReverse? -1.0:1.0)*(mTurn? -1.0:1.0)*mPercentPower));
+    velocity= (fabs(Subsystems::FalconDrive::getInstance()->getLeftRadsPerSec())+fabs(Subsystems::FalconDrive::getInstance()->getRightRadsPerSec()))/2.0; //now in radians per second of drive wheels
     voltage= mPercentPower*12.0;//volts
     shared_ptr<DriveCharacterization::VelocityDataPoint> VelDataPoint= make_shared<DriveCharacterization::VelocityDataPoint>(velocity, voltage);
     mVelocityData.push_back(VelDataPoint);
@@ -44,7 +45,7 @@ void CollectVelocityData::update(){
 
 void CollectVelocityData::done(){
     
-    Robot::drive->setOpenLoop(make_shared<DriveSignal>(0,0));
+    Subsystems::FalconDrive::getInstance()->setOpenLoop(make_shared<DriveSignal>(0,0));
     //mCSVWriter->close();
     cout<<"Ending velocity data collection"<<endl;
 }

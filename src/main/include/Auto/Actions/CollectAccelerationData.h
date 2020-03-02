@@ -10,7 +10,7 @@
 #include "lib/Util/CSVWriter.h"
 #include "lib/Util/DriveSignal.h"
 #include "lib/Physics/DriveCharacterization.h"
-#include "Robot.h"
+#include "lib/Util/Util.h"
 
 #include "frc/Timer.h"
 
@@ -22,6 +22,7 @@
 using namespace std;
 
 class CollectAccelerationData : public Action {
+  Util util{};
   double kPower=.5;
   double kTotalTime=2.0;
   shared_ptr<CSVWriter> mCSVwriter;

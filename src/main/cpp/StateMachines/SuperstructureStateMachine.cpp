@@ -347,38 +347,7 @@ void SuperstructureStateMachine::getIntakingBallDesiredState(SuperstructureState
         changedIntake = true;
     } else 
     {
-        /*       
-        if (photoEyeState)
-        { //run balls to top - multiple balls at one time?
-            resetIntakeLogic();
-            ballPathforward = true;
-            runBallPath = true;
-
-        } else
-        {
-            runBallPath = false;
-        }
         
-        if (!bottomPathTriggered && topBallTrigger.update(topPathState, frc::SmartDashboard::GetNumber("Top Ball Trigger Delay", .3)))
-        { //start balls going down
-                ballPathforward = false;
-                topPathTriggered = true;
-        } else if (topPathTriggered && bottomBallTrigger.update(bottomPathState, frc::SmartDashboard::GetNumber("Bottom Ball Trigger Delay", 0.0)))
-        { //stop balls at bottom
-            ballPathforward = true;
-            runBallPath = false;
-            bottomPathTriggered = true;
-        }
-        if (runBallPath)
-        {
-        
-            desiredState.ballPathTop = (ballPathforward? 1.0: -1.0) * frc::SmartDashboard::GetNumber("BallPathTop default", Constants::kBallPathTopDefaultSpeed);    
-        } else
-        { //stop ball path
-            desiredState.ballPathTop = 0.0;    
-        }
-        */
-        //frc::SmartDashboard::PutBoolean("SuperstructureStateMachine: run ballPath", runBallPath);
         desiredState.ballPathTop = frc::SmartDashboard::GetNumber("BallPathTop default", Constants::kBallPathTopDefaultSpeed);
         desiredState.centeringIntake = frc::SmartDashboard::GetNumber("CenteringIntake default", Constants::kCenteringIntakeDefaultSpeed);
         desiredState.hood = NAN;

@@ -13,9 +13,9 @@ PIDTuningMode::PIDTuningMode() {}
 
 void PIDTuningMode::routine(){
     //runAction(make_shared<PIDTuner>(1.0, 4.0));
-    //Robot::drive->startLogging();
+    
     runAction(make_shared<SeriesAction>(createProfile(setpoints)));
-    //Robot::drive->stopLogging();
+    
 }
 
 vector<shared_ptr<Action>> PIDTuningMode::createProfile(vector<double> percentOutput){

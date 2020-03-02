@@ -6,7 +6,7 @@
 /*----------------------------------------------------------------------------*/
 
 #include "Auto/Actions/PIDTuner.h"
-#include "Robot.h"
+#include "Subsystems/FalconDrive.h"
 #include "Subsystems/Drive.h"
 #include "lib/Util/DriveSignal.h"
 #include "Planners/DriveMotionPlanner.h"
@@ -19,11 +19,11 @@
 PIDTuner::PIDTuner(double percentPower, double duration) {
     mVelocity=percentPower*maxNeoRPM;
     mDuration=duration;
-    mVelocityIPS= Robot::drive->RPMToInchesPerSecond(mVelocity);
+    mVelocityIPS= Subsystems::FalconDrive::getInstance()->RPMToInchesPerSecond(mVelocity);
     frc::SmartDashboard::PutNumber("PIDTuner/Velocity (Inches/second)",mVelocityIPS);
     
     std::cout<<"PIDTuner constructed"<<endl;
-    Robot::drive->setPIDTuner(true);
+    Subsystems::FalconDrive::getInstance()->setPIDTuner(true);
 
 }
 
@@ -32,44 +32,43 @@ PIDTuner::PIDTuner(double percentPower, double endPower, double duration){
     mDuration=duration;
     mEndVelocity=endPower*maxNeoRPM;
 
-    mVelocityIPS= Robot::drive->RPMToInchesPerSecond(mVelocity);
+    mVelocityIPS= Subsystems::FalconDrive::getInstance()->RPMToInchesPerSecond(mVelocity);
     frc::SmartDashboard::PutNumber("PIDTuner/Velocity (Inches/second)",mVelocityIPS);
     
     std::cout<<"PIDTuner constructed"<<endl;
-    Robot::drive->setPIDTuner(true);
+    Subsystems::FalconDrive::getInstance()->setPIDTuner(true);
     
 }
 
 void PIDTuner::start(){
     std::cout<<"PIDTuner starting"<<endl;
     mStartTime=frc::Timer::GetFPGATimestamp();
-    shared_ptr<DriveMotionPlanner::Output> output = Robot::drive->mMotionPlanner->updatePIDTuner(mVelocity);
+    shared_ptr<DriveMotionPlanner::Output> output = Subsystems::FalconDrive::getInstance()->mMotionPlanner->updatePIDTuner(mVelocity);
 
     frc::SmartDashboard::PutNumber("Left Feedforward", output->left_feedforward_voltage);
-    frc::SmartDashboard::PutNumber("Left Demand", Robot::drive->radiansPerSecondToRPM(output->left_velocity));
+    frc::SmartDashboard::PutNumber("Left Demand", Subsystems::FalconDrive::getInstance()->radiansPerSecondToTicksPer100ms(output->left_velocity));
     frc::SmartDashboard::PutNumber("Left Acceleration", output->left_acceleration);
 
-    shared_ptr<DriveSignal> signal = make_shared<DriveSignal>(Robot::drive->radiansPerSecondToRPM(output->left_velocity), Robot::drive->radiansPerSecondToRPM(output->right_velocity));
-    shared_ptr<DriveSignal> feedforward= make_shared<DriveSignal>(output->left_feedforward_voltage, output->right_feedforward_voltage);
+    shared_ptr<DriveSignal> signal = make_shared<DriveSignal>(Subsystems::FalconDrive::getInstance()->radiansPerSecondToTicksPer100ms(output->left_velocity), Subsystems::FalconDrive::getInstance()->radiansPerSecondToTicksPer100ms(output->right_velocity));
+    shared_ptr<DriveSignal> feedforward= make_shared<DriveSignal>(output->left_feedforward_voltage / 12.0, output->right_feedforward_voltage /12.0);
     //shared_ptr<DriveSignal> feedforward=make_shared<DriveSignal>(2.0, 2.0);
-    Robot::drive->setVelocity(signal, feedforward);    
+    Subsystems::FalconDrive::getInstance()->setVelocity(signal, feedforward);    
     
     std::cout<<"PIDTuner started"<<endl;
 }
 
 void PIDTuner::update(){
-    frc::SmartDashboard::PutNumber("PID Tuning Error", Robot::util.limit((Robot::drive->getLinearVelocity()-mVelocityIPS), 2.0));
+    frc::SmartDashboard::PutNumber("PID Tuning Error", Robot::util.limit((Subsystems::FalconDrive::getInstance()->getLinearVelocity()-mVelocityIPS), 2.0));
     
 }
 
 void PIDTuner::done(){
-    shared_ptr<DriveMotionPlanner::Output> output = Robot::drive->mMotionPlanner->updatePIDTuner(mEndVelocity);
+    shared_ptr<DriveMotionPlanner::Output> output = Subsystems::FalconDrive::getInstance()->mMotionPlanner->updatePIDTuner(mEndVelocity);
 
-    shared_ptr<DriveSignal> signal = make_shared<DriveSignal>(Robot::drive->radiansPerSecondToRPM(output->left_velocity), Robot::drive->radiansPerSecondToRPM(output->right_velocity));
-    shared_ptr<DriveSignal> feedforward= make_shared<DriveSignal>(output->left_feedforward_voltage, output->right_feedforward_voltage);
+    shared_ptr<DriveSignal> signal = make_shared<DriveSignal>(Subsystems::FalconDrive::getInstance()->radiansPerSecondToTicksPer100ms(output->left_velocity), Subsystems::FalconDrive::getInstance()->radiansPerSecondToTicksPer100ms(output->right_velocity));
+    shared_ptr<DriveSignal> feedforward= make_shared<DriveSignal>(output->left_feedforward_voltage / 12.0, output->right_feedforward_voltage / 12.0);
 
-    Robot::drive->setVelocity(signal, feedforward);
-    //Robot::drive->setPIDTuner(false);
+    Subsystems::FalconDrive::getInstance()->setVelocity(signal, feedforward);
     
     std::cout<<"PIDTuner done"<<endl;
 }

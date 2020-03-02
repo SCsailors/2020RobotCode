@@ -8,7 +8,6 @@
 #pragma once
 
 #include "Action.h"
-#include "Robot.h"
 #include "lib/Util/DriveSignal.h"
 
 #include "frc/Timer.h"

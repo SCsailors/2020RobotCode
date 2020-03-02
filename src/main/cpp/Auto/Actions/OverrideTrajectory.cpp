@@ -6,10 +6,11 @@
 /*----------------------------------------------------------------------------*/
 
 #include "Auto/Actions/OverrideTrajectory.h"
+#include "Subsystems/FalconDrive.h"
 
 OverrideTrajectory::OverrideTrajectory() {}
 
 void OverrideTrajectory::start(){
-    Robot::drive->overrideTrajectory(true);
+    Subsystems::FalconDrive::getInstance()->overrideTrajectory(true);
     Finished=true;
 }

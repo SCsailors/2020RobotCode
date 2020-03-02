@@ -6,7 +6,7 @@
 /*----------------------------------------------------------------------------*/
 
 #include "Auto/Actions/CollectAccelerationData.h"
-
+#include "Subsystems/FalconDrive.h"
 
 
 CollectAccelerationData::CollectAccelerationData(vector<shared_ptr<DriveCharacterization::AccelerationDataPoint>> data, bool highGear, bool reverse, bool turn) {
@@ -18,9 +18,9 @@ CollectAccelerationData::CollectAccelerationData(vector<shared_ptr<DriveCharacte
 }
 
 void CollectAccelerationData::start(){
-    Robot::drive->setHighGear(mHighGear);
+    Subsystems::FalconDrive::getInstance()->setHighGear(mHighGear);
     shared_ptr<DriveSignal> signal= make_shared<DriveSignal>((mReverse? -1.0:1.0)*kPower, (mReverse? -1.0:1.0)*(mTurn? -1.0:1.0)*kPower);
-    Robot::drive->setOpenLoop(signal);
+    Subsystems::FalconDrive::getInstance()->setOpenLoop(signal);
     mStartTime=frc::Timer::GetFPGATimestamp();
     mPrevTime=mStartTime;
     cout<<"Starting Acceleration data collection"<<endl;
@@ -28,7 +28,7 @@ void CollectAccelerationData::start(){
 }
 
 void CollectAccelerationData::update(){
-    currentVelocity= (fabs(Robot::drive->getLeftRadsPerSec()+Robot::drive->getRightRadsPerSec())/2.0);
+    currentVelocity= (fabs(Subsystems::FalconDrive::getInstance()->getLeftRadsPerSec()+Subsystems::FalconDrive::getInstance()->getRightRadsPerSec())/2.0);
     double currentTime= frc::Timer::GetFPGATimestamp();
     if (mPrevTime==mStartTime){
         mPrevTime=currentTime;
@@ -38,7 +38,7 @@ void CollectAccelerationData::update(){
     acceleration= (currentVelocity-mPrevVelocity)/(currentTime-mPrevTime);
 
     //ignore small accelerations
-    if (acceleration<Robot::util.kEpsilon){
+    if (acceleration < util.kEpsilon){
         mPrevTime=currentTime;
         mPrevVelocity=currentVelocity;
         return;
@@ -55,7 +55,7 @@ void CollectAccelerationData::update(){
 void CollectAccelerationData::done(){
     shared_ptr<DriveSignal> signal= make_shared<DriveSignal>();
     
-    Robot::drive->setOpenLoop(signal);
+    Subsystems::FalconDrive::getInstance()->setOpenLoop(signal);
     //mCSVwriter->close();
     cout<<"Ending Acceleration data collection"<<endl;
 }

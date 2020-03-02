@@ -7,7 +7,6 @@
 
 #pragma once
 #include "Action.h"
-#include "Robot.h"
 #include "lib/Trajectory/TrajectoryIterator.h"
 #include "lib/Trajectory/Timing/TimedState.h"
 #include "lib/Trajectory/TimedView.h"

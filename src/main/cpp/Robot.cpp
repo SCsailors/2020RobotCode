@@ -19,7 +19,7 @@ DriveAssist Robot::driveAssist;
 Kinematics Robot::kinematics;
 AutoModeSelector Robot::autoModeSelector;
 
-shared_ptr<Subsystems::Drive> Robot::drive(new Subsystems::Drive());
+//shared_ptr<Subsystems::Drive> Robot::drive(new Subsystems::Drive());
 shared_ptr<Subsystems::RobotStateEstimator> Robot::robotStateEstimator(new Subsystems::RobotStateEstimator());
 
 TrajectoryGenerator Robot::trajectoryGenerator;
@@ -30,6 +30,8 @@ TrajectoryGenerator Robot::trajectoryGenerator;
 
 void Robot::RobotInit() {
   
+  mDrive = Subsystems::FalconDrive::getInstance();
+
   mBallPathTop = Subsystems::BallPathTop::getInstance();
   mCenteringIntake = Subsystems::CenteringIntake::getInstance();
   mHood = Subsystems::Hood::getInstance();
@@ -60,7 +62,7 @@ void Robot::RobotInit() {
 
   //has to be in Initialization because in RobotState constructor, it would cause a crash (RobotState constructor before drive constructor).
   //robot Starts forward
-  drive->setHeading(make_shared<Rotation2D>());
+  mDrive->setHeading(make_shared<Rotation2D>());
   mRobotState->reset();
 
   mLimelightManager->setAllLEDS(Subsystems::Limelight::LedMode::OFF);
@@ -77,7 +79,7 @@ void Robot::RobotInit() {
   
   //add subsystem loops to vector
   
-  subsystems.push_back(drive);
+  subsystems.push_back(mDrive);
   subsystems.push_back(robotStateEstimator);
   subsystems.push_back(mBallPathTop);
   subsystems.push_back(mCenteringIntake);
@@ -231,29 +233,31 @@ void Robot::manualControl()
     mSuperstructure->setBallPathManual(false);
   }
   
-  //Manual Shfit or enable auto shift
+  //Manual Shfit or enable auto shift - rework this
+  /*
   if (manualShift)
   { 
     if (firstManual)
     {
-      drive->setShifterState(Subsystems::Drive::Shifterstate::Manual);
+      mDrive->setShifterState(Subsystems::FalconDrive::Shifterstate::Manual);
     }
     
-    drive->setManualShifterState(wantsHighGear);
+    //mDrive->setManualShifterState(wantsHighGear);
   } else
   {
     if (firstAuto)
     {
-      drive->setShifterState(Subsystems::Drive::Shifterstate::Auto_Shift);
+      mDrive->setShifterState(Subsystems::Drive::Shifterstate::Auto_Shift);
     }
   }
+  */
   
   //Drive Signal
   std::shared_ptr<DriveSignal> signal;
   
   if (controller_one)
   {
-    signal = driveAssist.Drive(throttle, turn, quickTurn, drive->isHighGear());
+    signal = driveAssist.Drive(throttle, turn, quickTurn, mDrive->isHighGear());
   } else
   { //Throttle is Left, Turn is Right
     signal = std::make_shared<DriveSignal>(mControlBoard->getThrottle(), mControlBoard->getTurn());
@@ -261,7 +265,7 @@ void Robot::manualControl()
   
   frc::SmartDashboard::PutNumber("Drive Signal Left:", signal->getLeft());
   frc::SmartDashboard::PutNumber("Drive Signal Right:", signal->getRight());
-  drive->setOpenLoop(signal);
+  mDrive->setOpenLoop(signal);
 
   //Shoot
   //Only can be changed during preshoot otherwise balls_to_shoot should equal 5.0;
@@ -440,7 +444,7 @@ void Robot::TestControl()
     mSuperstructure->setBallPathManual(false);
     //mBallPathTop->setOpenLoop(0.0);
   }
-  
+  /* - rework
   if (manualShift)
   {
     if (firstManual)
@@ -456,12 +460,12 @@ void Robot::TestControl()
       drive->setShifterState(Subsystems::Drive::Shifterstate::Auto_Shift);
     }
   }
-  
+  */
   std::shared_ptr<DriveSignal> signal;
   
   if (controller_one)
   { //Curvature controlled arcade
-    signal = driveAssist.Drive(throttle, turn, quickTurn, drive->isHighGear());
+    signal = driveAssist.Drive(throttle, turn, quickTurn, mDrive->isHighGear());
   } else
   { //Throttle is Left, Turn is Right (tank)
     signal = std::make_shared<DriveSignal>(mControlBoard->getThrottle(), mControlBoard->getTurn());
@@ -469,7 +473,7 @@ void Robot::TestControl()
   
   frc::SmartDashboard::PutNumber("Drive Signal Left:", signal->getLeft());
   frc::SmartDashboard::PutNumber("Drive Signal Right:", signal->getRight());
-  drive->setOpenLoop(signal);
+  mDrive->setOpenLoop(signal);
 }
 
 void Robot::TestPeriodic() 

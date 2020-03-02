@@ -6,7 +6,7 @@
 /*----------------------------------------------------------------------------*/
 
 #include "Auto/Actions/CollectCurvatureData.h"
-#include "Robot.h"
+#include "Subsystems/FalconDrive.h"
 
 #include <RobotState.h>
 
@@ -18,9 +18,9 @@ CollectCurvatureData::CollectCurvatureData(vector<shared_ptr<DriveCharacterizati
 }
 
 void CollectCurvatureData::start(){
-    Robot::drive->setHighGear(mHighGear);
+    Subsystems::FalconDrive::getInstance()->setHighGear(mHighGear);
 
-    Robot::drive->setOpenLoop(make_shared<DriveSignal>(kStartPower, kStartPower));
+    Subsystems::FalconDrive::getInstance()->setOpenLoop(make_shared<DriveSignal>(kStartPower, kStartPower));
     mStartTime= frc::Timer::GetFPGATimestamp();
 }
 
@@ -35,7 +35,7 @@ void CollectCurvatureData::update(){
         return;
     }
     
-    Robot::drive->setOpenLoop(make_shared<DriveSignal>((mReverse? -1.0:1.0)*kStartPower, (mReverse?-1.0:1.0)*rightPower));
+    Subsystems::FalconDrive::getInstance()->setOpenLoop(make_shared<DriveSignal>((mReverse? -1.0:1.0)*kStartPower, (mReverse?-1.0:1.0)*rightPower));
 
     shared_ptr<DriveCharacterization::CurvatureDataPoint> CurvData = make_shared<DriveCharacterization::CurvatureDataPoint>(FRC_7054::RobotState::getInstance()->getPredictedVelocity()->dx,
         FRC_7054::RobotState::getInstance()->getPredictedVelocity()->dtheta, kStartPower*12.0, rightPower*12.0);
@@ -50,7 +50,7 @@ bool CollectCurvatureData::isFinished(){
 
 void CollectCurvatureData::done(){
     shared_ptr<DriveSignal> signal = make_shared<DriveSignal>();
-    Robot::drive->setOpenLoop(signal->BRAKE);
+    Subsystems::FalconDrive::getInstance()->setOpenLoop(signal->BRAKE);
     mCSVWriter->close();
 }
 

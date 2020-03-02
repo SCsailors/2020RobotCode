@@ -7,6 +7,7 @@
 
 #include "Planners/DriveMotionPlanner.h"
 #include "Robot.h"
+#include "Subsystems/FalconDrive.h"
 #include "frc/Timer.h"
 #include "frc/smartdashboard/SmartDashboard.h"
 #include "Constants.h"
@@ -290,7 +291,7 @@ shared_ptr<DriveMotionPlanner::Output> DriveMotionPlanner::update(double timesta
 }
 
 shared_ptr<DriveMotionPlanner::Output> DriveMotionPlanner::updatePIDTuner(double startVelocity){
-    double mVelocity=Robot::units.inches_to_meters(Robot::drive->RPMToInchesPerSecond(startVelocity));
+    double mVelocity=Robot::units.inches_to_meters(Subsystems::FalconDrive::getInstance()->RPMToInchesPerSecond(startVelocity));
     shared_ptr<DifferentialDrive::ChassisState> chassis_velocity= make_shared<DifferentialDrive::ChassisState>(mVelocity, 0.0);
     shared_ptr<DifferentialDrive::ChassisState> chassis_acceleration= make_shared<DifferentialDrive::ChassisState>(0.0, 0.0);
 
@@ -313,5 +314,7 @@ shared_ptr<TimedState> DriveMotionPlanner::setpoint(){
 }
 
 string DriveMotionPlanner::toPlannerCSV(){
-    return toString(mSetpoint->t())+","+toString(mSetpoint->state()->getTranslation()->x())+","+toString(mSetpoint->state()->getTranslation()->y())+","+toString(mSetpoint->state()->getRotation()->getDegrees())+","+toString(mSetpoint->velocity())+","+toString(mSetpoint->acceleration())+","+toString(mSetpoint->state()->getCurvature())+","+toString(mSetpoint->state()->getDCurvatureDs())+","+toString(mError->getTranslation()->x())+","+toString(mError->getTranslation()->y())+","+toString(mError->getRotation()->getDegrees())+","+toString(initialDynamics->chassis_velocity->linear)+","+toString(initialDynamics->chassis_velocity->angular)+","+toString(adjustedDynamics->chassis_velocity->linear)+","+toString(adjustedDynamics->chassis_velocity->angular)+","+toString(initialDynamics->voltage->left)+","+toString(initialDynamics->voltage->right)+","+toString(adjustedDynamics->voltage->left)+","+toString(adjustedDynamics->voltage->right)+","+toString(Robot::drive->leftAppliedOutput())+","+toString(Robot::drive->rightAppliedOutput())+","+ FRC_7054::RobotState::getInstance()->toPlannerCSV()+toString(Robot::drive->mPeriodicIO->left_demand)+ ","+toString(Robot::drive->mPeriodicIO->right_demand)+","+toString(Robot::drive->getLeftVelocityNativeUnits())+","+toString(Robot::drive->getRightVelocityNativeUnits());
+    return toString(mSetpoint->t())+","+toString(mSetpoint->state()->getTranslation()->x())+","+toString(mSetpoint->state()->getTranslation()->y())+","+toString(mSetpoint->state()->getRotation()->getDegrees())+","+toString(mSetpoint->velocity())+","+toString(mSetpoint->acceleration())+","+toString(mSetpoint->state()->getCurvature())+","+toString(mSetpoint->state()->getDCurvatureDs())+","+toString(mError->getTranslation()->x())+","+toString(mError->getTranslation()->y())+","+toString(mError->getRotation()->getDegrees())+","+toString(initialDynamics->chassis_velocity->linear)+","+toString(initialDynamics->chassis_velocity->angular)+","+toString(adjustedDynamics->chassis_velocity->linear)+","+toString(adjustedDynamics->chassis_velocity->angular)+","+toString(initialDynamics->voltage->left)+","+toString(initialDynamics->voltage->right)+","+toString(adjustedDynamics->voltage->left)+","+toString(adjustedDynamics->voltage->right)+
+    //","+toString(Subsystems::FalconDrive::getInstance()->leftAppliedOutput())+","+toString(Subsystems::FalconDrive::getInstance()->rightAppliedOutput())
+    +","+ FRC_7054::RobotState::getInstance()->toPlannerCSV()+toString(Subsystems::FalconDrive::getInstance()->mPeriodicIO->left_demand)+ ","+toString(Subsystems::FalconDrive::getInstance()->mPeriodicIO->right_demand)+","+toString(Subsystems::FalconDrive::getInstance()->getLeftVelocityNativeUnits())+","+toString(Subsystems::FalconDrive::getInstance()->getRightVelocityNativeUnits());
 }

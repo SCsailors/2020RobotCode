@@ -6,6 +6,7 @@
 /*----------------------------------------------------------------------------*/
 
 #include "Auto/Actions/DriveTrajectory.h"
+#include "Subsystems/FalconDrive.h"
 
 #include <RobotState.h>
 
@@ -26,18 +27,13 @@ void DriveTrajectory::start(){
     if(mResetPose){
         FRC_7054::RobotState::getInstance()->reset(frc::Timer::GetFPGATimestamp(), mTrajectory->getState()->state()->getPose());
     }
-    Robot::drive->setTrajectory(mTrajectory);
+    Subsystems::FalconDrive::getInstance()->setTrajectory(mTrajectory);
 }
 
 bool DriveTrajectory::isFinished(){
-    if(Robot::drive->isDoneWithTrajectory()){
+    if(Subsystems::FalconDrive::getInstance()->isDoneWithTrajectory()){
         cout<<"Trajectory Finished"<<endl;
-        /*
-        shared_ptr<DriveSignal> signal = make_shared<DriveSignal>();
-        shared_ptr<DriveSignal> feedforward = make_shared<DriveSignal>();
-
-        Robot::drive->setVelocity(signal, feedforward);
-        */
+        
         return true;
     }
     return false;

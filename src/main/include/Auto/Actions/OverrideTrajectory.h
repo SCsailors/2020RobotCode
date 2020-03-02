@@ -7,7 +7,6 @@
 
 #pragma once
 #include "Action.h"
-#include "Robot.h"
 
 class OverrideTrajectory: public Action {
   bool Finished=false;

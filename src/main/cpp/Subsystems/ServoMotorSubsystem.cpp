@@ -862,12 +862,15 @@ void TalonSRXSubsystem::writePeriodicOutputs()
     //std::cout << "TalonSRXSubsystem: " << mConstants->kName << ": write periodic outputs" << std::endl;
     if (mControlState == ControlState::MOTION_MAGIC)
     {
+        mMaster->SelectProfileSlot(Constants::kMotionMagicPIDSlot, 0);
         mMaster->Set(ControlMode::MotionMagic, mPeriodicIO->demand, DemandType::DemandType_ArbitraryFeedForward, mPeriodicIO->feedforward);
     } else if (mControlState == ControlState::POSITION_PID || mControlState == ControlState::MOTION_PROFILING)
     {
+        mMaster->SelectProfileSlot(Constants::kPositionPIDSlot, 0);
         mMaster->Set(ControlMode::Position, mPeriodicIO->demand, DemandType::DemandType_ArbitraryFeedForward, mPeriodicIO->feedforward);
     } else if (mControlState == ControlState::VELOCITY_PID)
     {
+        mMaster->SelectProfileSlot(Constants::kVelocityPIDSlot, 0);
         mMaster->Set(ControlMode::Velocity, mPeriodicIO->demand);
     } else
     {
@@ -1073,6 +1076,7 @@ void TalonSubsystem::setSetpointPositionPID(double units, double feedforward_v)
     if (mControlState != ControlState::POSITION_PID)
     {
         mControlState = ControlState::POSITION_PID;
+        
     }
 }
 
@@ -1438,12 +1442,15 @@ void TalonFXSubsystem::writePeriodicOutputs()
     //std::cout << "TalonFXSubsystem: " << mConstants->kName << ": write periodic outputs" << std::endl;
     if (mControlState == ControlState::MOTION_MAGIC)
     {
+        mMaster->SelectProfileSlot(Constants::kMotionMagicPIDSlot, 0);
         mMaster->Set(ControlMode::MotionMagic, mPeriodicIO->demand, DemandType::DemandType_ArbitraryFeedForward, mPeriodicIO->feedforward);
     } else if (mControlState == ControlState::POSITION_PID || mControlState == ControlState::MOTION_PROFILING)
     {
+        mMaster->SelectProfileSlot(Constants::kPositionPIDSlot, 0);
         mMaster->Set(ControlMode::Position, mPeriodicIO->demand, DemandType::DemandType_ArbitraryFeedForward, mPeriodicIO->feedforward);
     } else if (mControlState == ControlState::VELOCITY_PID)
     {
+        mMaster->SelectProfileSlot(Constants::kVelocityPIDSlot, 0);
         mMaster->Set(TalonFXControlMode::Velocity, 1.5*mPeriodicIO->demand);
     } else
     {

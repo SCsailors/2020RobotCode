@@ -7,6 +7,8 @@
 
 #include "Auto/Actions/OpenLoopDrive.h"
 
+#include "Subsystems/FalconDrive.h"
+
 OpenLoopDrive::OpenLoopDrive(double left, double right, double duration, bool finishCondition) {
     double mLeft=left;
     double mRight= right;
@@ -16,7 +18,7 @@ OpenLoopDrive::OpenLoopDrive(double left, double right, double duration, bool fi
 
 void OpenLoopDrive::start(){
     
-    Robot::drive->setOpenLoop(make_shared<DriveSignal>(mLeft, mRight));
+    Subsystems::FalconDrive::getInstance()->setOpenLoop(make_shared<DriveSignal>(mLeft, mRight));
     mStartTime=frc::Timer::GetFPGATimestamp();
 }
 
@@ -24,7 +26,7 @@ void OpenLoopDrive::update(){}
 
 void OpenLoopDrive::done(){
     
-    Robot::drive->setOpenLoop(make_shared<DriveSignal>(0.0, 0.0));
+    Subsystems::FalconDrive::getInstance()->setOpenLoop(make_shared<DriveSignal>(0.0, 0.0));
 }
 
 bool OpenLoopDrive::isFinished(){
