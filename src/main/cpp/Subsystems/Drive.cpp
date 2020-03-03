@@ -18,6 +18,7 @@ Drive::PeriodicIO::PeriodicIO(){}
 
 
 Drive::Drive() {
+    /*
     kP=Constants::kDriveLowGearVelocityKp;//1E-4*.5;//PID Tuning: 1E-4*.5; Trajectory: 8e-5;
     kI=Constants::kDriveLowGearVelocityKi;//1.864E-6*.35;//PID Tuning: 1.864E-6*.35; Trajectory: 0.0;
     kD=Constants::kDriveLowGearVelocityKd;//0.00025;//1.20713E-6*4;//PID Tuning: 1.20713E-6*4; Trajectory: 0.0;
@@ -88,7 +89,7 @@ Drive::Drive() {
     setBrakeMode(false);
 
     mMotionPlanner=make_shared<DriveMotionPlanner>();
-
+    */
 }
 
 #ifdef CompetitionBot
@@ -109,7 +110,7 @@ void Drive::configureSparkMaxPID(){
     rightMasterPID.SetFF(Constants::kDriveLowGearVelocityKf);
     rightMasterPID.SetIZone(Constants::kDriveLowGearVelocityKiZone);
     rightMasterPID.SetOutputRange(-1.0, 1.0);
-    */
+    
     
    
     leftMasterPID.SetP(kP);
@@ -143,7 +144,7 @@ void Drive::configureSparkMaxPID(){
     leftSlavePID.SetIZone(kIZ);
     leftSlavePID.SetIMaxAccum(10.0);
     leftSlavePID.SetOutputRange(-1.0, 1.0);
-
+*/
 }
 
 #endif

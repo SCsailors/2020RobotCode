@@ -209,22 +209,12 @@ void SparkMaxSubsystem::readPeriodicInputs()
 
         
     mPIDMode = mModeChooser.GetSelected();
-    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ Actual mode: ", mControlState);
+    frc::SmartDashboard::PutNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ Actual mode: ", mPIDMode);
     k++;
 
-    int i = mControlState;
+    int i = mPIDMode;
     if (i < 4 ){
     
-        p = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kP: ", mConstants->kP.at(i));
-        i = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kI: ", mConstants->kI.at(i));
-        d = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kD: ", mConstants->kD.at(i));
-        f = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kF: ", mConstants->kF.at(i));
-    
-    
-        
-    
-
-     
         if (k % 10 == 0)
         {
             frc::SmartDashboard::PutNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ Actual kP: ", mPIDController->GetP(i));
@@ -558,7 +548,7 @@ double SparkMaxSubsystem::unitsPerSecondToTicksPer100ms(double units_per_second)
 
 void SparkMaxSubsystem::pidTuning()
 {
-    
+    #ifdef CompetitionBot
     double dem = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ PID Demand: ", 0.0);
     double ff = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ PID Feedforward: ", 0.0);
     bool running = frc::SmartDashboard::GetBoolean("Subsystems/" + mConstants->kName + "/PIDTuning/ Enabled: ", false);
@@ -566,6 +556,13 @@ void SparkMaxSubsystem::pidTuning()
     int i = mPIDMode;
     if (i < 4)
     {
+
+            
+        p = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kP: ", mConstants->kP.at(i));
+        i = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kI: ", mConstants->kI.at(i));
+        d = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kD: ", mConstants->kD.at(i));
+        f = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kF: ", mConstants->kF.at(i));
+    
     if (p != kp)
         {
             mPIDController->SetP(p, i);
@@ -614,6 +611,7 @@ void SparkMaxSubsystem::pidTuning()
     
     frc::SmartDashboard::PutNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ Actual Demand: ", dem);
     frc::SmartDashboard::PutNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ Actual Feedforward: ", ff);
+    #endif
 }
 
 
@@ -828,16 +826,9 @@ void TalonSRXSubsystem::readPeriodicInputs()
     
     mPIDMode = mModeChooser.GetSelected();
     k++;
-    int i = mControlState;
-    if (i < 4){
-    
-    p = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kP: ", mConstants->kP.at(i));
-    i = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kI: ", mConstants->kI.at(i));
-    d = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kD: ", mConstants->kD.at(i));
-    f = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kF: ", mConstants->kF.at(i));
-    
+    int i = mPIDMode;
+    if (i < 4){    
 
-    
     if (k % 10 == 0)
     {
         frc::SmartDashboard::PutNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ Actual kP: ", mMaster->ConfigGetParameter(ParamEnum::eProfileParamSlot_P, i, 0));
@@ -1152,7 +1143,7 @@ double TalonSubsystem::unitsPerSecondToTicksPer100ms(double units_per_second)
 
 void TalonSRXSubsystem::pidTuning()
 {
-    
+    #ifdef CompetitionBot
     double dem = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ PID Demand: ", 0.0);
     double ff = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ PID Feedforward: ", 0.0);
     bool running = frc::SmartDashboard::GetBoolean("Subsystems/" + mConstants->kName + "/PIDTuning/ Enabled: ", false);    
@@ -1160,7 +1151,12 @@ void TalonSRXSubsystem::pidTuning()
     int i = mPIDMode;
     if (i < 4)
     {
-        
+            
+        p = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kP: ", mConstants->kP.at(i));
+        i = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kI: ", mConstants->kI.at(i));
+        d = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kD: ", mConstants->kD.at(i));
+        f = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kF: ", mConstants->kF.at(i));
+    
     if (p != kp)
     {
         mMaster->Config_kP(i, p);
@@ -1207,6 +1203,7 @@ void TalonSRXSubsystem::pidTuning()
 
     frc::SmartDashboard::PutNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ Actual Demand: ", dem);
     frc::SmartDashboard::PutNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ Actual Feedforward: ", ff);
+    #endif
 }
 
 TalonFXSubsystem::TalonFXSubsystem(std::shared_ptr<TalonConstants> constants) : TalonSubsystem() 
@@ -1411,14 +1408,9 @@ void TalonFXSubsystem::readPeriodicInputs()
 
     mPIDMode = mModeChooser.GetSelected();
     k++;
-    int i = mControlState;
+    int i = mPIDMode;
     if (i < 4){
-    
-        p = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kP: ", mConstants->kP.at(i));
-        i = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kI: ", mConstants->kI.at(i));
-        d = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kD: ", mConstants->kD.at(i));
-        f = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kF: ", mConstants->kF.at(i));
-    
+
         if (k % 10 == 0)
         {
             frc::SmartDashboard::PutNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ Actual kP: ", mMaster->ConfigGetParameter(ParamEnum::eProfileParamSlot_P, i, 0) );
@@ -1519,7 +1511,7 @@ void TalonFXSubsystem::OnStop(double timestamp)
 
 void TalonFXSubsystem::pidTuning()
 {
-    
+    #ifdef CompetitionBot
     double dem = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ PID Demand: ", 0.0);
     double ff = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ PID Feedforward: ", 0.0);
     bool running = frc::SmartDashboard::GetBoolean("Subsystems/" + mConstants->kName + "/PIDTuning/ Enabled: ", false);
@@ -1527,6 +1519,13 @@ void TalonFXSubsystem::pidTuning()
     int i = mPIDMode;
     if ( i < 4)
     {
+
+            
+        p = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kP: ", mConstants->kP.at(i));
+        i = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kI: ", mConstants->kI.at(i));
+        d = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kD: ", mConstants->kD.at(i));
+        f = frc::SmartDashboard::GetNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ kF: ", mConstants->kF.at(i));
+    
         if (p != kp)
         {
             mMaster->Config_kP(i, p);
@@ -1573,4 +1572,5 @@ void TalonFXSubsystem::pidTuning()
     
     frc::SmartDashboard::PutNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ Actual Demand: ", dem);
     frc::SmartDashboard::PutNumber("Subsystems/" + mConstants->kName + "/PIDTuning/ Actual Feedforward: ", ff);
+    #endif
 }

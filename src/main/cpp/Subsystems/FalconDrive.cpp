@@ -206,6 +206,7 @@ std::shared_ptr<FalconDrive> FalconDrive::getInstance()
         rightConstants->id = 11;
         rightConstants->kName = "Right Drive Master";
         rightConstants->kIsTalonSRX = false;
+        rightConstants->inverted = true;
         rightConstants->kClosedLoopRampRate = Constants::kDriveOpenRampRateLowGear;
         rightConstants->kOpenLoopRampRate = Constants::kDriveOpenRampRateLowGear;
         rightConstants->kNeutralMode  = NeutralMode::Coast;
@@ -291,6 +292,7 @@ double FalconDrive::radiansPerSecondToTicksPer100ms(double rad_s)
 
 void FalconDrive::setOpenLoop(std::shared_ptr<DriveSignal> signal)
 {
+    #ifdef CompetitionBot
     if (mDriveControlState != OPEN_LOOP)
     {
         setBrakeMode(false);
@@ -309,10 +311,12 @@ void FalconDrive::setOpenLoop(std::shared_ptr<DriveSignal> signal)
 
     mPeriodicIO->left_feedforward = 0.0;
     mPeriodicIO->right_feedforward = 0.0;
+    #endif
 }
 
 void FalconDrive::setVelocity(std::shared_ptr<DriveSignal> signal, std::shared_ptr<DriveSignal> feedforward)
 {
+    #ifdef CompetitionBot
     if(mDriveControlState!= PATH_FOLLOWING){
         //entering velocity controlled state
         setBrakeMode(true);
@@ -329,6 +333,7 @@ void FalconDrive::setVelocity(std::shared_ptr<DriveSignal> signal, std::shared_p
     mPeriodicIO->right_demand= signal->getRight();
     mPeriodicIO->left_feedforward=feedforward->getLeft();
     mPeriodicIO->right_feedforward=feedforward->getRight();
+    #endif
 }
 
 void FalconDrive::setTrajectory(std::shared_ptr<TrajectoryIterator> trajectory)

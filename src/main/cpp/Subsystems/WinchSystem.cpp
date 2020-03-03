@@ -74,9 +74,12 @@ void WinchSystem::followSetpoint()
 
 void WinchSystem::extendClimber()
 {
+    
     if (!mClimberExtended)
     {
+        #ifdef CompetitionBot
         mClimber.Set(true);
+        #endif
         mClimberExtended = true;
     }
 }
@@ -85,7 +88,9 @@ void WinchSystem::retractClimber()
 {
     if (mClimberExtended)
     {
+        #ifdef CompetitionBot
         mClimber.Set(false);
+        #endif
         mClimberExtended = false;
     }
 }

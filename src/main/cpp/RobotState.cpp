@@ -242,7 +242,7 @@ VisionTargeting::AimingParameters FRC_7054::RobotState::getAimingParameters(bool
 
     double timestamp = frc::Timer::GetFPGATimestamp();
 
-    VisionTargeting::GoalTracker::TrackReportComparator comparator{Constants::kTrackScrubFactor, Constants::kTrackAgeWeight, Constants::kTrackSwitchingWeight, prev_track_id, timestamp};
+    VisionTargeting::GoalTracker::TrackReportComparator comparator{Constants::kTrackStabilityWeight, Constants::kTrackAgeWeight, Constants::kTrackSwitchingWeight, prev_track_id, timestamp};
 
     VisionTargeting::GoalTracker::TrackReport report{};
 
@@ -250,7 +250,7 @@ VisionTargeting::AimingParameters FRC_7054::RobotState::getAimingParameters(bool
     {
         if (track.latest_timestamp > timestamp - max_track_age)
         {
-            if (comparator.compare(report, track) >0)
+            if (comparator.compare(report, track) > 0)
             {
                 report = track;
             }
@@ -259,13 +259,13 @@ VisionTargeting::AimingParameters FRC_7054::RobotState::getAimingParameters(bool
 
     std::shared_ptr<Pose2D> vehicleToGoal = getFieldToVehicle(timestamp)->inverse()->transformBy(report.field_to_target);
     VisionTargeting::AimingParameters params{
-        //vehicleToGoal->getTranslation()->norm(),
         vehicleToGoal,
         report.field_to_target,
         report.field_to_target->getRotation(),
         report.latest_timestamp, report.stability, 
         report.id
     };
+    return params;
 }
 
 void FRC_7054::RobotState::outputToSmartDashboard(){

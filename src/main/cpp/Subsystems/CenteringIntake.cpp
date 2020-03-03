@@ -22,7 +22,7 @@ std::shared_ptr<Subsystems::CenteringIntake> CenteringIntake::getInstance()
         constants->kName = "Centering Intake";
         constants->kCurrentStallLimit = 20;
         constants->kSecondaryCurrentLimit = 30;
-        constants->inverted = false;
+        constants->inverted = true;
         constants->kTicksPerUnitDistance = 42.0 / 9.0; //Rotation after gear reduction
         mInstance = std::make_shared<Subsystems::CenteringIntake>(constants);
     }
