@@ -34,8 +34,8 @@ std::shared_ptr<Subsystems::Shooter> Shooter::getInstance()
         constants->kNeutralMode = NeutralMode::Coast;
         constants->kClosedLoopRampRate = 1.5;
 
-        constants->kP.at(2) = .22;
-        constants->kF.at(2) = .1097;
+        constants->kP.at(2) = .12;
+        constants->kF.at(2) = 0.0;
         
         mInstance = std::make_shared<Subsystems::Shooter>(constants);
     }

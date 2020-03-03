@@ -170,8 +170,6 @@ class ServoMotorSubsystem : public Subsystems::Subsystem {
   double feedforward = 0.0;
   bool PIDTuning = false;
 
-  double p, i, d, f;
-
   ControlState mPIDMode = ControlState::OPEN_LOOP;
   frc::SendableChooser<ControlState> mModeChooser;
 };
