@@ -73,6 +73,8 @@ class GamePadTwoJoysticks : public ControlBoardBase {
   double getBallPath() override;
   bool getBallPathToggle() override;
   bool getClimbRun() override;
+  bool getCloseShot() override;
+  bool getLineShot() override;
 
   int i = 0;
   int j = 0;

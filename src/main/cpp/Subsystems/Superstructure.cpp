@@ -41,8 +41,6 @@ void Superstructure::OnLoop(double timestamp)
     mStateMachine.updateBottomPathState(mBallPathTop->getLastBreakState());
     
     updateCurrentState(); //gets data from subsystems
-    if (!frc::SmartDashboard::GetBoolean("Enable PID Tuning", false))
-    {
         //calculate intake, hood, and shooter setpoints and set it to goal
         setGoal(mStateMachine.mergedShootingIntaking(timestamp, mWantedActionShooter, mWantedActionIntake, mCurrentState, mLatestAimingParameters.getRange()));
         updateWantedAction(); //update wanted action because state transitions in superstructure state machine could change it
@@ -52,7 +50,6 @@ void Superstructure::OnLoop(double timestamp)
         maybeUpdateGoalFromFieldRelativeGoal(timestamp);
         //set updated data
         followSetpoint();
-    }
 }
 
 void Superstructure::OnStop(double timestamp)

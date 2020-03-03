@@ -45,6 +45,9 @@ class SuperstructureStateMachine {
   Utility::TimeDelayedBoolean bottomBallTrigger{};
   Utility::VariableDelayedBoolean PreBottomTrigger{};
 
+  double default_shooter_speed = 0.0;
+  double default_hood_angle = 0.0;
+
  public:
   enum WantedAction {
         WANTED_IDLE, 
@@ -128,6 +131,9 @@ class SuperstructureStateMachine {
   void updateBottomPathState(bool state){bottomPathState = state;}
   void updateTopPathState(bool state){topPathState = state;}
   void updatePreBottomPathState(bool state){preBottomState = state;}
+
+  void updateShooterDefault(double speed){default_shooter_speed = speed;}
+  void updateHoodDefault(double angle){default_hood_angle = angle;}
   //add double getHoodForRange(range);
   //add double getSpeedForRange(range);
   //use either piecewise functions or multiple interpolating treemap (one for each speed) where all the data is already inputted.

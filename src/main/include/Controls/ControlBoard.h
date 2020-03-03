@@ -82,6 +82,8 @@ class ControlBoardBase {
   virtual double getBallPath(){return 0.0;}
   virtual bool getBallPathToggle(){return false;}
   virtual bool getClimbRun(){return false;}
+  virtual bool getCloseShot(){return false;}
+  virtual bool getLineShot(){return false;}
 
   Util util{}; 
   double turretDeadband = .4;

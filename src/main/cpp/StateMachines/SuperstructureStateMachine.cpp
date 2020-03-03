@@ -348,26 +348,26 @@ void SuperstructureStateMachine::getIntakingBallDesiredState(SuperstructureState
         changedIntake = true;
     } else 
     {
-        if (PreBottomTrigger.updateStarted(preBottomState, frc::Timer::GetFPGATimestamp(), frc::SmartDashboard::GetNumber("PreBottom Delay Default", .1))) //add delay?
+        if (PreBottomTrigger.updateStarted(preBottomState, frc::Timer::GetFPGATimestamp(), .1)) //add delay?
         {
             preBottomTriggered = true;
         }
 
-        if ((bottomBallTrigger.update(bottomPathState, frc::SmartDashboard::GetNumber("Bottom Trigger Delay default", 0.0)) || topBallTrigger.update(topPathState, frc::SmartDashboard::GetNumber("Top Trigger Delay", 0.0))) && preBottomTriggered)
+        if ((bottomBallTrigger.update(bottomPathState, 0.0) || topBallTrigger.update(topPathState, 0.0)) && preBottomTriggered)
         {
             preBottomTriggered = false;
         }
 
         if (preBottomTriggered)
         {
-            desiredState.ballPathTop = frc::SmartDashboard::GetNumber("BallPathTop default", Constants::kBallPathTopDefaultSpeed);
+            desiredState.ballPathTop = .7;
         } else
         {
             desiredState.ballPathTop = 0.0;    
         }
         
         
-        desiredState.centeringIntake = frc::SmartDashboard::GetNumber("CenteringIntake default", Constants::kCenteringIntakeDefaultSpeed);
+        desiredState.centeringIntake = .9;
         desiredState.hood = NAN;
         desiredState.shooter = NAN;
         //desiredState.turret = currentState.turret;
@@ -458,8 +458,8 @@ void SuperstructureStateMachine::getPreExhaustingBallDesiredState(Superstructure
         shooterPriority = false;
 
         desiredState.centeringIntake = NAN;
-        desiredState.hood = frc::SmartDashboard::GetNumber("Hood default", Constants::kHoodDefaultAngle); //will be calculated here
-        desiredState.shooter = ShooterSpeed;
+        desiredState.hood = default_hood_angle; //will be calculated here
+        desiredState.shooter = default_shooter_speed;
         //desiredState.turret = currentState.turret; //handled by vision
         //desiredState.numBalls = currentState.numBalls;
     
@@ -517,10 +517,10 @@ void SuperstructureStateMachine::getExhaustingBallDesiredState(SuperstructureSta
             ShooterSpeed = frc::SmartDashboard::GetNumber("Shooter Far default", Constants::kShooterFarDefaultSpeed);
             break;
     }
-    desiredState.ballPathTop = frc::SmartDashboard::GetNumber("BallPath Shoot default", .45);
+    desiredState.ballPathTop = .7;
     desiredState.centeringIntake = currentState.centeringIntake;
-    desiredState.hood = frc::SmartDashboard::GetNumber("Hood default", Constants::kHoodDefaultAngle); //should just be set in Superstructure.h
-    desiredState.shooter = ShooterSpeed;
+    desiredState.hood = default_hood_angle; //should just be set in Superstructure.h
+    desiredState.shooter = default_shooter_speed;
     //desiredState.turret = currentState.turret; //handled else where
     //desiredState.numBalls = currentState.numBalls; // handled else where
     desiredState.extendWheelieBar = true;

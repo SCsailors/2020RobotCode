@@ -11,6 +11,7 @@
 
 #include <frc/smartdashboard/SmartDashboard.h>
 #include "lib/Util/CSVWriter.h"
+#include "Auto/Modes/CompetitionModes/SimpleMode.h"
 
 Util Robot::util;
 Units Robot::units;
@@ -44,17 +45,9 @@ void Robot::RobotInit() {
   mClimber = Subsystems::WinchSystem::getInstance();
   mRobotState = FRC_7054::RobotState::getInstance();
   
-  //Controls
-  if (Constants::kJoystickOne)
-  {
-    mControlBoard = std::make_shared<ControlBoard::SingleGamePadController>();
-    prev_controller_one = true;
-  } else
-  {
-    mControlBoard = std::make_shared<ControlBoard::GamePadTwoJoysticks>();
-    prev_controller_one = false;
-  }
-
+    
+  mControlBoard = std::make_shared<ControlBoard::GamePadTwoJoysticks>();
+  
   //mTurret->zeroSensors();
   mHood->zeroSensors();
   
@@ -69,13 +62,13 @@ void Robot::RobotInit() {
   mInfrastructure->setManualControl(true);
   //shared_ptr<CharacterizeHighGear> characterizeHighGear=make_shared<CharacterizeHighGear>();
   //mAutoModeExecutor= make_shared<AutoModeExecutor>(characterizeHighGear);
-  
+  std::shared_ptr<SimpleMode> mSimpleMode = std::make_shared<SimpleMode>();
   //shared_ptr<PIDTuningMode> tuningMode = make_shared<PIDTuningMode>();
   //mAutoModeExecutor= make_shared<AutoModeExecutor>(tuningMode);
-  shared_ptr<AutoModeBase> baseMode = make_shared<AutoModeBase>();
-  mAutoModeExecutor= make_shared<AutoModeExecutor>(baseMode);
+  //shared_ptr<AutoModeBase> baseMode = make_shared<AutoModeBase>();
+  mAutoModeExecutor= make_shared<AutoModeExecutor>(mSimpleMode);
   
-  autoModeSelector.updateModeCreator();
+  //autoModeSelector.updateModeCreator();
   
   //add subsystem loops to vector
   
@@ -103,46 +96,40 @@ void Robot::RobotInit() {
 
   mSubsystemLoops->resetSensors();
   std::cout<<"reset sensors"<<std::endl;
+
+  mSuperstructure->mStateMachine.updateHoodDefault(lineHood);
+  mSuperstructure->mStateMachine.updateShooterDefault(lineShooter);
+  isShootClose = false;
 }
 
 
 void Robot::RobotPeriodic() {
-  #ifndef CompetitionBot
-  int count = (int) frc::SmartDashboard::GetNumber("Subsystems/Ball Path Top/ get Ball Count: ", 0.0);
-  mBallPathTop->SetBallCount(count);
-  #endif
+  
   mRobotState->outputToSmartDashboard();
   
-  controller_one = frc::SmartDashboard::GetBoolean("One Controller?", true);
-  if (controller_one && controller_one != prev_controller_one)
-  {
-    mControlBoard = std::make_shared<ControlBoard::SingleGamePadController>();
-  } else if (!controller_one && controller_one != prev_controller_one)
-  {
-    mControlBoard = std::make_shared<ControlBoard::GamePadTwoJoysticks>();
-  }
-  prev_controller_one = controller_one;
-
+  mControlBoard = std::make_shared<ControlBoard::GamePadTwoJoysticks>();
+  
   frc::SmartDashboard::PutBoolean("Compressor Manual Control", mInfrastructure->isManualControl());
-  //std::cout<<"ControlBoard: One or Two Controllers"<<std::endl;
+  
+  
 }
 
 void Robot::DisabledInit(){
   mSubsystemLoops->stopEnabledLoops();
   mSubsystemLoops->startDisabledLoops();
   mAutoModeExecutor->stop();
-  autoModeSelector.reset();
-  autoModeSelector.updateModeCreator();
+  //autoModeSelector.reset();
+  //autoModeSelector.updateModeCreator();
 }
 
 void Robot::DisabledPeriodic(){
-  autoModeSelector.updateModeCreator();
+  //autoModeSelector.updateModeCreator();
 
-  shared_ptr<AutoModeBase> autoMode = autoModeSelector.getAutoMode(true); //add autofieldstate
-  if (autoMode->getID()!= mAutoModeExecutor->getAutoMode()->getID()){
-    cout<<"Setting AutoMode to: "+ autoMode->getID()<<endl;
-    mAutoModeExecutor->setAutoMode(autoMode);
-  }
+  //shared_ptr<AutoModeBase> autoMode = autoModeSelector.getAutoMode(true); //add autofieldstate
+ // if (autoMode->getID()!= mAutoModeExecutor->getAutoMode()->getID()){
+  //  cout<<"Setting AutoMode to: "+ autoMode->getID()<<endl;
+  //  mAutoModeExecutor->setAutoMode(autoMode);
+  //}
 }
 
 void Robot::AutonomousInit() {
@@ -165,13 +152,7 @@ void Robot::TeleopInit() {
 }
 
 void Robot::TeleopPeriodic() {
-  if (frc::SmartDashboard::GetBoolean("Enable PID Tuning", false))
-  { //pid tuning: set pidf constants and run individual motors
-    TestControl();
-  } else
-  { //competition mode
     manualControl();
-  }
   
 }
 
@@ -201,6 +182,8 @@ void Robot::manualControl()
   bool autoAim = mControlBoard->getAutoAim();
   bool pathToggle = mControlBoard->getBallPathToggle();
   bool climbRun = mControlBoard->getClimbRun();
+  bool shootClose = mControlBoard->getCloseShot();
+  bool shootLine = mControlBoard->getLineShot();
 
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getQuickTurn()", quickTurn);
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getWantsLowGear()", wantsHighGear);
@@ -272,6 +255,18 @@ void Robot::manualControl()
   double balls_to_shoot = mControlBoard->getBallShootCount(preshoot);
   
   
+  if (shootLine && isShootClose)
+  {
+    isShootClose = false;
+    mSuperstructure->mStateMachine.updateHoodDefault(lineHood);
+    mSuperstructure->mStateMachine.updateShooterDefault(lineShooter);
+  } else if (shootClose && !isShootClose)
+  {
+    isShootClose = true;
+    mSuperstructure->mStateMachine.updateHoodDefault(closeHood);
+    mSuperstructure->mStateMachine.updateShooterDefault(closeShooter);
+  }
+
   if ( balls_to_shoot != prev_ball)
   {
     std::cout <<"Balls: setting number of balls to shoot: "<<balls_to_shoot <<std::endl;

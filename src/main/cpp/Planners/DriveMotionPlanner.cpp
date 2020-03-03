@@ -200,10 +200,6 @@ shared_ptr<DriveMotionPlanner::Output> DriveMotionPlanner::updateNonlinearFeedba
     //cout<<dynamics->chassis_velocity->linear<<","<<dynamics->chassis_velocity->angular<<",";
     double kBeta= 1.5; //>0 EX. 3.5
     double kZeta=.4; // Damping coefficient, [0,1] EX. 0.7
-    kBeta=frc::SmartDashboard::GetNumber("MotionPlanner kBeta", 1.5);
-    kZeta=frc::SmartDashboard::GetNumber("MotionPlanner kZeta", .4);
-    frc::SmartDashboard::PutNumber("Actual kBeta", kBeta);
-    frc::SmartDashboard::PutNumber("Actual kZeta", kZeta);
     //compute gain parameter
     double k= 2.0*kZeta*sqrt(kBeta*dynamics->chassis_velocity->linear*dynamics->chassis_velocity->linear+dynamics->chassis_velocity->angular*dynamics->chassis_velocity->angular);
     frc::SmartDashboard::PutNumber("MotionPlanner k gain", k);

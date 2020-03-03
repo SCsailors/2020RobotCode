@@ -243,3 +243,13 @@ bool GamePadTwoJoysticks::getClimbRun()
 {
     return X.isHeld();
 }
+
+bool GamePadTwoJoysticks::getCloseShot()
+{
+    return LT_Multi.holdStarted();
+}
+
+bool GamePadTwoJoysticks::getLineShot()
+{
+    return RT_Multi.holdStarted();
+}

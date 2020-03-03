@@ -145,6 +145,13 @@ void TestControl();
   Utility::LatchedBoolean manualDriveShifter{};
   Utility::LatchedBoolean autoDriveShifter{false};
 
+  double lineHood = 46.0;
+  double lineShooter = 90.0;
+
+  double closeHood = 0.0;
+  double closeShooter = 30.0;
+  bool isShootClose = false;
+
   int i = 0;
   int j = 0;
   int k = 0;
