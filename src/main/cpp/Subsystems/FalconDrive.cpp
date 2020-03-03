@@ -374,7 +374,7 @@ void FalconDrive::setHighGear(bool wantsHighGear)
         {
             mIsHighGear = false;
             #ifdef CompetitionBot
-            mGearShifter.Set(true);
+            mGearShifter.Set(false);
             mLeftMaster->ConfigOpenloopRamp(Constants::kDriveOpenRampRateLowGear);
             mRightMaster->ConfigOpenloopRamp(Constants::kDriveOpenRampRateLowGear);
             #endif
