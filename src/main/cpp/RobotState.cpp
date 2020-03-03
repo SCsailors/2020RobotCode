@@ -80,7 +80,7 @@ void FRC_7054::RobotState::addVehicleToTurretObservation(double timestamp, share
 }
 
 void FRC_7054::RobotState::addObservation(double timestamp, shared_ptr<Twist2D> measured_velocity, shared_ptr<Twist2D> predicted_velocity){
-    addFieldToVehicleObservation(timestamp, Robot::kinematics.integrateForwardKinematics(getLatestFieldToVehicle(), measured_velocity));
+    addFieldToVehicleObservation(timestamp, kinematics.integrateForwardKinematics(getLatestFieldToVehicle(), measured_velocity));
     vehicle_velocity_measured_=measured_velocity;
     vehicle_velocity_predicted_=predicted_velocity;
 
@@ -97,7 +97,7 @@ void FRC_7054::RobotState::addObservation(double timestamp, shared_ptr<Twist2D> 
 
 shared_ptr<Twist2D> FRC_7054::RobotState::generateOdometryFromSensors(double left_encoder_delta_distance, double right_encoder_delta_distance, shared_ptr<Rotation2D> current_gyro_angle){
     shared_ptr<Pose2D> last_measurement= getLatestFieldToVehicle();
-    shared_ptr<Twist2D> delta= Robot::kinematics.forwardKinematics(last_measurement->getRotation(), left_encoder_delta_distance, right_encoder_delta_distance, current_gyro_angle);
+    shared_ptr<Twist2D> delta= kinematics.forwardKinematics(last_measurement->getRotation(), left_encoder_delta_distance, right_encoder_delta_distance, current_gyro_angle);
     distance_driven_+=delta->dx;
     return delta;
 }
@@ -231,7 +231,7 @@ VisionTargeting::AimingParameters FRC_7054::RobotState::getAimingParameters(bool
 {
     VisionTargeting::GoalTracker tracker = turret ? vision_target_turret : vision_target_intake;
 
-    std::vector<VisionTargeting::GoalTracker::TrackReport> reports = tracker.getTracks();
+    std::vector<VisionTargeting::TrackReport> reports = tracker.getTracks();
 
     if (reports.empty())
     {
@@ -240,9 +240,9 @@ VisionTargeting::AimingParameters FRC_7054::RobotState::getAimingParameters(bool
 
     double timestamp = frc::Timer::GetFPGATimestamp();
 
-    VisionTargeting::GoalTracker::TrackReportComparator comparator{Constants::kTrackScrubFactor, Constants::kTrackAgeWeight, Constants::kTrackSwitchingWeight, prev_track_id, timestamp};
+    VisionTargeting::TrackReportComparator comparator{Constants::kTrackScrubFactor, Constants::kTrackAgeWeight, Constants::kTrackSwitchingWeight, prev_track_id, timestamp};
 
-    VisionTargeting::GoalTracker::TrackReport report{};
+    VisionTargeting::TrackReport report{};
 
     for (auto track : reports)
     {

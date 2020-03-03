@@ -61,6 +61,7 @@ class RobotState {
   * 
   * 4. Camera-to-goal: Measured by vision system.
   */
+  Kinematics kinematics{};
   shared_ptr<Pose2D> pose=make_shared<Pose2D>();
   int kObservationBufferSize=100;
   static std::shared_ptr<RobotState> mInstance;

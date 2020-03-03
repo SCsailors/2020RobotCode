@@ -14,9 +14,7 @@
 
 
 namespace VisionTargeting{
-class GoalTracker {
- public:
-  class TrackReport{
+class TrackReport{
    public:
     std::shared_ptr<Pose2D> field_to_target;
     double latest_timestamp;
@@ -30,7 +28,7 @@ class GoalTracker {
       id(0) {}
   };
 
-  class TrackReportComparator{
+class TrackReportComparator{
     public:
       double mStabilityWeight;
       double mAgeWeight;
@@ -44,6 +42,8 @@ class GoalTracker {
       int compare(TrackReport o1, TrackReport o2);
   };
 
+class GoalTracker {
+ public:
   GoalTracker();
   std::vector<GoalTrack> mCurrentTracks;
   int mNextId = 0;
