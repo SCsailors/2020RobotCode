@@ -43,6 +43,7 @@ class TrackReportComparator{
   };
 
 class GoalTracker {
+
  public:
   GoalTracker();
   std::vector<GoalTrack> mCurrentTracks;

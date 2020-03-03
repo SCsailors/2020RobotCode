@@ -66,7 +66,6 @@ void GoalTracker::update(double timestamp, std::vector<std::shared_ptr<Pose2D>> 
     //Try to update existing tracks
     for (auto target : field_to_goals)
     {
-        auto it = mCurrentTracks.begin();
         bool hasUpdatedTrack = false;
         for (auto track : mCurrentTracks)
         {
@@ -81,20 +80,24 @@ void GoalTracker::update(double timestamp, std::vector<std::shared_ptr<Pose2D>> 
                 track.emptyUpdate();
             }
             
+        }
+        if (!hasUpdatedTrack)
+        {
+            mCurrentTracks.push_back(GoalTrack::makeNewTrack(timestamp, target, mNextId));
+            ++mNextId;
+        }
         
-            if (!hasUpdatedTrack)
-            {
-                mCurrentTracks.push_back(GoalTrack::makeNewTrack(timestamp, target, mNextId));
-                ++mNextId;
-            }
-            
-            if (!track.isAlive())
-            {
-                mCurrentTracks.erase(it);
-            } else
-            {
-                it++;    
-            }
+    }
+
+    auto it = mCurrentTracks.begin();
+    for (auto track : mCurrentTracks)
+    {
+        if (!track.isAlive())
+        {
+            mCurrentTracks.erase(it);
+        } else
+        {
+            it++;    
         }
     }
 }
