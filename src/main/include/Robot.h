@@ -144,6 +144,7 @@ void TestControl();
 
   Utility::LatchedBoolean manualDriveShifter{};
   Utility::LatchedBoolean autoDriveShifter{false};
+  bool toggleHighGear = false;
 
   double lineHood = 46.0;
   double lineShooter = 90.0;
