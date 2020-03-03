@@ -240,7 +240,7 @@ VisionTargeting::AimingParameters FRC_7054::RobotState::getAimingParameters(bool
 
     double timestamp = frc::Timer::GetFPGATimestamp();
 
-    VisionTargeting::TrackReportComparator comparator{Constants::kTrackScrubFactor, Constants::kTrackAgeWeight, Constants::kTrackSwitchingWeight, prev_track_id, timestamp};
+    VisionTargeting::TrackReportComparator comparator{Constants::kTrackStabilityWeight, Constants::kTrackAgeWeight, Constants::kTrackSwitchingWeight, prev_track_id, timestamp};
 
     VisionTargeting::TrackReport report{};
 
@@ -264,6 +264,7 @@ VisionTargeting::AimingParameters FRC_7054::RobotState::getAimingParameters(bool
         report.latest_timestamp, report.stability, 
         report.id
     };
+    return params;
 }
 
 void FRC_7054::RobotState::outputToSmartDashboard(){
