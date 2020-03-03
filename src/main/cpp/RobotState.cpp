@@ -172,7 +172,7 @@ void FRC_7054::RobotState::addVisionUpdate(double timestamp, std::vector<VisionT
         vision_target_turret.update(timestamp, emptyVector);
         return;
     }
-/*
+
     mCameraToVisionTargetPosesIntake.clear();
     mCameraToVisionTargetPosesTurret.clear();
     
@@ -183,11 +183,11 @@ void FRC_7054::RobotState::addVisionUpdate(double timestamp, std::vector<VisionT
     }
     frc::SmartDashboard::PutBoolean("CheckPoint/ VisionUpdate/ added xyz poses", true);
     
-    /*
+    
     //update Goal trackers with actual data
     updateGoalTracker(timestamp, mCameraToVisionTargetPosesTurret, vision_target_turret, limelights.at(0));
     updateGoalTracker(timestamp, mCameraToVisionTargetPosesIntake, vision_target_intake, limelights.at(1));    
-    */
+    
 }
 
 std::shared_ptr<Pose2D> FRC_7054::RobotState::getFieldToVisionTarget(bool turret)

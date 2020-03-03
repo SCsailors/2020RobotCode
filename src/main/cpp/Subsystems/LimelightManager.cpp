@@ -40,8 +40,8 @@ void LimelightManager::OnLoop(double timestamp)
 {
     frc::SmartDashboard::PutNumber("CheckPoint/ VisionUpdate/ Timestamp: ", timestamp);
     frc::SmartDashboard::PutNumber("CheckPoint/ VisionUpdate/ Timestamp of photo (latency): ", getAverageLatency());
-    //FRC_7054::RobotState::getInstance()->addVisionUpdate(timestamp - getAverageLatency(), getTargetInfos(), getLimelights());
-    getTargetInfos();
+    FRC_7054::RobotState::getInstance()->addVisionUpdate(timestamp - getAverageLatency(), getTargetInfos(), getLimelights());
+    //getTargetInfos();
 }
 
 void LimelightManager::OnStop(double timestamp)
