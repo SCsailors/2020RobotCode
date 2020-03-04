@@ -45,6 +45,8 @@ class SuperstructureStateMachine {
   Utility::TimeDelayedBoolean bottomBallTrigger{};
   Utility::VariableDelayedBoolean PreBottomTrigger{};
 
+  double shooter_default = 0.0;
+  double hood_default = 0.0;
  public:
   enum WantedAction {
         WANTED_IDLE, 
@@ -131,6 +133,7 @@ class SuperstructureStateMachine {
   //add double getHoodForRange(range);
   //add double getSpeedForRange(range);
   //use either piecewise functions or multiple interpolating treemap (one for each speed) where all the data is already inputted.
-
+  void updateHoodDefault(double Hood_Default){hood_default = Hood_Default;}
+  void updateShooterDefault(double Shooter_Default){shooter_default = Shooter_Default;}
 };
 }

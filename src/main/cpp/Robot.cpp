@@ -12,6 +12,8 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include "lib/Util/CSVWriter.h"
 
+#include "Auto/Modes/CompetitionModes/SimpleMode.h"
+
 Util Robot::util;
 Units Robot::units;
 DriveAssist Robot::driveAssist;
@@ -72,10 +74,10 @@ void Robot::RobotInit() {
   
   //shared_ptr<PIDTuningMode> tuningMode = make_shared<PIDTuningMode>();
   //mAutoModeExecutor= make_shared<AutoModeExecutor>(tuningMode);
-  shared_ptr<AutoModeBase> baseMode = make_shared<AutoModeBase>();
-  mAutoModeExecutor= make_shared<AutoModeExecutor>(baseMode);
+  shared_ptr<SimpleMode> simpleMode = make_shared<SimpleMode>();
+  mAutoModeExecutor= make_shared<AutoModeExecutor>(simpleMode);
   
-  autoModeSelector.updateModeCreator();
+  //autoModeSelector.updateModeCreator();
   
   //add subsystem loops to vector
   
@@ -93,6 +95,10 @@ void Robot::RobotInit() {
   subsystems.push_back(mLimelightManager);
   subsystems.push_back(mLED);
   
+  isShootClose = false;
+  mSuperstructure->mStateMachine.updateHoodDefault(lineHood);
+  mSuperstructure->mStateMachine.updateShooterDefault(lineShooter);
+
   frc::SmartDashboard::PutNumber("Subsystems/Ball Path Top/ get Ball Count: ", 0.0);
   frc::SmartDashboard::PutBoolean("Enable PID Tuning", false);
   frc::SmartDashboard::PutBoolean("One Controller?", true);
@@ -131,18 +137,18 @@ void Robot::DisabledInit(){
   mSubsystemLoops->stopEnabledLoops();
   mSubsystemLoops->startDisabledLoops();
   mAutoModeExecutor->stop();
-  autoModeSelector.reset();
-  autoModeSelector.updateModeCreator();
+  //autoModeSelector.reset();
+  //autoModeSelector.updateModeCreator();
 }
 
 void Robot::DisabledPeriodic(){
-  autoModeSelector.updateModeCreator();
+  //autoModeSelector.updateModeCreator();
 
-  shared_ptr<AutoModeBase> autoMode = autoModeSelector.getAutoMode(true); //add autofieldstate
-  if (autoMode->getID()!= mAutoModeExecutor->getAutoMode()->getID()){
-    cout<<"Setting AutoMode to: "+ autoMode->getID()<<endl;
-    mAutoModeExecutor->setAutoMode(autoMode);
-  }
+  //shared_ptr<AutoModeBase> autoMode = autoModeSelector.getAutoMode(true); //add autofieldstate
+  //if (autoMode->getID()!= mAutoModeExecutor->getAutoMode()->getID()){
+  //  cout<<"Setting AutoMode to: "+ autoMode->getID()<<endl;
+  //  mAutoModeExecutor->setAutoMode(autoMode);
+  //}
 }
 
 void Robot::AutonomousInit() {
@@ -243,25 +249,21 @@ void Robot::manualControl()
     mDrive->setShifterState(Subsystems::FalconDrive::ShifterState::FORCE_LOW_GEAR);
   }
 
-  //Manual Shfit or enable auto shift - rework this
-  /*
-  if (manualShift)
-  { 
-    if (firstManual)
-    {
-      mDrive->setShifterState(Subsystems::FalconDrive::Shifterstate::Manual);
-    }
-    
-    //mDrive->setManualShifterState(wantsHighGear);
-  } else
+  bool shootLine = mControlBoard->getLineShoot();
+  bool shootClose = mControlBoard->getCloseShoot();
+
+  if (shootLine && isShootClose)
   {
-    if (firstAuto)
-    {
-      mDrive->setShifterState(Subsystems::Drive::Shifterstate::Auto_Shift);
-    }
+    isShootClose = false;
+    mSuperstructure->mStateMachine.updateHoodDefault(lineHood);
+    mSuperstructure->mStateMachine.updateShooterDefault(lineShooter);
+  } else if (shootClose && isShootClose)
+  {
+    isShootClose = true;
+    mSuperstructure->mStateMachine.updateHoodDefault(closeHood);
+    mSuperstructure->mStateMachine.updateShooterDefault(closeShooter);
   }
-  */
-  
+
   //Drive Signal
   std::shared_ptr<DriveSignal> signal;
   
@@ -454,23 +456,17 @@ void Robot::TestControl()
     mSuperstructure->setBallPathManual(false);
     //mBallPathTop->setOpenLoop(0.0);
   }
-  /* - rework
-  if (manualShift)
+
+  if (wantsHighGear && !toggleHighGear)
   {
-    if (firstManual)
-    {
-      drive->setShifterState(Subsystems::Drive::Shifterstate::Manual);
-    }
-    
-    drive->setManualShifterState(wantsHighGear);
-  } else
+    toggleHighGear = true;
+    mDrive->setShifterState(Subsystems::FalconDrive::ShifterState::FORCE_HIGH_GEAR);
+  } else if (wantsHighGear && toggleHighGear)
   {
-    if (firstAuto)
-    {
-      drive->setShifterState(Subsystems::Drive::Shifterstate::Auto_Shift);
-    }
+    toggleHighGear = false;
+    mDrive->setShifterState(Subsystems::FalconDrive::ShifterState::FORCE_LOW_GEAR);
   }
-  */
+  
   std::shared_ptr<DriveSignal> signal;
   
   if (controller_one)

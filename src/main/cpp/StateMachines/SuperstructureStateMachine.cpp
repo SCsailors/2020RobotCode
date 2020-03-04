@@ -360,14 +360,14 @@ void SuperstructureStateMachine::getIntakingBallDesiredState(SuperstructureState
 
         if (preBottomTriggered)
         {
-            desiredState.ballPathTop = frc::SmartDashboard::GetNumber("BallPathTop default", Constants::kBallPathTopDefaultSpeed);
+            desiredState.ballPathTop = .7;
         } else
         {
             desiredState.ballPathTop = 0.0;    
         }
         
         
-        desiredState.centeringIntake = frc::SmartDashboard::GetNumber("CenteringIntake default", Constants::kCenteringIntakeDefaultSpeed);
+        desiredState.centeringIntake = .9;
         desiredState.hood = NAN;
         desiredState.shooter = NAN;
         //desiredState.turret = currentState.turret;
@@ -458,8 +458,8 @@ void SuperstructureStateMachine::getPreExhaustingBallDesiredState(Superstructure
         shooterPriority = false;
 
         desiredState.centeringIntake = NAN;
-        desiredState.hood = frc::SmartDashboard::GetNumber("Hood default", Constants::kHoodDefaultAngle); //will be calculated here
-        desiredState.shooter = ShooterSpeed;
+        desiredState.hood = hood_default; //will be calculated here
+        desiredState.shooter = shooter_default;
         //desiredState.turret = currentState.turret; //handled by vision
         //desiredState.numBalls = currentState.numBalls;
     
@@ -517,10 +517,10 @@ void SuperstructureStateMachine::getExhaustingBallDesiredState(SuperstructureSta
             ShooterSpeed = frc::SmartDashboard::GetNumber("Shooter Far default", Constants::kShooterFarDefaultSpeed);
             break;
     }
-    desiredState.ballPathTop = frc::SmartDashboard::GetNumber("BallPath Shoot default", .45);
+    desiredState.ballPathTop = .7;
     desiredState.centeringIntake = currentState.centeringIntake;
-    desiredState.hood = frc::SmartDashboard::GetNumber("Hood default", Constants::kHoodDefaultAngle); //should just be set in Superstructure.h
-    desiredState.shooter = ShooterSpeed;
+    desiredState.hood = hood_default; //should just be set in Superstructure.h
+    desiredState.shooter = shooter_default;
     //desiredState.turret = currentState.turret; //handled else where
     //desiredState.numBalls = currentState.numBalls; // handled else where
     desiredState.extendWheelieBar = true;
