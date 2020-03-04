@@ -327,15 +327,19 @@ void SparkMaxSubsystem::writePeriodicOutputs()
     //std::cout << "SparkMaxSubsystem: " << mConstants->kName << ": write periodic outputs" << std::endl;
     if (mControlState == ControlState::MOTION_MAGIC)
     {
+        frc::SmartDashboard::PutString("Subsystems/" + mConstants->kName + "/ Control Mode", "MotionMagic");
         mPIDController->SetReference(mPeriodicIO->demand, rev::ControlType::kSmartMotion, Constants::kMotionMagicPIDSlot, mPeriodicIO->feedforward);
     } else if (mControlState == ControlState::POSITION_PID)
     {
+        frc::SmartDashboard::PutString("Subsystems/" + mConstants->kName + "/ Control Mode", "Position PID");
         mPIDController->SetReference(mPeriodicIO->demand, rev::ControlType::kPosition, Constants::kPositionPIDSlot, mPeriodicIO->feedforward);
     } else if (mControlState == ControlState::VELOCITY_PID)
     {
+        frc::SmartDashboard::PutString("Subsystems/" + mConstants->kName + "/ Control Mode", "Velocity PID");
         mPIDController->SetReference(mPeriodicIO->demand, rev::ControlType::kVelocity, Constants::kVelocityPIDSlot, mPeriodicIO->feedforward);
     } else 
     {
+        frc::SmartDashboard::PutString("Subsystems/" + mConstants->kName + "/ Control Mode", "Open Loop");
         mPIDController->SetReference(mPeriodicIO->demand, rev::ControlType::kDutyCycle, 0, mPeriodicIO->feedforward);
     }
     #endif  
@@ -861,15 +865,15 @@ void TalonSRXSubsystem::writePeriodicOutputs()
     //std::cout << "TalonSRXSubsystem: " << mConstants->kName << ": write periodic outputs" << std::endl;
     if (mControlState == ControlState::MOTION_MAGIC)
     {
-        //mMaster->SelectProfileSlot(Constants::kMotionMagicPIDSlot, 0);
+        mMaster->SelectProfileSlot(Constants::kMotionMagicPIDSlot, 0);
         mMaster->Set(ControlMode::MotionMagic, mPeriodicIO->demand, DemandType::DemandType_ArbitraryFeedForward, mPeriodicIO->feedforward);
     } else if (mControlState == ControlState::POSITION_PID || mControlState == ControlState::MOTION_PROFILING)
     {
-        //mMaster->SelectProfileSlot(Constants::kPositionPIDSlot, 0);
+        mMaster->SelectProfileSlot(Constants::kPositionPIDSlot, 0);
         mMaster->Set(ControlMode::Position, mPeriodicIO->demand, DemandType::DemandType_ArbitraryFeedForward, mPeriodicIO->feedforward);
     } else if (mControlState == ControlState::VELOCITY_PID)
     {
-        //mMaster->SelectProfileSlot(Constants::kVelocityPIDSlot, 0);
+        mMaster->SelectProfileSlot(Constants::kVelocityPIDSlot, 0);
         mMaster->Set(ControlMode::Velocity, mPeriodicIO->demand);
     } else
     {
@@ -1451,15 +1455,15 @@ void TalonFXSubsystem::writePeriodicOutputs()
     //std::cout << "TalonFXSubsystem: " << mConstants->kName << ": write periodic outputs" << std::endl;
     if (mControlState == ControlState::MOTION_MAGIC)
     {
-        //mMaster->SelectProfileSlot(Constants::kMotionMagicPIDSlot, 0);
+        mMaster->SelectProfileSlot(Constants::kMotionMagicPIDSlot, 0);
         mMaster->Set(ControlMode::MotionMagic, mPeriodicIO->demand, DemandType::DemandType_ArbitraryFeedForward, mPeriodicIO->feedforward);
     } else if (mControlState == ControlState::POSITION_PID || mControlState == ControlState::MOTION_PROFILING)
     {
-        //mMaster->SelectProfileSlot(Constants::kPositionPIDSlot, 0);
+        mMaster->SelectProfileSlot(Constants::kPositionPIDSlot, 0);
         mMaster->Set(ControlMode::Position, mPeriodicIO->demand, DemandType::DemandType_ArbitraryFeedForward, mPeriodicIO->feedforward);
     } else if (mControlState == ControlState::VELOCITY_PID)
     {
-        //mMaster->SelectProfileSlot(Constants::kVelocityPIDSlot, 0);
+        mMaster->SelectProfileSlot(Constants::kVelocityPIDSlot, 0);
         mMaster->Set(TalonFXControlMode::Velocity, 1.5*mPeriodicIO->demand);
     } else
     {

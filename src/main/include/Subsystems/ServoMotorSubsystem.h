@@ -52,7 +52,7 @@ class ServoMotorSubsystemConstants {
   
 
   //see Constants.h for which slot is for which purpose 
-  std::vector<double> kP{0.1, 0.1, 0.1, 0.1};
+  std::vector<double> kP{0.0, 0.0, 0.0, 0.0};
   std::vector<double> kI{0.0, 0.0, 0.0, 0.0};
   std::vector<double> kD{0.0, 0.0, 0.0, 0.0};
   std::vector<double> kF{0.0, 0.0, 0.0, 0.0};

@@ -233,6 +233,16 @@ void Robot::manualControl()
     mSuperstructure->setBallPathManual(false);
   }
   
+  if (wantsHighGear && !toggleHighGear)
+  {
+    toggleHighGear = true;
+    mDrive->setShifterState(Subsystems::FalconDrive::ShifterState::FORCE_HIGH_GEAR);
+  } else if (wantsHighGear && toggleHighGear)
+  {
+    toggleHighGear = false;
+    mDrive->setShifterState(Subsystems::FalconDrive::ShifterState::FORCE_LOW_GEAR);
+  }
+
   //Manual Shfit or enable auto shift - rework this
   /*
   if (manualShift)
@@ -409,9 +419,9 @@ void Robot::manualControl()
   intake_extended = mSuperstructure->isIntakeExtended();
   frc::SmartDashboard::PutBoolean("CheckPoint/ intake extend number", intake_extended);
   
-  double hood = mControlBoard->getHood();
-  mHood->setOpenLoop(hood);
-  frc::SmartDashboard::PutNumber("Hood Joystick Percent", hood);
+  //double hood = mControlBoard->getHood();
+  //mHood->setOpenLoop(hood);
+  //frc::SmartDashboard::PutNumber("Hood Joystick Percent", hood);
 }
 
 void Robot::TestControl()

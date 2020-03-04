@@ -231,7 +231,7 @@ bool GamePadTwoJoysticks::getDriveShifterManual()
 
 double GamePadTwoJoysticks::getBallPath()
 {
-    return mController.getJoystick(ControlBoard::XBoxController::Side::LEFT, ControlBoard::XBoxController::Axis::y);
+    return -mController.getJoystick(ControlBoard::XBoxController::Side::LEFT, ControlBoard::XBoxController::Axis::y);
 }
 
 bool GamePadTwoJoysticks::getBallPathToggle()

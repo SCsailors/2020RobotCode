@@ -142,6 +142,8 @@ void TestControl();
   bool climbing = false;
   bool climbing_finished = false;
 
+  bool toggleHighGear = false;
+
   Utility::LatchedBoolean manualDriveShifter{};
   Utility::LatchedBoolean autoDriveShifter{false};
 

@@ -10,20 +10,25 @@
 #include "Auto/Actions/Action.h"
 #include "Subsystems/Superstructure.h"
 
+#include <frc/Timer.h>
+
 #include <memory>
 
 class Shoot : public Action {
- std::shared_ptr<Subsystems::Superstructure> mSuperstructure;
+  std::shared_ptr<Subsystems::Superstructure> mSuperstructure;
+  frc::Timer mTimer{};
  public:
   Shoot(){}
   void start()
   {
     mSuperstructure = Subsystems::Superstructure::getInstance();
     mSuperstructure->setWantedActionShooter(StateMachines::SuperstructureStateMachine::WANTED_PRE_EXHAUST_BALL);
+    mTimer.Reset();
+    mTimer.Start();
   }
   void update()
   {
-    if (mSuperstructure->isAtDesiredState())
+    if (mSuperstructure->isAtDesiredState() || mTimer.Get() > 1.5)
     {
       mSuperstructure->setWantedActionShooter(StateMachines::SuperstructureStateMachine::WANTED_EXHAUST_BALL);
     }
@@ -34,7 +39,7 @@ class Shoot : public Action {
   }
   bool isFinished()
   {
-    return mSuperstructure->getShooterState() == StateMachines::SuperstructureStateMachine::IDLE;
+    return (mSuperstructure->getShooterState() == StateMachines::SuperstructureStateMachine::IDLE || mTimer.Get() > 7.0);
   }
 
 };

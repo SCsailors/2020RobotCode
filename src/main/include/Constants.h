@@ -100,8 +100,8 @@ namespace Constants {
 
 
   //Max drive Velocity and Acceleration
-  const double kDriveOpenRampRateLowGear = .20833;
-  const double kDriveOpenRampRateHighGear = .75;
+  const double kDriveOpenRampRateLowGear = 0.0;//.20833;
+  const double kDriveOpenRampRateHighGear = 0.0;//.75;
   const double kDriveMaxVelocity=75.0;//max recorded 88 inches/second
   const double kDriveMaxAcceleration=30.0;//max recorded 200 inches/second^2
   const double kDriveMaxCentripetalAcceleration=100.0;

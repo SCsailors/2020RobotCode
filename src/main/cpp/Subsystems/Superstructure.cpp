@@ -314,10 +314,10 @@ void Superstructure::followSetpoint()
     if (mTurretMode == TurretControlModes::JOGGING)
     {
         mTurret->setSetpointPositionPID(mGoal.state.turret, mTurretFeedforwardV);
-    } else if (util.epsilonEquals(mGoal.state.turret, mCurrentState.turret, mTurret->mConstants->kAllowableClosedLoopError / mTurret->mConstants->kTicksPerUnitDistance) )
-    {
-        mTurret->setOpenLoop(0.0);
-    }
+    } //else if (util.epsilonEquals(mGoal.state.turret, mCurrentState.turret, mTurret->mConstants->kAllowableClosedLoopError / mTurret->mConstants->kTicksPerUnitDistance) )
+    //{
+    //    mTurret->setOpenLoop(0.0);
+    //}
     else if (mTurretMode == TurretControlModes::VISION_AIMED )
     {
         mTurret->setSetpointPositionPID(mGoal.state.turret + turret_offset, mTurretFeedforwardV);
@@ -329,13 +329,13 @@ void Superstructure::followSetpoint()
         mTurret->setSetpointMotionMagic(mGoal.state.turret);
     }
     
-    if (util.epsilonEquals(mGoal.state.hood, mCurrentState.hood, mHood->mConstants->kAllowableClosedLoopError / mHood->mConstants->kTicksPerUnitDistance))
-    {
-        mHood->setOpenLoop(0.0);
-    } else
-    {
+    //if (util.epsilonEquals(mGoal.state.hood, mCurrentState.hood, mHood->mConstants->kAllowableClosedLoopError / mHood->mConstants->kTicksPerUnitDistance))
+    //{
+    //    mHood->setOpenLoop(0.0);
+    //} else
+    //{
         mHood->setSetpointPositionPID(mGoal.state.hood, mHoodFeedforwardV);
-    }
+    //}
 
     mShooter->setSetpointVelocityPID(mGoal.state.shooter, mShooterFeedforwardV);
     frc::SmartDashboard::PutBoolean("BallPathManual", ballPathManual);
