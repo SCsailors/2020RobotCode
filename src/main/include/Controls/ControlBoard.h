@@ -18,37 +18,6 @@
 
 namespace ControlBoard {
 
-class TurretCardinal {
-  
- public:
-  std::shared_ptr<Rotation2D> rotation;
-  std::shared_ptr<Rotation2D> inputDirection;
-  TurretCardinal(int degrees)
-  {
-    double deg = (double) degrees;
-    rotation = rotation->fromDegrees(deg);
-    inputDirection = inputDirection->fromDegrees(deg);
-  }
-  
-  TurretCardinal(double degrees)
-  {
-    rotation = rotation->fromDegrees(degrees);
-    inputDirection = inputDirection->fromDegrees(degrees);
-  }
-
-  TurretCardinal(double degrees, double inputDirectionDegrees)
-  {
-    rotation = rotation->fromDegrees(degrees);
-    inputDirection = inputDirection->fromDegrees(inputDirectionDegrees);
-  }
-
-  TurretCardinal()
-  {
-    rotation = rotation->fromDegrees(0.0);
-    inputDirection = NULL;
-  }
-};
-
 class ControlBoardBase {
  public: 
   ControlBoardBase(){reset();}
