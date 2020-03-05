@@ -47,6 +47,7 @@ void Robot::RobotInit() {
   mRobotState = FRC_7054::RobotState::getInstance();
   
   //Controls
+  /*
   if (Constants::kJoystickOne)
   {
     mControlBoard = std::make_shared<ControlBoard::SingleGamePadController>();
@@ -54,8 +55,11 @@ void Robot::RobotInit() {
   } else
   {
     mControlBoard = std::make_shared<ControlBoard::GamePadTwoJoysticks>();
-    prev_controller_one = false;
+    
   }
+  */
+  mControlBoard = std::make_shared<ControlBoard::GamePadTwoJoysticks>();
+  prev_controller_one = false;
 
   //mTurret->zeroSensors();
   mHood->zeroSensors();
@@ -76,7 +80,6 @@ void Robot::RobotInit() {
   //mAutoModeExecutor= make_shared<AutoModeExecutor>(tuningMode);
   shared_ptr<SimpleMode> simpleMode = make_shared<SimpleMode>();
   mAutoModeExecutor= make_shared<AutoModeExecutor>(simpleMode);
-  
   //autoModeSelector.updateModeCreator();
   
   //add subsystem loops to vector
@@ -102,7 +105,7 @@ void Robot::RobotInit() {
 
   frc::SmartDashboard::PutNumber("Subsystems/Ball Path Top/ get Ball Count: ", 0.0);
   frc::SmartDashboard::PutBoolean("Enable PID Tuning", false);
-  frc::SmartDashboard::PutBoolean("One Controller?", true);
+  frc::SmartDashboard::PutBoolean("One Controller?", Constants::kJoystickOne);
   trajectoryGenerator.generateTrajectories();
   std::cout<<"generated Trajectories"<<std::endl;
   //create and start subsystem loops
@@ -138,6 +141,9 @@ void Robot::DisabledInit(){
   mSubsystemLoops->stopEnabledLoops();
   mSubsystemLoops->startDisabledLoops();
   mAutoModeExecutor->stop();
+
+  shared_ptr<SimpleMode> simpleMode = make_shared<SimpleMode>();
+  mAutoModeExecutor= make_shared<AutoModeExecutor>(simpleMode);
   //autoModeSelector.reset();
   //autoModeSelector.updateModeCreator();
 }
@@ -394,24 +400,29 @@ void Robot::manualControl()
   }
 
   //wheel - later
-
+  std::string mClimberState = "Idle";
   //Climb
   if (climber && !climbing && !pre_climb)
   { //pre_climb
     mClimber->setWantedAction(StateMachines::ClimberStateMachine::WANTED_PRE_CLIMB);
     climbing_finished = false;
     pre_climb = true;
+    mClimberState = "PreCLimb";
   } else if (climbRun && pre_climb && !climbing)
   { //running climber
     mClimber->setWantedAction(StateMachines::ClimberStateMachine::WANTED_CLIMBING);
     climbing = true;
+    mClimberState = "CLimb";
   } else if (!climbRun && climbing)
   { //finished climbing
     mClimber->setWantedAction(StateMachines::ClimberStateMachine::WANTED_POST_CLIMB);
     climbing_finished = true;
     pre_climb = false;
     climbing = false;
+    mClimberState = "PostCLimb";
   }
+
+  frc::SmartDashboard::PutString("ClimberState", mClimberState);
 
   //Intake
   if (intake)

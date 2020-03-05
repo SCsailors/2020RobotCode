@@ -21,6 +21,7 @@ class Shoot : public Action {
   Shoot(){}
   void start()
   {
+    std::cout << "Starting Shoot" << std::endl;
     mSuperstructure = Subsystems::Superstructure::getInstance();
     mSuperstructure->setWantedActionShooter(StateMachines::SuperstructureStateMachine::WANTED_PRE_EXHAUST_BALL);
     mTimer.Reset();
@@ -28,14 +29,14 @@ class Shoot : public Action {
   }
   void update()
   {
-    if (mSuperstructure->isAtDesiredState() || mTimer.Get() > 1.5)
+    if (mSuperstructure->isAtDesiredState() || mTimer.Get() > 3.0)
     {
       mSuperstructure->setWantedActionShooter(StateMachines::SuperstructureStateMachine::WANTED_EXHAUST_BALL);
     }
   }
   void done()
   {
-
+    std::cout << "Finishing Shoot" << std::endl;
   }
   bool isFinished()
   {

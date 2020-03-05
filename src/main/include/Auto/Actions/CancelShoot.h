@@ -11,11 +11,14 @@
 
 #include "Subsystems/Superstructure.h"
 
+#include <iostream>
+
 class CancelShoot : public Action {
  public:
   CancelShoot(){}
   void start()
   {
+    std::cout << "Starting Cancel Shoot" << std::endl;
     Subsystems::Superstructure::getInstance()->setWantedActionShooter(StateMachines::SuperstructureStateMachine::WANTED_IDLE);
   }
 

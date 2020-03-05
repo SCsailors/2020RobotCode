@@ -16,9 +16,13 @@ class ToggleIntake : public Action {
   ToggleIntake(bool extend): extendIntake(extend){}
   void start()
   {
+    std::cout << "Starting Toggle Intake" << std::endl;
     Subsystems::Superstructure::getInstance()->setWantedActionIntake(extendIntake? StateMachines::SuperstructureStateMachine::WantedAction::WANTED_INTAKE_BALL : StateMachines::SuperstructureStateMachine::WantedAction::WANTED_HAVE_BALLS);
   }
   void update(){}
-  void done(){}
+  void done()
+  {
+    std::cout << "Finishing Toggle Intake" << std::endl;
+  }
   bool isFinished(){return true;}
 };
