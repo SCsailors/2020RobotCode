@@ -329,22 +329,22 @@ void Superstructure::followSetpoint()
         mTurret->setSetpointMotionMagic(mGoal.state.turret);
     }
     
-    //if (util.epsilonEquals(mGoal.state.hood, mCurrentState.hood, mHood->mConstants->kAllowableClosedLoopError / mHood->mConstants->kTicksPerUnitDistance))
-    //{
-    //    mHood->setOpenLoop(0.0);
-    //} else
-    //{
+    if (!hoodManual)
+    {
         mHood->setSetpointPositionPID(mGoal.state.hood, mHoodFeedforwardV);
-    //}
+    }
 
-    mShooter->setSetpointVelocityPID(mGoal.state.shooter, mShooterFeedforwardV);
+    if (!shooterManual)
+    {
+        mShooter->setSetpointVelocityPID(mGoal.state.shooter, mShooterFeedforwardV);
+    }
+    
     frc::SmartDashboard::PutBoolean("BallPathManual", ballPathManual);
     if (!ballPathManual)
     {
         mBallPathTop->setOpenLoop(mGoal.state.ballPathTop);
+        mCenteringIntake->setOpenLoop(mGoal.state.centeringIntake);
     }
-    
-    mCenteringIntake->setOpenLoop(mGoal.state.centeringIntake);
 
     if (mGoal.state.extendIntake)
     {

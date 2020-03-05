@@ -16,7 +16,7 @@ std::shared_ptr<WinchSystem> WinchSystem::getInstance()
     {
         std::shared_ptr<Subsystems::TalonConstants> constants = std::make_shared<Subsystems::TalonConstants>();
         constants->kName = "Winch System";
-        std::shared_ptr<Subsystems::SlaveConstants> slave = std::make_shared<Subsystems::SlaveConstants>(27, false, true);
+        std::shared_ptr<Subsystems::SlaveConstants> slave = std::make_shared<Subsystems::SlaveConstants>(27, true, true);
         constants->kSlaveIDs.push_back(slave);
         constants->id = 26;
         constants->kContinuousCurrentLimit = 20;

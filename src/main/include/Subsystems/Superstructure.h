@@ -142,7 +142,12 @@ class Superstructure : public Subsystems::Subsystem {
   void setStateMachineLEDMaxPriority(bool maxPriority);
 
   bool ballPathManual = false;
+  bool shooterManual = false;
+  bool hoodManual = false;
+  
   void setBallPathManual(bool manual){ballPathManual = manual;}
+  void setShooterManual(bool manual){shooterManual = manual;}
+  void setHoodManual(bool manual){hoodManual = manual;}
 
   StateMachines::SuperstructureStateMachine::SystemState getShooterState(){return mStateMachine.getSystemShooterState();}
   StateMachines::SuperstructureStateMachine::SystemState getIntakeState(){return mStateMachine.getSystemIntakeState();}  

@@ -22,7 +22,6 @@ namespace ControlBoard {
 
 class SingleGamePadController : public ControlBoard::ControlBoardBase {
   static std::shared_ptr<SingleGamePadController> mInstance;
-  TurretCardinalEnum mLastCardinal = TurretCardinalEnum::NONE;
   Utility::DelayedBoolean mDPadValid;
   double mDPadDelay = .02;
   bool wantsHighGear = false;
@@ -57,7 +56,7 @@ class SingleGamePadController : public ControlBoard::ControlBoardBase {
   bool getCancel() override;
   double getTurretJog() override;
   bool isTurretJogging() override;
-  TurretCardinal getTurretCardinal() override;
+  std::shared_ptr<Rotation2D> getTurretCardinal() override;
   void reset();
   //bool getAutoAim() override;
   double getBallShootCount(bool preshoot) override;

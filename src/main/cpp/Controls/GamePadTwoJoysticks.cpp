@@ -27,25 +27,16 @@ std::shared_ptr<GamePadTwoJoysticks> GamePadTwoJoysticks::getInstance()
 
 double GamePadTwoJoysticks::getThrottle()
 {
-    return -mRightJoystick.GetY();
+    return -mLeftJoystick.GetY();
 }
 
 double GamePadTwoJoysticks::getTurn()
 {
-    return -mLeftJoystick.GetY();
+    return -mRightJoystick.GetY();
 }
 
 bool GamePadTwoJoysticks::getQuickTurn()
 {
-    /*
-    if (LT_Multi.holdStarted())
-    {
-        i++;
-    }
-    frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ quickTurn counter", i);
-    //LT_Multi.update(mController.getTrigger(XBoxController::Side::LEFT));
-    return LT_Multi.isHeld();
-    */
     return false;
 }
 
@@ -57,10 +48,15 @@ bool GamePadTwoJoysticks::getWantsHighGear()
         wantsHighGear = true;
     
     } else if (wantsHigh && wantsHighGear)
-    { //want auto shift
+    {
         wantsHighGear = false;
     }
     return wantsHighGear;
+}
+
+bool GamePadTwoJoysticks::getDriveStraight()
+{
+    return mRightJoystick.GetRawButton(1);
 }
 
 bool GamePadTwoJoysticks::getShoot()
@@ -74,91 +70,6 @@ bool GamePadTwoJoysticks::getShoot()
     return a;
 }
 
-bool GamePadTwoJoysticks::getWheel()
-{
-    return B.update(mController.getButton(XBoxController::Button::B));
-}
-
-bool GamePadTwoJoysticks::getWantsRotation()
-{
-    return Start.update(mController.getButton(XBoxController::Button::START));
-}
-
-bool GamePadTwoJoysticks::getClimber()
-{
-    X.update(mController.getButton(XBoxController::Button::X));
-    return X.wasTapped();
-}
-
-bool GamePadTwoJoysticks::getIntake()
-{
-    return Y.update(mController.getButton(XBoxController::Button::Y));
-}
-
-bool GamePadTwoJoysticks::getCancel()
-{
-    //RB_Multi.update(mController.getButton(XBoxController::Button::RB));
-    return RB_Multi.holdStarted();
-}
-
-double GamePadTwoJoysticks::getTurretJog()
-{
-    double jog = mController.getJoystick(XBoxController::Side::RIGHT, XBoxController::Axis::x);
-    if (util.epsilonEquals(jog, 0.0, turretDeadband))
-    {
-        return 0.0;
-    }
-    double pre_jog = std::fabs(jog);
-    //rescale
-    double adj_jog = std::copysign((pre_jog-turretDeadband)/ (1.0-turretDeadband), jog);
-    return Constants::kTurretJogMultiplier * (std::pow(adj_jog, Constants::kTurretJogPower));
-}
-
-bool GamePadTwoJoysticks::isTurretJogging()
-{
-    return !(util.epsilonEquals(mController.getJoystick(XBoxController::Side::RIGHT, XBoxController::Axis::x), 0.0, turretDeadband));
-}
-
-TurretCardinal GamePadTwoJoysticks::getTurretCardinal()
-{
-    int dPad = mController.getDPad();
-    frc::SmartDashboard::PutNumber("DPad", dPad);
-    TurretCardinalEnum newCardinal = dPad == -1 ? TurretCardinalEnum::NONE : TurretCardinalToEnum(findClosest(Rotation2D::fromDegrees((double) dPad)));
-    frc::SmartDashboard::PutNumber("NewCardinal degrees", newCardinal);
-    if (newCardinal != TurretCardinalEnum::NONE && isDiagonal(newCardinal))
-    {
-        //Latch previous direction on diagonal presses because D-Pad is bad at diagonals
-        newCardinal = mLastCardinal;
-    }
-    bool valid = mDPadValid.update(frc::Timer::GetFPGATimestamp(), newCardinal != TurretCardinalEnum::NONE && (mLastCardinal == TurretCardinalEnum::NONE || newCardinal == mLastCardinal));
-    if (valid)
-    {
-        if (mLastCardinal == TurretCardinalEnum::NONE)
-        {
-            mLastCardinal = newCardinal;
-        }
-        return mLastCardinal;
-    } else
-    {
-        mLastCardinal = newCardinal;
-    }
-    return TurretCardinalEnum::NONE;
-    
-}
-
-void GamePadTwoJoysticks::reset()
-{
-    mLastCardinal = TurretCardinalEnum::NONE;
-    mDPadValid.reset(frc::Timer::GetFPGATimestamp(), mDPadDelay);
-}
-
-/*
-bool GamePadTwoJoysticks::getAutoAim()
-{
-    return Back.update(mController.getButton(XBoxController::Button::BACK));
-}
-*/
-//put this first
 double GamePadTwoJoysticks::getBallShootCount(bool preshoot)
 {
     LT_Multi.update(mController.getTrigger(XBoxController::Side::LEFT));
@@ -189,30 +100,105 @@ double GamePadTwoJoysticks::getBallShootCount(bool preshoot)
     return shootCount;
 }
 
+bool GamePadTwoJoysticks::getWheel()
+{
+    return B.update(mController.getButton(XBoxController::Button::B));
+}
+
+bool GamePadTwoJoysticks::getWantsRotation()
+{
+    return false;//Start.update(mController.getButton(XBoxController::Button::START));
+}
+
+bool GamePadTwoJoysticks::getClimber()
+{
+    Start.update(mController.getButton(XBoxController::Button::X));
+    return Start.wasTapped();
+}
+
+bool GamePadTwoJoysticks::getClimbRun()
+{
+    return Start.isHeld();
+}
+
+bool GamePadTwoJoysticks::getIntake()
+{
+    return Y.update(mController.getButton(XBoxController::Button::Y));
+}
+
+bool GamePadTwoJoysticks::getCancel()
+{
+    //RB_Multi.update(mController.getButton(XBoxController::Button::RB));
+    return RB_Multi.holdStarted();
+}
+
+
+bool GamePadTwoJoysticks::isTurretJogging()
+{
+    return !(util.epsilonEquals(mController.getJoystick(XBoxController::Side::RIGHT, XBoxController::Axis::x), 0.0, kDeadband));
+}
+
+std::shared_ptr<Rotation2D> GamePadTwoJoysticks::getTurretCardinal()
+{
+    int dPad = mController.getDPad();
+    frc::SmartDashboard::PutNumber("DPad", dPad);
+    
+
+    prev_dpad = dPad;
+    return Rotation2D::fromDegrees(0.0);
+    
+}
+
+void GamePadTwoJoysticks::reset() {}
+
 double GamePadTwoJoysticks::getHood()
 {
     double hood = mController.getJoystick(XBoxController::Side::RIGHT, XBoxController::Axis::y);
-    if (util.epsilonEquals(hood, 0.0, turretDeadband))
+    if (util.epsilonEquals(hood, 0.0, kDeadband))
     {
         return 0.0;
     }
     double pre_hood = std::fabs(hood);
     //rescale
-    double adj_hood = std::copysign((pre_hood-turretDeadband)/ (1.0-turretDeadband), hood);
+    double adj_hood = std::copysign((pre_hood-kDeadband)/ (1.0-kDeadband), hood);
     return adj_hood;
 }
 
 double GamePadTwoJoysticks::getShooter()
 {
-    double shooter = mController.getJoystick(XBoxController::Side::LEFT, XBoxController::Axis::y);
-    if (util.epsilonEquals(shooter, 0.0, turretDeadband))
+    double shooter = mController.getJoystick(XBoxController::Side::LEFT, XBoxController::Axis::x);
+    if (util.epsilonEquals(shooter, 0.0, kDeadband))
     {
         return 0.0;
     }
     double pre_shooter = std::fabs(shooter);
     //rescale
-    double adj_shooter = std::copysign((pre_shooter-turretDeadband)/ (1.0-turretDeadband), shooter);
+    double adj_shooter = std::copysign((pre_shooter-kDeadband)/ (1.0-kDeadband), shooter);
     return adj_shooter;
+}
+
+double GamePadTwoJoysticks::getBallPath()
+{
+    double path = mController.getJoystick(XBoxController::Side::LEFT, XBoxController::Axis::y);
+    if (util.epsilonEquals(path, 0.0, kDeadband))
+    {
+        return 0.0;
+    }
+    
+    return path;
+}
+
+double GamePadTwoJoysticks::getTurretJog()
+{
+    double jog = mController.getJoystick(XBoxController::Side::RIGHT, XBoxController::Axis::x);
+    if (util.epsilonEquals(jog, 0.0, kDeadband))
+    {
+        return 0.0;
+    }
+    double pre_jog = std::fabs(jog);
+    //rescale
+    double adj_jog = std::copysign((pre_jog-kDeadband)/ (1.0-kDeadband), jog);
+    return Constants::kTurretJogMultiplier * (std::pow(adj_jog, Constants::kTurretJogPower));
 }
 
 bool GamePadTwoJoysticks::getDriveShifterManual()
@@ -227,21 +213,6 @@ bool GamePadTwoJoysticks::getDriveShifterManual()
         wantsManual = false;
     }
     return wantsManual;
-}
-
-double GamePadTwoJoysticks::getBallPath()
-{
-    return -mController.getJoystick(ControlBoard::XBoxController::Side::LEFT, ControlBoard::XBoxController::Axis::y);
-}
-
-bool GamePadTwoJoysticks::getBallPathToggle()
-{
-    return LB_Multi.holdStarted();
-}
-
-bool GamePadTwoJoysticks::getClimbRun()
-{
-    return X.isHeld();
 }
 
 bool GamePadTwoJoysticks::getCloseShoot()

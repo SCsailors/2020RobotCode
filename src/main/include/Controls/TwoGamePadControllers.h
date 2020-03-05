@@ -22,7 +22,6 @@ namespace ControlBoard{
 
 class TwoGamePadControllers : public ControlBoard::ControlBoardBase {
   static std::shared_ptr<TwoGamePadControllers> mInstance;
-  TurretCardinalEnum mLastCardinal = TurretCardinalEnum::NONE;
   Utility::DelayedBoolean mDPadValid;
   double mDPadDelay = .02;
   XBoxController mDriveController{Constants::kSingleJoystickPort}; 
@@ -58,7 +57,7 @@ class TwoGamePadControllers : public ControlBoard::ControlBoardBase {
   bool getIntake() override;
   bool getCancel() override;
   double getTurretJog() override;
-  TurretCardinal getTurretCardinal() override;
+  std::shared_ptr<Rotation2D> getTurretCardinal() override;
   void reset();
   bool getAutoAim() override;
   double getBallShootCount(bool preshoot) override;

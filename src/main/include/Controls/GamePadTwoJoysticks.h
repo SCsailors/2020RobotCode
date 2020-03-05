@@ -25,11 +25,10 @@ class GamePadTwoJoysticks : public ControlBoardBase {
   frc::Joystick mLeftJoystick{1};
   frc::Joystick mRightJoystick{2};
   XBoxController mController{Constants::kSingleJoystickPort}; 
-  TurretCardinalEnum mLastCardinal = TurretCardinalEnum::NONE;
-  Utility::DelayedBoolean mDPadValid;
   double mDPadDelay = .02;
   bool wantsHighGear = false;
   bool wantsManual = true;
+  int prev_dpad = -1;
   
   Utility::MultiTrigger LT_Multi{Constants::kJoystickHoldTime};
   Utility::MultiTrigger RT_Multi{Constants::kJoystickHoldTime};
@@ -38,12 +37,14 @@ class GamePadTwoJoysticks : public ControlBoardBase {
 
   Utility::LatchedBoolean A{};
   Utility::LatchedBoolean B{};
-  Utility::MultiTrigger X{Constants::kJoystickHoldTime};
+  Utility::MultiTrigger Start{Constants::kJoystickHoldTime};
   Utility::LatchedBoolean Y{};
-  Utility::LatchedBoolean Start{};
+  Utility::LatchedBoolean X{};
   Utility::LatchedBoolean Back{};
   Utility::LatchedBoolean HighGear{};
   Utility::LatchedBoolean ManualShiftToggle{};
+
+  Utility::TimeDelayedBoolean mDPadValid{};
 
  public:
   GamePadTwoJoysticks();
@@ -52,29 +53,37 @@ class GamePadTwoJoysticks : public ControlBoardBase {
   double getTurn() override;
   bool getQuickTurn() override;
   bool getWantsHighGear() override;
+  bool getDriveStraight() override;
 
   bool getShoot() override;
-  bool getWheel() override;
-  bool getWantsRotation() override;
-  bool getClimber() override;
-  bool getIntake() override;
-  bool getCancel() override;
-  double getTurretJog() override;
-  bool isTurretJogging() override;
-  TurretCardinal getTurretCardinal() override;
-  void reset();
-  //bool getAutoAim() override;
   double getBallShootCount(bool preshoot) override;
   double shootCount = 5.0;
 
+  bool getWheel() override;
+  bool getWantsRotation() override;
+  
+  bool getClimber() override;
+  bool getClimbRun() override;
+
+  bool getIntake() override;
+  bool getCancel() override;
+  
+  bool isTurretJogging() override;
+  std::shared_ptr<Rotation2D> getTurretCardinal() override;
+  void reset();
+  //bool getAutoAim() override;
+  
+
   double getHood() override;
   double getShooter() override;
-  bool getDriveShifterManual() override;
   double getBallPath() override;
-  bool getBallPathToggle() override;
-  bool getClimbRun() override;
+  double getTurretJog() override;
+  
+  bool getDriveShifterManual() override;
+  
   bool getCloseShoot() override;
   bool getLineShoot() override;
+  
 
   int i = 0;
   int j = 0;

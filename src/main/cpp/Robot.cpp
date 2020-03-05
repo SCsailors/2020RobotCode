@@ -94,6 +94,7 @@ void Robot::RobotInit() {
 
   subsystems.push_back(mLimelightManager);
   subsystems.push_back(mLED);
+  subsystems.push_back(mClimber);
   
   isShootClose = false;
   mSuperstructure->mStateMachine.updateHoodDefault(lineHood);
@@ -186,14 +187,22 @@ void Robot::manualControl()
   double throttle = mControlBoard->getThrottle();
   double turn = mControlBoard->getTurn();
   double turretJog = mControlBoard->getTurretJog();
-  double cardinalDegrees = mControlBoard->getTurretCardinal().inputDirection->getDegrees();
+  double cardinalDegrees = mControlBoard->getTurretCardinal()->getDegrees();
   double ballShootCount = mControlBoard->getBallShootCount(preshoot);
+  double ballPath = mControlBoard->getBallPath();
+  double shooter = mControlBoard->getShooter();
+  double hood = mControlBoard->getHood();
+  double ballPathOutput = mControlBoard->getBallPath();
 
   frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ getThrottle()", throttle);
   frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ getTurn()", turn);
   frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ getTurretJog()", turretJog);
   frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ getTurretCardinal()", cardinalDegrees);
   frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ getBallShoot()", ballShootCount);
+  frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ getBallPath()", ballPath);
+  frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ getShooter()", shooter);
+  frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ getHood()", hood);
+  frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ getBallPath()", ballPathOutput);
 
   bool quickTurn = mControlBoard->getQuickTurn();
   bool wantsHighGear = mControlBoard->getWantsHighGear();
@@ -205,8 +214,10 @@ void Robot::manualControl()
   bool cancel = mControlBoard->getCancel();
   bool isTurretJogging = mControlBoard->isTurretJogging();
   bool autoAim = mControlBoard->getAutoAim();
-  bool pathToggle = mControlBoard->getBallPathToggle();
+  //bool pathToggle = mControlBoard->getBallPathToggle();
   bool climbRun = mControlBoard->getClimbRun();
+  bool shootLine = mControlBoard->getLineShoot();
+  bool shootClose = mControlBoard->getCloseShoot();
 
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getQuickTurn()", quickTurn);
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getWantsLowGear()", wantsHighGear);
@@ -218,7 +229,10 @@ void Robot::manualControl()
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getCancel()", cancel);
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ isTurretJogging()", isTurretJogging);
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getAutoAim()", autoAim);
-
+  frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getClimbRun()", cancel);
+  frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getLineShoot()", shootLine);
+  frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getCloseShoot()", shootClose);
+  frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ isShootClose()", isShootClose);
   
   double timestamp = frc::Timer::GetFPGATimestamp();
   
@@ -226,38 +240,55 @@ void Robot::manualControl()
   bool manualShift = mControlBoard->getDriveShifterManual();
   bool firstManual = manualDriveShifter.update(manualShift);
   bool firstAuto = autoDriveShifter.update(manualShift);
-  
-  double ballPathOutput = mControlBoard->getBallPath();
 
-  //Auto Control ballPath
+  //Manual
+  //BallPath
   if (!util.epsilonEquals(0.0, ballPathOutput, .5))
   { //On
     mSuperstructure->setBallPathManual(true);
-    mBallPathTop->setOpenLoop(std::copysign(.8, ballPathOutput));  
+    mBallPathTop->setOpenLoop(std::copysign(.8, ballPathOutput));
+    mCenteringIntake->setOpenLoop(std::copysign(.8, ballPathOutput));  
   } else
   { //Off
     mSuperstructure->setBallPathManual(false);
   }
+
+  //Shooter
+  if (!util.epsilonEquals(0.0, shooter, .01))
+  {
+    mSuperstructure->setShooterManual(true);
+    mShooter->setOpenLoop(shooter);
+  } else
+  {
+    mSuperstructure->setShooterManual(false);
+  }
   
-  if (wantsHighGear && !toggleHighGear)
+
+  //Hood
+  if (!util.epsilonEquals(0.0, hood, .01))
   {
-    toggleHighGear = true;
+    mSuperstructure->setHoodManual(true);
+    mHood->setOpenLoop(hood);
+  } else
+  {
+    mSuperstructure->setHoodManual(false);
+  }
+  
+  
+  if (wantsHighGear)
+  {
     mDrive->setShifterState(Subsystems::FalconDrive::ShifterState::FORCE_HIGH_GEAR);
-  } else if (wantsHighGear && toggleHighGear)
+  } else
   {
-    toggleHighGear = false;
     mDrive->setShifterState(Subsystems::FalconDrive::ShifterState::FORCE_LOW_GEAR);
   }
-
-  bool shootLine = mControlBoard->getLineShoot();
-  bool shootClose = mControlBoard->getCloseShoot();
 
   if (shootLine && isShootClose)
   {
     isShootClose = false;
     mSuperstructure->mStateMachine.updateHoodDefault(lineHood);
     mSuperstructure->mStateMachine.updateShooterDefault(lineShooter);
-  } else if (shootClose && isShootClose)
+  } else if (shootClose && !isShootClose)
   {
     isShootClose = true;
     mSuperstructure->mStateMachine.updateHoodDefault(closeHood);
@@ -272,7 +303,15 @@ void Robot::manualControl()
     signal = driveAssist.Drive(throttle, turn, quickTurn, mDrive->isHighGear());
   } else
   { //Throttle is Left, Turn is Right
-    signal = std::make_shared<DriveSignal>(mControlBoard->getThrottle(), mControlBoard->getTurn());
+    if (mControlBoard->getDriveStraight())
+    { //Drive Straight based on right joystick
+      signal = std::make_shared<DriveSignal>(mControlBoard->getTurn(), mControlBoard->getTurn());
+    } else
+    { //tank drive
+      signal = std::make_shared<DriveSignal>(mControlBoard->getThrottle(), mControlBoard->getTurn());  
+    }
+    
+    
   }
   
   frc::SmartDashboard::PutNumber("Drive Signal Left:", signal->getLeft());
@@ -288,9 +327,6 @@ void Robot::manualControl()
   {
     std::cout <<"Balls: setting number of balls to shoot: "<<balls_to_shoot <<std::endl;
     mSuperstructure->setGoalNumBalls(balls_to_shoot);
-    i++;
-    frc::SmartDashboard::PutNumber("CheckPoint/ Balls to Shoot counter", i);
-    frc::SmartDashboard::PutNumber("CheckPoint/ Balls to Shoot number", balls_to_shoot);
   }
 
   prev_ball = balls_to_shoot;
@@ -299,8 +335,6 @@ void Robot::manualControl()
   {
     preshoot = false;
     shooting = false;
-    j++;
-    frc::SmartDashboard::PutNumber("CheckPoint/ Shooter State Idle", j);
   }
 
   
@@ -316,9 +350,7 @@ void Robot::manualControl()
     preshoot = false;
     shooting = true;
     shoot_start_time = timestamp;
-    l++;
-    frc::SmartDashboard::PutNumber("CheckPoint/ Shooting counter", l);
-    frc::SmartDashboard::PutNumber("CheckPoint/ Shoot Timestamp", shoot_start_time);
+    
   }
 
   //set preshooting
@@ -328,11 +360,6 @@ void Robot::manualControl()
     mSuperstructure->setWantedActionShooter(StateMachines::SuperstructureStateMachine::WANTED_PRE_EXHAUST_BALL);
     preshoot = true;
     pre_shoot_start_time = timestamp;
-    k++;
-    frc::SmartDashboard::PutNumber("CheckPoint/ PreShooting counter", k);
-    frc::SmartDashboard::PutNumber("CheckPoint/ PreShooting Timestamp", pre_shoot_start_time);
-
-    
   }
 
   //cancel shooting action
@@ -342,8 +369,7 @@ void Robot::manualControl()
     mSuperstructure->setWantedActionShooter(StateMachines::SuperstructureStateMachine::WANTED_IDLE);
     shooting = false;
     preshoot = false;
-    m++;
-    frc::SmartDashboard::PutNumber("CheckPoint/ Cancel counter", m);
+    
   } else if (cancel && (pre_climb || climbing))
   {
     std::cout <<"Canceling climbing: "<<timestamp <<std::endl;
@@ -360,10 +386,6 @@ void Robot::manualControl()
   {
     mSuperstructure->jogTurret(mControlBoard->getTurretJog());
     jogging = true;
-
-    n++;
-    frc::SmartDashboard::PutNumber("CheckPoint/ Turret Jog counter", n);
-    frc::SmartDashboard::PutNumber("CheckPoint/ Turret Jog number", mControlBoard->getTurretJog());
   } else
   {
     mLimelightManager->setAllLEDS(Subsystems::Limelight::LedMode::ON);
@@ -398,9 +420,6 @@ void Robot::manualControl()
     { //extend intake
       std::cout <<"Extending Intake: "<<timestamp <<std::endl;
       mSuperstructure->setWantedActionIntake(StateMachines::SuperstructureStateMachine::WANTED_INTAKE_BALL);
-
-      o++;
-      frc::SmartDashboard::PutNumber("CheckPoint/ intake extend counter", o);
      
     } else
     {
@@ -413,17 +432,11 @@ void Robot::manualControl()
         std::cout <<"Closing Intake-HAVE_BALLS: "<<timestamp <<std::endl;
         mSuperstructure->setWantedActionIntake(StateMachines::SuperstructureStateMachine::WANTED_HAVE_BALLS);
       }
-      //intake_extended = mSuperstructure->()
-      p++;
-      frc::SmartDashboard::PutNumber("CheckPoint/ intake extend counter", p);
     }
   }
   intake_extended = mSuperstructure->isIntakeExtended();
   frc::SmartDashboard::PutBoolean("CheckPoint/ intake extend number", intake_extended);
   
-  //double hood = mControlBoard->getHood();
-  //mHood->setOpenLoop(hood);
-  //frc::SmartDashboard::PutNumber("Hood Joystick Percent", hood);
 }
 
 void Robot::TestControl()

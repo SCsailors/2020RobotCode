@@ -75,12 +75,11 @@ void BallPathTop::updateLast()
 
 void BallPathTop::readPeriodicInputs()
 {
-    mFirstBreakState = mFirstBreak.Get();
-    mFirstMakeState = mFirstMake.Get();
-
+    mFirstBreakState = !mFirstBreak.Get(); 
+    
     mLastBreakState = mLastBreak.Get();
-    mLastMakeState = mLastMake.Get();
-    mPreBottomState = mPreBottom.Get();
+    
+    //mPreBottomState = mPreBottom.Get();
 
     updateLast();
     updateFirst();

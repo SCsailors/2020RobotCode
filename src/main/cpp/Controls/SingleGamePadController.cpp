@@ -99,51 +99,32 @@ bool SingleGamePadController::getCancel()
 double SingleGamePadController::getTurretJog()
 {
     double jog = mController.getJoystick(XBoxController::Side::RIGHT, XBoxController::Axis::x);
-    if (util.epsilonEquals(jog, 0.0, turretDeadband))
+    if (util.epsilonEquals(jog, 0.0, kDeadband))
     {
         return 0.0;
     }
     double pre_jog = std::fabs(jog);
     //rescale
-    double adj_jog = std::copysign((pre_jog-turretDeadband)/ (1.0-turretDeadband), jog);
+    double adj_jog = std::copysign((pre_jog-kDeadband)/ (1.0-kDeadband), jog);
     return Constants::kTurretJogMultiplier * (std::pow(adj_jog, Constants::kTurretJogPower));
 }
 
 bool SingleGamePadController::isTurretJogging()
 {
-    return !(util.epsilonEquals(mController.getJoystick(XBoxController::Side::RIGHT, XBoxController::Axis::x), 0.0, turretDeadband));
+    return !(util.epsilonEquals(mController.getJoystick(XBoxController::Side::RIGHT, XBoxController::Axis::x), 0.0, kDeadband));
 }
 
-TurretCardinal SingleGamePadController::getTurretCardinal()
+std::shared_ptr<Rotation2D> SingleGamePadController::getTurretCardinal()
 {
     int dPad = mController.getDPad();
     frc::SmartDashboard::PutNumber("DPad", dPad);
-    TurretCardinalEnum newCardinal = dPad == -1 ? TurretCardinalEnum::NONE : TurretCardinalToEnum(findClosest(Rotation2D::fromDegrees((double) dPad)));
-    frc::SmartDashboard::PutNumber("NewCardinal degrees", newCardinal);
-    if (newCardinal != TurretCardinalEnum::NONE && isDiagonal(newCardinal))
-    {
-        //Latch previous direction on diagonal presses because D-Pad is bad at diagonals
-        newCardinal = mLastCardinal;
-    }
-    bool valid = mDPadValid.update(frc::Timer::GetFPGATimestamp(), newCardinal != TurretCardinalEnum::NONE && (mLastCardinal == TurretCardinalEnum::NONE || newCardinal == mLastCardinal));
-    if (valid)
-    {
-        if (mLastCardinal == TurretCardinalEnum::NONE)
-        {
-            mLastCardinal = newCardinal;
-        }
-        return mLastCardinal;
-    } else
-    {
-        mLastCardinal = newCardinal;
-    }
-    return TurretCardinalEnum::NONE;
+    
+    return Rotation2D::fromDegrees(0.0);
     
 }
 
 void SingleGamePadController::reset()
 {
-    mLastCardinal = TurretCardinalEnum::NONE;
     mDPadValid.reset(frc::Timer::GetFPGATimestamp(), mDPadDelay);
 }
 
@@ -187,13 +168,13 @@ double SingleGamePadController::getBallShootCount(bool preshoot)
 double SingleGamePadController::getHood()
 {
     double hood = mController.getJoystick(XBoxController::Side::RIGHT, XBoxController::Axis::y);
-    if (util.epsilonEquals(hood, 0.0, turretDeadband))
+    if (util.epsilonEquals(hood, 0.0, kDeadband))
     {
         return 0.0;
     }
     double pre_hood = std::fabs(hood);
     //rescale
-    double adj_hood = std::copysign((pre_hood-turretDeadband)/ (1.0-turretDeadband), hood);
+    double adj_hood = std::copysign((pre_hood-kDeadband)/ (1.0-kDeadband), hood);
     return adj_hood;
 }
 
