@@ -84,7 +84,7 @@ void FRC_7054::RobotState::addObservation(double timestamp, shared_ptr<Twist2D> 
     vehicle_velocity_measured_=measured_velocity;
     vehicle_velocity_predicted_=predicted_velocity;
 
-    if (fabs(vehicle_velocity_measured_->dtheta < 2.0 *Constants::kPI))
+    if (fabs(vehicle_velocity_measured_->dtheta) < 2.0 *Constants::kPI)
     {
         //reject really high angular velocities from filter
         vehicle_velocity_measured_filtered_.add(vehicle_velocity_measured_);
@@ -93,6 +93,14 @@ void FRC_7054::RobotState::addObservation(double timestamp, shared_ptr<Twist2D> 
         shared_ptr<Twist2D> twist = make_shared<Twist2D>(vehicle_velocity_measured_->dx, vehicle_velocity_measured_->dy, 0.0);
         vehicle_velocity_measured_filtered_.add(twist);
     }
+
+    vehicle_acceleration_measured_ = vehicle_velocity_measured_->derive(prev_vehicle_acceleration_, timestamp - prev_timestamp);
+    
+    //check if limits are needed    
+    vehicle_acceleration_measured_filtered_.add(vehicle_acceleration_measured_);
+
+    prev_vehicle_acceleration_ = vehicle_acceleration_measured_;
+    prev_timestamp = timestamp;
 }
 
 shared_ptr<Twist2D> FRC_7054::RobotState::generateOdometryFromSensors(double left_encoder_delta_distance, double right_encoder_delta_distance, shared_ptr<Rotation2D> current_gyro_angle){
@@ -121,6 +129,11 @@ shared_ptr<Twist2D> FRC_7054::RobotState::getMeasuredVelocity(){
 shared_ptr<Twist2D> FRC_7054::RobotState::getSmoothedVelocity()
 {
     return vehicle_velocity_measured_filtered_.getAverage();
+}
+
+shared_ptr<Twist2D> FRC_7054::RobotState::getMeasuredAcceleration()
+{
+
 }
 
 void FRC_7054::RobotState::resetVision()
@@ -273,7 +286,17 @@ void FRC_7054::RobotState::outputToSmartDashboard(){
     frc::SmartDashboard::PutNumber("Robot Pose X", odometry->getTranslation()->x());
     frc::SmartDashboard::PutNumber("Robot Pose Y", odometry->getTranslation()->y());
     frc::SmartDashboard::PutNumber("Robot Pose Theta", odometry->getRotation()->getDegrees());
-    frc::SmartDashboard::PutNumber("Robot Linear Velocity", vehicle_velocity_measured_->dx);
+    frc::SmartDashboard::PutNumber("Robot Velocity (X)", vehicle_velocity_measured_->dx);
+    frc::SmartDashboard::PutNumber("Robot Velocity (Theta)", vehicle_velocity_measured_->dtheta);
+
+    frc::SmartDashboard::PutNumber("Robot filtered Velocity (X)", vehicle_velocity_measured_filtered_.getAverage()->dx);
+    frc::SmartDashboard::PutNumber("Robot filtered Velocity (Theta)", vehicle_velocity_measured_filtered_.getAverage()->dtheta);
+
+    frc::SmartDashboard::PutNumber("Robot Acceleration (X)", vehicle_acceleration_measured_->dx);
+    frc::SmartDashboard::PutNumber("Robot Acceleration (Theta)", vehicle_acceleration_measured_->dtheta);
+
+    frc::SmartDashboard::PutNumber("Robot filtered Acceleration (X)", vehicle_acceleration_measured_filtered_.getAverage()->dx);
+    frc::SmartDashboard::PutNumber("Robot filtered Acceleration (Theta)", vehicle_acceleration_measured_filtered_.getAverage()->dtheta);
 }
 
 string FRC_7054::RobotState::toPlannerCSV(){

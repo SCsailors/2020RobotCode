@@ -184,6 +184,8 @@ void Robot::TeleopPeriodic() {
 
 void Robot::manualControl()
 {
+  std::shared_ptr<Rotation2D> turretCardinal = mControlBoard->getTurretCardinal();
+
   double throttle = mControlBoard->getThrottle();
   double turn = mControlBoard->getTurn();
   double turretJog = mControlBoard->getTurretJog();
@@ -203,6 +205,7 @@ void Robot::manualControl()
   frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ getShooter()", shooter);
   frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ getHood()", hood);
   frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ getBallPath()", ballPathOutput);
+  frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ getTurretCardinal() (degrees)", turretCardinal->getDegrees());
 
   bool quickTurn = mControlBoard->getQuickTurn();
   bool wantsHighGear = mControlBoard->getWantsHighGear();
@@ -219,6 +222,10 @@ void Robot::manualControl()
   bool shootLine = mControlBoard->getLineShoot();
   bool shootClose = mControlBoard->getCloseShoot();
 
+  bool fieldRelative = mControlBoard->getFieldRelative();
+  bool autoAim = mControlBoard->getAutoAim();
+  bool validTurretCardinal = mControlBoard->getValidTurretCardinal();
+
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getQuickTurn()", quickTurn);
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getWantsLowGear()", wantsHighGear);
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getShoot()", shoot);
@@ -233,7 +240,10 @@ void Robot::manualControl()
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getLineShoot()", shootLine);
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getCloseShoot()", shootClose);
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ isShootClose()", isShootClose);
-  
+  frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getFieldRelative()", fieldRelative);
+  frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getAutoAim()", autoAim);
+  frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getValidTurretCardinal()", validTurretCardinal);
+
   double timestamp = frc::Timer::GetFPGATimestamp();
   
   //Drive
@@ -377,20 +387,60 @@ void Robot::manualControl()
     pre_climb = false;
     climbing = false;
   }
+  if (validTurretCardinal)
+  {
+    hold_angle = true;
+  }
 
-  //Turret
-
-  //Jog turret-auto aiming disabled, need to add: getAutoAim, field relative, robot relative,
-  //currently only jogging - overrides aiming
   if (isTurretJogging)
   {
     mSuperstructure->jogTurret(mControlBoard->getTurretJog());
     jogging = true;
-  } else
+    hold_angle = false;
+  } else 
   {
-    mLimelightManager->setAllLEDS(Subsystems::Limelight::LedMode::ON);
-    mSuperstructure->setWantAutoAim(Rotation2D::fromDegrees(0.0));
     jogging = false;
+    if (autoAim)
+    {
+      mLimelightManager->setAllLEDS(Subsystems::Limelight::LedMode::ON);
+      if (mLimelightManager->getTurretLimelight()->seesTarget())
+      {
+        mSuperstructure->setWantAutoAim(Rotation2D::fromDegrees(0.0));
+        hold_angle = false;
+      } else if (hold_angle)
+      {
+        if (fieldRelative)
+        {
+          mSuperstructure->setWantFieldRelativeTurret(turretCardinal);
+        } else
+        {
+          mSuperstructure->setWantRobotRelativeTurret(turretCardinal);
+        }
+        
+      } else
+      {
+        mSuperstructure->setTurretOpenLoop(0.0);
+      }
+      
+    } else
+    {
+      mLimelightManager->setAllLEDS(Subsystems::Limelight::LedMode::OFF);
+      if (hold_angle)
+      {
+        if (fieldRelative)
+        {
+          mSuperstructure->setWantFieldRelativeTurret(turretCardinal);
+        } else
+        {
+          mSuperstructure->setWantRobotRelativeTurret(turretCardinal);
+        }
+        
+      } else
+      {
+        mSuperstructure->setTurretOpenLoop(0.0);
+      }
+    }
+    
   }
 
   //wheel - later
@@ -405,13 +455,16 @@ void Robot::manualControl()
   { //running climber
     mClimber->setWantedAction(StateMachines::ClimberStateMachine::WANTED_CLIMBING);
     climbing = true;
-  } else if (!climbRun && climbing)
-  { //finished climbing
+  } 
+  
+  else if (!climbRun && climbing)
+  { //paused Climbing
     mClimber->setWantedAction(StateMachines::ClimberStateMachine::WANTED_POST_CLIMB);
-    climbing_finished = true;
-    pre_climb = false;
+    //climbing_finished = true;
+    //pre_climb = false;
     climbing = false;
   }
+  
 
   //Intake
   if (intake)

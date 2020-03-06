@@ -155,6 +155,8 @@ void TestControl();
 
   bool isShootClose = false;
 
+  bool hold_angle = false;
+
 };
 
 #include "Auto/Modes/CharacterizeHighGear.h"

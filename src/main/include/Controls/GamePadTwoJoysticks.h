@@ -25,11 +25,14 @@ class GamePadTwoJoysticks : public ControlBoardBase {
   frc::Joystick mLeftJoystick{1};
   frc::Joystick mRightJoystick{2};
   XBoxController mController{Constants::kSingleJoystickPort}; 
-  double mDPadDelay = .02;
+  double mDPadDelay = .2;
   bool wantsHighGear = false;
   bool wantsManual = true;
   int prev_dpad = -1;
-  
+  double mTurretCardinalOutput = 0.0;
+  bool dPadValid = false;
+  Utility::LatchedBoolean mDPadUpdate{};
+
   Utility::MultiTrigger LT_Multi{Constants::kJoystickHoldTime};
   Utility::MultiTrigger RT_Multi{Constants::kJoystickHoldTime};
   Utility::MultiTrigger LB_Multi{Constants::kJoystickHoldTime};
@@ -70,9 +73,15 @@ class GamePadTwoJoysticks : public ControlBoardBase {
   
   bool isTurretJogging() override;
   std::shared_ptr<Rotation2D> getTurretCardinal() override;
-  void reset();
-  //bool getAutoAim() override;
+  bool getValidTurretCardinal() override;
   
+  bool getAutoAim() override;
+  bool getFieldRelative() override;
+  bool AutoAim = true;
+  bool FieldRelative = false;
+
+
+  void reset();
 
   double getHood() override;
   double getShooter() override;

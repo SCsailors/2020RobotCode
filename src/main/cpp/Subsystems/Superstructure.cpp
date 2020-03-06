@@ -50,6 +50,7 @@ void Superstructure::OnLoop(double timestamp)
         //update turret 
         maybeUpdateGoalFromVision(timestamp);
         maybeUpdateGoalFromFieldRelativeGoal(timestamp);
+        maybeUpdateGoalFromRobotRelativeGoal(timestamp);
         //set updated data
         followSetpoint();
     }
@@ -86,16 +87,8 @@ void Superstructure::jogTurret(double delta)
 
 void Superstructure::setGoal(SuperstructureGoal goal)
 {
-    if (mTurretMode == TurretControlModes::VISION_AIMED && mHasTarget)
-    {
-        //keep existing turret setpoint.
-    } 
-    /*
-    else
-    {
-        mGoal.state.turret = goal.state.turret;
-    }
-    */
+    if (mTurretMode == TurretControlModes::VISION_AIMED && mHasTarget) {} 
+    
     mGoal.state.hood = goal.state.hood;
     mGoal.state.shooter = goal.state.shooter;
     mGoal.state.centeringIntake = goal.state.centeringIntake;
@@ -105,29 +98,15 @@ void Superstructure::setGoal(SuperstructureGoal goal)
     mGoal.state.extendWheelieBar = goal.state.extendWheelieBar;
 }
 
-void Superstructure::maybeUpdateGoalFromFieldRelativeGoal(double timestamp)
+void Superstructure::maybeUpdateGoalFromRobotRelativeGoal(double timestamp)
 {
-    if (mTurretMode != TurretControlModes::FIELD_RELATIVE && mTurretMode != TurretControlModes::VISION_AIMED)
+    if (mTurretMode != TurretControlModes::ROBOT_RELATIVE)
     {
-        mFieldRelativeGoal = NULL;
-        return;
-    }
-    if (mTurretMode == TurretControlModes::VISION_AIMED && mHasTarget)
-    {
-        //vision controls turret;
-        return;
-    }
-    if(mFieldRelativeGoal == NULL)
-    {
-        mTurretMode = TurretControlModes::ROBOT_RELATIVE;
+        //mRelativeGoal = NULL;
         return;
     }
 
-    double kLookaheadTime = .7;
-    std::shared_ptr<Rotation2D> turret_error = mRobotState->getPredictedFieldToVehicle(kLookaheadTime)
-            ->transformBy(mRobotState->getVehicleToTurret(timestamp))->getRotation()->inverse()
-            ->rotateBy(mFieldRelativeGoal);
-    mGoal.state.turret = mCurrentState.turret + turret_error->getDegrees();
+    mGoal.state.turret = mRelativeGoal->getDegrees();
 
     if (mGoal.state.turret < mTurret->getMinUnits())
     {
@@ -137,6 +116,44 @@ void Superstructure::maybeUpdateGoalFromFieldRelativeGoal(double timestamp)
     {
         mGoal.state.turret = mTurret->getMaxUnits();
     }
+}
+
+void Superstructure::maybeUpdateGoalFromFieldRelativeGoal(double timestamp)
+{
+    if (mTurretMode != TurretControlModes::FIELD_RELATIVE && mTurretMode != TurretControlModes::VISION_AIMED)
+    {
+        //mRelativeGoal = NULL;
+        return;
+    }
+    if (mTurretMode == TurretControlModes::VISION_AIMED && mHasTarget)
+    {
+        //vision controls turret;
+        return;
+    }
+//    if(mRelativeGoal == NULL)
+//    {
+//        mTurretMode = TurretControlModes::ROBOT_RELATIVE;
+//        return;
+//    }
+
+    double kLookaheadTime = .4;
+    std::shared_ptr<Rotation2D> turret_error = mRobotState->getPredictedFieldToVehicle(kLookaheadTime)
+            ->transformBy(mRobotState->getVehicleToTurret(timestamp))->getRotation()->inverse()
+            ->rotateBy(mRelativeGoal);
+    double turretGoal = mCurrentState.turret + turret_error->getDegrees();
+
+    mGoal.state.turret = getDesiredTurretAngle(util.convertTurretAngle(turretGoal), timestamp);
+    
+    if (mGoal.state.turret < mTurret->getMinUnits())
+    {
+        mGoal.state.turret = mTurret->getMinUnits();
+    } 
+    if (mGoal.state.turret > mTurret->getMaxUnits())
+    {
+        mGoal.state.turret = mTurret->getMaxUnits();
+    }
+
+
 
 }
 
@@ -167,7 +184,7 @@ void Superstructure::maybeUpdateGoalFromVision(double timestamp)
     {
         mTrackId = mLatestAimingParameters.getTrackID();
 
-        double kLookaheadTime = .7;
+        double kLookaheadTime = .4;
         std::shared_ptr<Pose2D> robot_to_predicted_robot = mRobotState->getLatestFieldToVehicle()->inverse()->transformBy(mRobotState->getPredictedFieldToVehicle(kLookaheadTime));
 
         std::shared_ptr<Pose2D> predicted_robot_to_goal = robot_to_predicted_robot->inverse()->transformBy(mLatestAimingParameters.getRobotToGoal());
@@ -213,6 +230,41 @@ void Superstructure::maybeUpdateGoalFromVision(double timestamp)
     }
     */
     
+}
+
+double Superstructure::getDesiredTurretAngle(double turretGoal, double timestamp)
+{
+    double limit_deadzone = 8.0;
+    double flip_delay = .8;
+    double desiredAngle;
+    if (turretGoal > (mTurret->getMinUnits() + limit_deadzone) && turretGoal < (mTurret->getMaxUnits() - limit_deadzone))
+    { //with in limits
+        mConsideringFlip = false;
+        desiredAngle = turretGoal;
+        
+    } else
+    { //outside limits / in limit_deadzone: considering switching to other limit
+        mConsideringFlip = true;    
+    }
+    
+    bool valid = mConsideringFlipValid.update(mConsideringFlip);
+    if (valid)
+    {
+        mFlipTimer.Reset();
+        mFlipTimer.Start();   
+    }
+
+    if (mConsideringFlip && mFlipTimer.Get() > .8)
+    {
+        if (turretGoal < 0)
+        {
+            turretGoal += 360.0;
+        }
+        std::shared_ptr<Twist2D> smoothedVelocity = FRC_7054::RobotState::getInstance()->getSmoothedVelocity();
+        std::shared_ptr<Twist2D> smoothedAcceleration = FRC_7054::RobotState::getInstance()->getSmoothedAcceleration();
+    }
+
+    return desiredAngle;
 }
 
 void Superstructure::resetAimingParameters()
@@ -269,7 +321,7 @@ void Superstructure::updateCurrentState()
 void Superstructure::setWantAutoAim(std::shared_ptr<Rotation2D> field_to_turret_hint, bool enforce_min_distance, double min_distance)
 {
     mTurretMode = TurretControlModes::VISION_AIMED;
-    mFieldRelativeGoal = field_to_turret_hint;
+    mRelativeGoal = field_to_turret_hint;
     mEnforceAutoAimMinDistance = enforce_min_distance;
     mAutoAimMinDistance = min_distance;
 }
@@ -279,15 +331,16 @@ void Superstructure::setWantAutoAim(std::shared_ptr<Rotation2D> field_to_turret_
     setWantAutoAim(field_to_turret_hint, false, 12.0);
 }
 
-void Superstructure::setWantRobotRelativeTurret()
+void Superstructure::setWantRobotRelativeTurret(std::shared_ptr<Rotation2D> robot_to_turret)
 {
     mTurretMode = TurretControlModes::ROBOT_RELATIVE;
+    mRelativeGoal = robot_to_turret;
 }
 
 void Superstructure::setWantFieldRelativeTurret(std::shared_ptr<Rotation2D> field_to_turret)
 {
     mTurretMode = TurretControlModes::FIELD_RELATIVE;
-    mFieldRelativeGoal = field_to_turret;
+    mRelativeGoal = field_to_turret;
 }
 
 void Superstructure::setTurretOpenLoop(double throttle)

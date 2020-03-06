@@ -60,7 +60,7 @@ class Superstructure : public Subsystems::Subsystem {
   //Final Desired State of the Superstructure
   SuperstructureGoal mGoal{};
 
-  std::shared_ptr<Rotation2D> mFieldRelativeGoal = NULL;
+  std::shared_ptr<Rotation2D> mRelativeGoal = NULL;
 
   bool mHasTarget = false;
   bool mOnTarget = false;
@@ -77,6 +77,10 @@ class Superstructure : public Subsystems::Subsystem {
   double mTurretFeedforwardV = 0.0;
   double mTurretThrottle = 0.0;
   double mTurretJog = 0.0;
+
+  bool mConsideringFlip = false;
+  Utility::LatchedBoolean mConsideringFlipValid{};
+  frc::Timer mFlipTimer{};
 
   VisionTargeting::AimingParameters mLatestAimingParameters{};
   double mCorrectedRangeToTarget = 0.0;
@@ -100,9 +104,13 @@ class Superstructure : public Subsystems::Subsystem {
 
   void jogTurret(double delta);
   void setGoal(SuperstructureGoal goal);
-
+  
+  void maybeUpdateGoalFromRobotRelativeGoal(double timestamp);
   void maybeUpdateGoalFromFieldRelativeGoal(double timestamp);
   void maybeUpdateGoalFromVision(double timestamp);
+
+  //if outside limits, scores turretGoals and return whether they should rotate around to other limit
+  double getDesiredTurretAngle(double turretGoal, double timestamp);
 
   void resetAimingParameters();
   double getCorrectedRangeToTarget();
@@ -115,7 +123,7 @@ class Superstructure : public Subsystems::Subsystem {
   //
   void setWantAutoAim(std::shared_ptr<Rotation2D> field_to_turret_hint, bool enforce_min_distance, double min_distance);
   void setWantAutoAim(std::shared_ptr<Rotation2D> field_to_turret_hint);
-  void setWantRobotRelativeTurret();
+  void setWantRobotRelativeTurret(std::shared_ptr<Rotation2D> robot_to_turret);
   void setWantFieldRelativeTurret(std::shared_ptr<Rotation2D> field_to_turret);
 
   void setWantedActionShooter(StateMachines::SuperstructureStateMachine::WantedAction wantedAction){mWantedActionShooter = wantedAction;}

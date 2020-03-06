@@ -41,8 +41,10 @@ class ControlBoardBase {
   {
     return Rotation2D::fromDegrees(0.0);
   }
-
+  virtual bool getValidTurretCardinal(){return false;}
+  virtual bool getFieldRelative(){return false;}
   virtual bool getAutoAim(){return false;}
+  
   virtual double getBallShootCount(bool preshoot){return 0.0;}
   virtual void reset(){};
 

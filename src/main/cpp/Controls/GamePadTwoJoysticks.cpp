@@ -142,11 +142,49 @@ std::shared_ptr<Rotation2D> GamePadTwoJoysticks::getTurretCardinal()
 {
     int dPad = mController.getDPad();
     frc::SmartDashboard::PutNumber("DPad", dPad);
+    if (dPad == -1)
+    {
+        dPadValid = false;
+        prev_dpad = dPad;
+        return Rotation2D::fromDegrees(0.0);
+    } 
     
-
+    bool dPadUpdate = mDPadValid.update(dPad == prev_dpad, mDPadDelay);
+    if (mDPadUpdate.update(dPadUpdate))
+    {
+        dPadValid = true;
+        mTurretCardinalOutput = util.convertTurretAngle((double) dPad);
+    } else
+    {
+        dPadValid = false;
+    }
+    
     prev_dpad = dPad;
-    return Rotation2D::fromDegrees(0.0);
+    return Rotation2D::fromDegrees(mTurretCardinalOutput);
     
+}
+
+bool GamePadTwoJoysticks::getValidTurretCardinal()
+{
+    return dPadValid;
+}
+
+bool GamePadTwoJoysticks::getAutoAim()
+{
+    if (Back.update(mController.getButton(ControlBoard::XBoxController::BACK)))
+    {
+        AutoAim = !AutoAim;
+    }
+    return AutoAim;
+}
+
+bool GamePadTwoJoysticks::getFieldRelative()
+{
+    if (LB_Multi.holdStarted())
+    {
+        FieldRelative = !FieldRelative;
+    }
+    return FieldRelative;
 }
 
 void GamePadTwoJoysticks::reset() {}
