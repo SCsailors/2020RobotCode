@@ -11,16 +11,29 @@
 
 #include "Subsystems/Superstructure.h"
 
+#include <iostream>
+
 class CancelShoot : public Action {
  public:
   CancelShoot(){}
   void start()
   {
+    std::cout << "Starting Cancel Shoot" << std::endl;
     Subsystems::Superstructure::getInstance()->setWantedActionShooter(StateMachines::SuperstructureStateMachine::WANTED_IDLE);
+    frc::SmartDashboard::PutString("Action/Cancel Shoot/Started", "Started");
+    frc::SmartDashboard::PutNumber("Action/Cancel Shoot/Started timestamp", frc::Timer::GetFPGATimestamp());
   }
 
-  void update(){}
-  void done(){}
+  void update()
+  {
+    frc::SmartDashboard::PutString("Action/Cancel Shoot/Updated", "Updated");
+    frc::SmartDashboard::PutNumber("Action/Cancel Shoot/Updated timestamp", frc::Timer::GetFPGATimestamp());
+  }
+  void done()
+  {
+    frc::SmartDashboard::PutString("Action/Cancel Shoot/Updated", "Updated");
+    frc::SmartDashboard::PutNumber("Action/Cancel Shoot/Updated timestamp", frc::Timer::GetFPGATimestamp());
+  }
   bool isFinished()
   {
     return true;

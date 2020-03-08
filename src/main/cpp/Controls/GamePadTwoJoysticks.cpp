@@ -61,13 +61,7 @@ bool GamePadTwoJoysticks::getDriveStraight()
 
 bool GamePadTwoJoysticks::getShoot()
 {
-    bool a = A.update(mController.getButton(XBoxController::Button::A));
-    if (a)
-    {
-        k++;
-    }
-    frc::SmartDashboard::PutNumber("CheckPoint/ ControlBoard/ getShoot counter", k);
-    return a;
+    return A.update(mController.getButton(XBoxController::Button::A));
 }
 
 double GamePadTwoJoysticks::getBallShootCount(bool preshoot)
@@ -80,7 +74,6 @@ double GamePadTwoJoysticks::getBallShootCount(bool preshoot)
     if (preshoot){
         if (LT_Multi.wasTapped())
         {
-            shootCount = 1.0;
         } else if (LB_Multi.wasTapped())
         {
             shootCount = 2.0;
@@ -112,7 +105,8 @@ bool GamePadTwoJoysticks::getWantsRotation()
 
 bool GamePadTwoJoysticks::getClimber()
 {
-    Start.update(mController.getButton(XBoxController::Button::X));
+    frc::SmartDashboard::PutBoolean("Start State (climb)",mController.getButton(8));
+    Start.update(mController.getButton(XBoxController::Button::START));
     return Start.wasTapped();
 }
 

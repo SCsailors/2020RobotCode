@@ -39,7 +39,7 @@ void WinchSystem::OnLoop(double timestamp)
     mDesiredState = mStateMachine.updateClimber(timestamp, mWantedAction, mCurrentState);
     mWantedAction = mStateMachine.getWantedAction(); // in case statemachine transitions
     followSetpoint();
-
+    frc::SmartDashboard::PutBoolean("Subsystems/" + mConstants->kName + "/Crack Da Whip State: ", mClimberExtended);
 }
 
 void WinchSystem::OnStop(double timestamp)

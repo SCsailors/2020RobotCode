@@ -21,22 +21,27 @@ class Shoot : public Action {
   Shoot(){}
   void start()
   {
+    std::cout << "Starting Shoot" << std::endl;
     mSuperstructure = Subsystems::Superstructure::getInstance();
     mSuperstructure->setWantedActionShooter(StateMachines::SuperstructureStateMachine::WANTED_PRE_EXHAUST_BALL);
     mTimer.Reset();
     mTimer.Start();
+    //frc::SmartDashboard::PutString()
+    
   }
   void update()
   {
-    if (mSuperstructure->isAtDesiredState() || mTimer.Get() > 1.5)
+    if (mTimer.Get() > 3.0) //mSuperstructure->isAtDesiredState() ||
     {
       mSuperstructure->setWantedActionShooter(StateMachines::SuperstructureStateMachine::WANTED_EXHAUST_BALL);
     }
   }
+
   void done()
   {
-
+    std::cout << "Finishing Shoot" << std::endl;
   }
+  
   bool isFinished()
   {
     return (mSuperstructure->getShooterState() == StateMachines::SuperstructureStateMachine::IDLE || mTimer.Get() > 7.0);

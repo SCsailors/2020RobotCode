@@ -374,7 +374,8 @@ void Superstructure::followSetpoint()
     else if (mTurretMode == TurretControlModes::VISION_AIMED )
     {
         mTurret->setSetpointPositionPID(mGoal.state.turret + turret_offset, mTurretFeedforwardV);
-    } else if (mTurretMode == TurretControlModes::OPEN_LOOP)
+    } 
+    else if (mTurretMode == TurretControlModes::OPEN_LOOP)
     {
         mTurret->setOpenLoop(mTurretThrottle);
     } else

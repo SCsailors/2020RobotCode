@@ -5,14 +5,6 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-#include "Auto/Modes/CompetitionModes/SimpleMode.h"
+#include "Auto/Creators/CompetitionCreators/LineShootCreator.h"
 
-void SimpleMode::routine()
-{
-    runAction(mOpenLoopDrive);
-}
-
-std::string SimpleMode::getID()
-{
-    return "SimpleMode";
-}
+LineShootCreator::LineShootCreator() {}

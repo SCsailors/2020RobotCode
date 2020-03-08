@@ -10,25 +10,35 @@
 #include "Subsystems/FalconDrive.h"
 
 OpenLoopDrive::OpenLoopDrive(double left, double right, double duration, bool finishCondition) {
-    double mLeft=left;
-    double mRight= right;
-    double mDuration=duration;
-    bool mFinishedCondition=finishCondition;
+    mLeft = left;
+    mRight = right;
+    mDuration = duration;
+    mFinishCondition = finishCondition;
+
 }
 
 void OpenLoopDrive::start(){
     
     Subsystems::FalconDrive::getInstance()->setOpenLoop(make_shared<DriveSignal>(mLeft, mRight));
-    mStartTime=frc::Timer::GetFPGATimestamp();
+    //mStartTime = frc::Timer::GetFPGATimestamp();
+    mTimer.Reset();
+    mTimer.Start();
+    frc::SmartDashboard::PutString("Action/OpenLoopDrive/Started", "Started");
+    frc::SmartDashboard::PutNumber("Action/OpenLoopDrive/Started timestamp", frc::Timer::GetFPGATimestamp());
 }
 
-void OpenLoopDrive::update(){}
+void OpenLoopDrive::update()
+{
+    frc::SmartDashboard::PutString("Action/OpenLoopDrive/Updated", "Updated");
+    frc::SmartDashboard::PutNumber("Action/OpenLoopDrive/Updated timestamp", frc::Timer::GetFPGATimestamp());
+}
 
-void OpenLoopDrive::done(){
-    
+void OpenLoopDrive::done(){    
     Subsystems::FalconDrive::getInstance()->setOpenLoop(make_shared<DriveSignal>(0.0, 0.0));
+    frc::SmartDashboard::PutString("Action/OpenLoopDrive/Done", "Done");
+    frc::SmartDashboard::PutNumber("Action/OpenLoopDrive/Done timestamp", frc::Timer::GetFPGATimestamp());
 }
 
 bool OpenLoopDrive::isFinished(){
-    return (frc::Timer::GetFPGATimestamp()-mStartTime)>mDuration || mFinishCondition;
+    return mTimer.Get() > mDuration || mFinishCondition;
 }

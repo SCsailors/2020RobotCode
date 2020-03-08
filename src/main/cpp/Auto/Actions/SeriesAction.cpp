@@ -27,14 +27,12 @@ void SeriesAction::update(){
             return;
         }
         mRemainingActions.erase(mRemainingActions.begin());
-        if (mRemainingActions.size()>=1){
-            mCurrAction=mRemainingActions.at(0);
+        if (!mRemainingActions.empty()){
+            mCurrAction = mRemainingActions.at(0);
             mCurrAction->start();
         } else{
             return;
         }
-        
-        
     }
 
     mCurrAction->update();

@@ -16,9 +16,10 @@
 using namespace std;
 
 class OpenLoopDrive: public Action {
-  double mStartTime;
-  double mDuration, mLeft, mRight;
-  bool mFinishCondition;
+  //double mStartTime;
+  double mDuration, mLeft, mRight = 0.0;
+  bool mFinishCondition = false;
+  frc::Timer mTimer{};
   
  public:
   OpenLoopDrive(double left, double right, double duration, bool finishCondition);

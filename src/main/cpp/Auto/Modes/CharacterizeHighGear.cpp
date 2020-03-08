@@ -39,6 +39,7 @@ void CharacterizeHighGear::routine(){
     cout<<"kv: "<<constants->kv<<endl;
     cout<<"ka: "<<constants->ka<<endl;
     }
+    
   }
 
 string CharacterizeHighGear::getID(){
