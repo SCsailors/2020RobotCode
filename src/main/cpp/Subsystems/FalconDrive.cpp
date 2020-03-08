@@ -440,7 +440,7 @@ void FalconDrive::setHeading(std::shared_ptr<Rotation2D> heading)
 {
     mPeriodicIO->gyro_heading = heading;
     #ifdef CompetitionBot
-    mGyroOffset = heading->rotateBy(Rotation2D::fromDegrees(NavX.GetFusedHeading())->inverse());
+    mGyroOffset = Rotation2D::fromDegrees(0.0);//mGyroOffset = heading->rotateBy(Rotation2D::fromDegrees(NavX.GetFusedHeading())->inverse());
     #endif
 }
 
@@ -614,7 +614,7 @@ void FalconDrive::readPeriodicInputs()
     mPeriodicIO->right_ticks = mRightMaster->GetSelectedSensorPosition(0);
     mPeriodicIO->left_velocity_ticks = mLeftMaster->GetSelectedSensorVelocity(0);
     mPeriodicIO->right_velocity_ticks = mRightMaster->GetSelectedSensorVelocity(0);
-    mPeriodicIO->gyro_heading = Rotation2D::fromDegrees(NavX.GetFusedHeading())->rotateBy(mGyroOffset);
+    mPeriodicIO->gyro_heading = Rotation2D::fromDegrees(0.0);//Rotation2D::fromDegrees(NavX.GetFusedHeading())->rotateBy(mGyroOffset);
 
     double deltaLeftInches = rotationsToInches((mPeriodicIO->left_ticks - prevLeftTicks) / DRIVE_ENCODER_PPR);
     mPeriodicIO->left_distance += deltaLeftInches;

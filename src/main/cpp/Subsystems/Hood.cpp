@@ -35,9 +35,9 @@ std::shared_ptr<Subsystems::Hood> Hood::getInstance()
         constants->inverted = true;
         constants->kHomePosition = 0.0;
 
-        constants->kP.at(1) = 20.0;
-        constants->kI.at(1) = .03;
-        constants->kD.at(1) = 40.0;
+        constants->kP.at(1) = 9.0;//.01; //20.0;
+        constants->kI.at(1) = .03;//.0001; //.03;
+        constants->kD.at(1) = 20.0;//.1; // 40.0;
         constants->kMaxIAccum.at(1) = 60.0;
         constants->kIZone.at(1) = 1.0/36.0;
         constants->kClosedLoopRampRate = .1;
@@ -49,10 +49,10 @@ std::shared_ptr<Subsystems::Hood> Hood::getInstance()
         constants->kMaxVelocity = 30.0; //rps
         constants->kMaxAcceleration = 80.0; 
         constants->kAllowableClosedLoopError = .0027; // 1 degree
-        constants->kP[3] = 0.0;
-        constants->kI[3] = 0.0;
-        constants->kD[3] = 0.0;
-        constants->kF[3] = .0001;
+        constants->kP.at(3) = 0.0;
+        constants->kI.at(3) = 0.0;
+        constants->kD.at(3) = 0.0;
+        constants->kF.at(3) = .0001;
 
 
         mInstance = std::make_shared<Subsystems::Hood>(constants);

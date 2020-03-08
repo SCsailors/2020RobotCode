@@ -18,14 +18,29 @@
 
 #include <memory>
 
-class SimpleMode : public AutoModeBase{
+class LineShootMode : public AutoModeBase {
+  std::shared_ptr<Shoot> mShoot;
+  std::shared_ptr<WaitAction> mWait;
+  std::shared_ptr<CancelShoot> mCancelShoot;
   std::shared_ptr<OpenLoopDrive> mOpenLoopDrive;
-  
+  std::shared_ptr<ParallelAction> mParallel;
+  std::shared_ptr<SeriesAction> mSeries;
  public:
-  SimpleMode()
+  LineShootMode()
   {
+    mShoot = std::make_shared<Shoot>();
+    mWait = std::make_shared<WaitAction>(8.0);
+    mCancelShoot = std::make_shared<CancelShoot>();
+
     mOpenLoopDrive = std::make_shared<OpenLoopDrive>(.5, .5, 2.0, false);
+    
+    std::vector<std::shared_ptr<Action>> parallel{mShoot, mWait};
+    mParallel = std::make_shared<ParallelAction>(parallel);
+    
+    std::vector<std::shared_ptr<Action>> series{mParallel, mCancelShoot, mOpenLoopDrive};
+    mSeries = std::make_shared<SeriesAction>(series);
   }
+
   void routine();
   std::string getID();
 };

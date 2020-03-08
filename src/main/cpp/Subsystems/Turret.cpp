@@ -21,17 +21,17 @@ std::shared_ptr<Subsystems::Turret> Turret::getInstance()
         constants->kName = "Turret";
         constants->kTicksPerUnitDistance =  1.0 * 461.0 / 360.0; //Rotations of motor to degrees; Division bigger, Multiplication smaller 
         constants->kAllowableClosedLoopError = .5; //approximately .4 degrees
-        constants->kP[1] = 0.04;
-        constants->kI[1] = 0.0;
-        constants->kD[1] = 0.27;
-        constants->kF[1] = .0000;
+        constants->kP.at(1) = 0.04;
+        constants->kI.at(1) = 0.0;
+        constants->kD.at(1) = 0.27;
+        constants->kF.at(1) = .0000;
         
         constants->kMaxVelocity = 6000.0; //Tune rpm
         constants->kMaxAcceleration = 15000.0; //Tune rpm
-        constants->kP[3] = 0.0;
-        constants->kI[3] = 0.0;
-        constants->kD[3] = 0.0;
-        constants->kF[3] = .0001;
+        constants->kP.at(3) = 0.0;
+        constants->kI.at(3) = 0.0;
+        constants->kD.at(3) = 0.0;
+        constants->kF.at(3) = .0001;
         
          
 

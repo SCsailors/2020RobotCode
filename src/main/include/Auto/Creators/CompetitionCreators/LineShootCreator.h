@@ -5,14 +5,20 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-#include "Auto/Modes/CompetitionModes/SimpleMode.h"
+#pragma once
 
-void SimpleMode::routine()
-{
-    runAction(mOpenLoopDrive);
-}
+#include "Auto/Creators/AutoModeCreator.h"
 
-std::string SimpleMode::getID()
-{
-    return "SimpleMode";
-}
+#include "Auto/Modes/CompetitionModes/LineShootMode.h"
+
+#include <memory>
+
+class LineShootCreator : public AutoModeCreator {
+  std::shared_ptr<LineShootMode> mLineShootMode = std::make_shared<LineShootMode>();
+ public:
+  LineShootCreator();
+  std::shared_ptr<AutoModeBase> getStateDependentAutoMode(bool left)
+  {
+    return mLineShootMode;
+  }
+};

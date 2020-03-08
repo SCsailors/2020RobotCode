@@ -29,7 +29,7 @@ class AutoModeSelector {
  Mode mCachedMode=Mode::NONE1;
  string mMode="NONE";
 
- enum CompetitionMode{DO_NOTHING, NONE2};
+ enum CompetitionMode{DO_NOTHING, NONE2, SIMPLE, LINE_SHOOT};
  CompetitionMode mCachedCompetitionMode=CompetitionMode::NONE2;
 
  enum TestingMode{STRAIGHT_TEST, SWERVE_TEST, SWERVE_ANGLED_TEST, NONE3};

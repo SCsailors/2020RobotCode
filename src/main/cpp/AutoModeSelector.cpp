@@ -8,7 +8,11 @@
 #include "AutoModeSelector.h"
 #include "Auto/Creators/PIDTuningCreator.h"
 #include "Auto/Creators/DriveCharacterizationCreator.h"
+
 #include "Auto/Creators/CompetitionCreators/DoNothingCreator.h"
+#include "Auto/Creators/CompetitionCreators/SimpleCreator.h"
+#include "Auto/Creators/CompetitionCreators/LineShootCreator.h"
+
 #include "Auto/Creators/MotionProfileTestingCreators/StraightCreator.h"
 #include "Auto/Creators/MotionProfileTestingCreators/SwerveCreator.h"
 #include "Auto/Creators/MotionProfileTestingCreators/SwerveAngledCreator.h"
@@ -20,7 +24,9 @@ AutoModeSelector::AutoModeSelector() {
     mModeChooser.AddOption("Motion Profile Testing", AutoModeSelector::MOTION_PROFILE_TESTING);
     frc::SmartDashboard::PutData("Auto Mode", &mModeChooser);
 
-    mCompetitionModeChooser.SetDefaultOption("Do Nothing", AutoModeSelector::DO_NOTHING);
+    mCompetitionModeChooser.SetDefaultOption("Simple", CompetitionMode::SIMPLE);
+    mCompetitionModeChooser.AddOption("Do Nothing", AutoModeSelector::DO_NOTHING);
+    mCompetitionModeChooser.AddOption("Line Shoot", CompetitionMode::LINE_SHOOT);
     frc::SmartDashboard::PutData("Competition Mode", &mCompetitionModeChooser);
 
     mTestingModeChooser.SetDefaultOption("Straight Test", AutoModeSelector::STRAIGHT_TEST);
@@ -43,7 +49,7 @@ void AutoModeSelector::updateModeCreator(){
     if (mCachedMode != mode || mCachedTestingMode != testing || mStartingPosition != position || mCachedCompetitionMode != competition){
         
         mCreator = getCreatorForParams(mode, competition, testing, position);
-        cout<<"Auto selection changed, updating creator, Mode: "+mMode+ ", Starting Position: "+mPosition<<endl;
+        frc::SmartDashboard::PutString("Auto selection changed, updating creator, Mode: ", mMode+ ", Starting Position: "+mPosition );
     }
     mStartingPosition=position;
     mCachedMode=mode;
@@ -83,7 +89,13 @@ shared_ptr<AutoModeCreator> AutoModeSelector::getCreatorForParams(Mode mode, Com
             case DO_NOTHING:
              mMode="Competition->DoNothing";
              return make_shared<DoNothingCreator>();
-            break;
+            case SIMPLE:
+             mMode="Competition->Simple";
+             return make_shared<SimpleCreator>();
+            case LINE_SHOOT:
+             mMode="Competition->LineShoot";
+             return make_shared<LineShootCreator>();
+
             default:
              cout<<"Invalid Competition Mode"<<endl;
              return make_shared<DoNothingCreator>();

@@ -107,7 +107,7 @@ class FalconDrive : public Subsystems::Subsystem {
 
     //Hardware -
 #ifdef CompetitionBot
-  AHRS NavX{frc::SerialPort::kUSB1, AHRS::SerialDataType::kProcessedData, 200};
+  //AHRS NavX{frc::SerialPort::kUSB1, AHRS::SerialDataType::kProcessedData, 200};
 
   std::shared_ptr<TalonFX> mLeftMaster;
   std::shared_ptr<TalonFX> mRightMaster;

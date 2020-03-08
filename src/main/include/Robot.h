@@ -78,6 +78,7 @@ class Robot : public frc::TimedRobot {
   void DisabledInit() override;
   void DisabledPeriodic() override;
   bool isHighGear=false;
+  frc::Timer mAutoTimer{};
 
 //Util
 
@@ -148,10 +149,10 @@ void TestControl();
   Utility::LatchedBoolean autoDriveShifter{false};
 
   double lineHood = 46.0;
-  double lineShooter = 90.0;
+  double lineShooter = 110.0;
 
-  double closeHood = 5.0;
-  double closeShooter = 50.0;
+  double closeHood = 10.0;
+  double closeShooter = 65.0;
 
   bool isShootClose = false;
 

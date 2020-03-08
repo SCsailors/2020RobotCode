@@ -42,8 +42,8 @@ bool SuperstructureGoal::isAtDesiredState(SuperstructureState currentState)
         currentState.turret - state.turret,
         currentState.shooter - state.shooter,
         currentState.hood - state.hood,
-        currentState.ballPathTop - state.ballPathTop,
-        currentState.centeringIntake - state.centeringIntake //,
+        //currentState.ballPathTop - state.ballPathTop,
+        //currentState.centeringIntake - state.centeringIntake //,
         //currentState.numBalls - state.numBalls
         };
     

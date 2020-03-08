@@ -169,6 +169,7 @@ class ServoMotorSubsystem : public Subsystems::Subsystem {
   double demand = 0.0;
   double feedforward = 0.0;
   bool PIDTuning = false;
+  
 
   ControlState mPIDMode = ControlState::OPEN_LOOP;
   frc::SendableChooser<ControlState> mModeChooser;
@@ -223,7 +224,7 @@ class SparkMaxSubsystem : public ServoMotorSubsystem {
     std::shared_ptr<rev::CANDigitalInput> mForwardLimitSwitch = NULL;
     std::shared_ptr<rev::CANDigitalInput> mReverseLimitSwitch = NULL;
     std::shared_ptr<rev::CANPIDController> mPIDController = NULL;
-    int i = 0;
+    int j = 0;
     int k = 0;
 };
 
@@ -287,7 +288,7 @@ class TalonSRXSubsystem : public TalonSubsystem {
     
     std::shared_ptr<TalonSRX> mMaster;
     std::vector<std::shared_ptr<BaseTalon>> mSlaves;
-    int i = 0;
+    int j = 0;
     int k = 0;
 };
 
@@ -305,7 +306,7 @@ class TalonFXSubsystem : public TalonSubsystem {
     
     std::shared_ptr<TalonFX> mMaster;
     std::vector<std::shared_ptr<BaseTalon>> mSlaves;
-    int i = 0;
+    int j = 0;
     int k = 0;
 
     void pidTuning();

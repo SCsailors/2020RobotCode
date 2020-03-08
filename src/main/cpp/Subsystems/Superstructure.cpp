@@ -318,10 +318,11 @@ void Superstructure::followSetpoint()
     //{
     //    mTurret->setOpenLoop(0.0);
     //}
-    else if (mTurretMode == TurretControlModes::VISION_AIMED )
-    {
-        mTurret->setSetpointPositionPID(mGoal.state.turret + turret_offset, mTurretFeedforwardV);
-    } else if (mTurretMode == TurretControlModes::OPEN_LOOP)
+   // else if (mTurretMode == TurretControlModes::VISION_AIMED )
+    //{
+    //    mTurret->setSetpointPositionPID(mGoal.state.turret + turret_offset, mTurretFeedforwardV);
+    //} 
+    else if (mTurretMode == TurretControlModes::OPEN_LOOP)
     {
         mTurret->setOpenLoop(mTurretThrottle);
     } else

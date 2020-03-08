@@ -1,49 +1,58 @@
-Subsystems
+Shooter:
+Places
+1. spot : trench, 10 ft, close
+2. area : front
+3. moving : within front
+4. Why does it cut out? current limit?
+5. make sure compressor turns off
 
-1. Shooter
-2. Intake
-3. Ball Path
-4. Turret
-5. Superstructure--
-6. Wheel of Fortune
+Hood:
+1. better PIDF constants
 
+Climber:
+1. buttons
+2. check statemachine
+3. Test functionality
 
-5. Climber 
+Turret:
+1. Vision Tracking, PNP (add filter in case of partial target (l / w) or jumps (compare to target position)), long range
+2. Relative Modes
+3. Tune
+4. Fix Goal Tracker
+5. Fix RobotState::AddVisionUpdates();
 
-Statemachines
-1. Superstructure
-2. Turret
-3. Shooter
-4. Wheel of Fortune
-5. Climber
-6. Drive
+Superstructure:
+1. Fix atDesiredState
+2. add limit switches
 
+BallPath:
+1. Indexing: Magic Motion or Position PID, Sensors
 
-States
-1. LED states
-2. Superstructure
+Autonomous:
+1. Auto Mode Selector
+2. 3 ball
+3. 8 ball 
+4. 13 ball
+5. 15 ball
+6. Test individual actions
+7. reverse run intake action
+8. rotate in place action: Auxiliary PID[1] on Falcons? invest in Pigeon IMU?
+9. Tune Motion Profiling: DriveTrain Characteriztion, NavX, Canifiers
 
-Top Level
-Robot.cpp
+ServoMotorSubsystem
+1. Set PIDF constants on the fly
 
-Interpretation
--Statemachines
-1. Superstructure to individual subsystems or state machines
-
-Low Level
--Subsystems
-1. individual subsystems
-
-Goals
-1. Idiot proof: push button get action with manual mode
-2. Drivers get close
-3. LED Feedback
-
-buttons:
--Jog -manual arrows
-Intake - toggle in and out: out = running, retract when 5 balls
-Shoot - all, manual shoot one per press
-Climber - Up, start Climber
-Auto drive - destination
-Wheel of Fortune: Position and Rotation
-Turret manual rescan
+Priority:
+1. Turret
+2. Indexing: test 12V vs. 5V signals (zener diode/ resistor divider), 2m distance sensor
+3. Climber
+4. Autonomous - 3 ball and addition actions/tests
+5. Superstructure atDesiredState
+6. Goal Tracking and PNP
+6.25 ServoMotorSubsystem PID - general tuning
+6.5. Spot Shooting
+7. Motion Profiling
+7.25. Area Shooting
+7.5. 8 Ball
+8. Moving Shooting
+9. 13 and 15 ball autos.
