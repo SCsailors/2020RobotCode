@@ -33,7 +33,7 @@ class GoalTrack {
   std::shared_ptr<Pose2D> getSmoothedPosition(){return mSmoothedPosition;}
   std::shared_ptr<Pose2D> getLatestPosition(){return mObservedPositions.getLatestObject();}
   double getLatestTimestamp(){return mObservedPositions.getLatestKey();}
-  double getStability(){return std::fmin(1.0, mObservedPositions.pastObjects.size()/(Constants::kCameraFrameRate*Constants::kMaxGoalTrackAge));}
+  double getStability(){return std::fmin(1.0, mObservedPositions.pastObjects.size()/(Constants::kCameraFastFrameRate*Constants::kMaxGoalTrackAge));}
   int getId(){return mId;}
 };
 }

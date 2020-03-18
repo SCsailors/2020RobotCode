@@ -21,9 +21,11 @@ namespace Constants {
   const double kRadsToDegrees = 180.0/kPI;
   const double kDegreesToRads = kPI/180.0;
   
-  const double kCameraFrameRate = 90.0;
-  const double kImageCaptureLatency = kCameraFrameRate/1000.0;
-  
+  const double kCameraFastFrameRate = 90.0;
+  const double kCameraSlowFrameRate = 22.0;
+  const double kImageCaptureFastLatency = kCameraFastFrameRate/1000.0;
+  const double kImageCaptureSlowLatency = kCameraSlowFrameRate/1000.0;
+
   const double kLimelightWidth = 320.0;
   const double kLimelightHeight = 240.0;
   
@@ -61,7 +63,7 @@ namespace Constants {
   const int kColor21_Green = 5;
   const int kColor12_Red = 6;
   const int kColor22_Yellow = 7;
-  const int kDIO_PhotoEye = 8;
+  const int kDIO_PreBottom = 8;
   //AIO Ports
 
   //MIN MAX State Times
@@ -100,8 +102,8 @@ namespace Constants {
 
 
   //Max drive Velocity and Acceleration
-  const double kDriveOpenRampRateLowGear = .20833;
-  const double kDriveOpenRampRateHighGear = .75;
+  const double kDriveOpenRampRateLowGear = 0.0;//.20833;
+  const double kDriveOpenRampRateHighGear = 0.0;//.75;
   const double kDriveMaxVelocity=75.0;//max recorded 88 inches/second
   const double kDriveMaxAcceleration=30.0;//max recorded 200 inches/second^2
   const double kDriveMaxCentripetalAcceleration=100.0;

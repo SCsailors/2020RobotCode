@@ -34,6 +34,19 @@ double Util::interpolate(double a, double b, double x){
     return a+(b-a)*x;
 }
 
+double Util::convertTurretAngle(double angle)
+{
+    double mod_angle = std::fmod(angle, 360.0);
+    if (mod_angle > 180.0)
+    {
+        mod_angle -= 360.0;
+    } else if (mod_angle < -180.0)
+    {
+        mod_angle += 360.0;
+    }
+    return mod_angle;
+}
+
 string Util::toString(double value){
     stringstream stream;
     stream<<fixed<<setprecision(4)<<value;

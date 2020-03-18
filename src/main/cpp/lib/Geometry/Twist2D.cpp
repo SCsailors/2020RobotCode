@@ -30,3 +30,12 @@ double Twist2D::norm(){
     }
     return hypot(dx, dy);
 }
+
+shared_ptr<Twist2D> Twist2D::derive(shared_ptr<Twist2D> initial, double dt)
+{
+    double dX = (this->dx - initial->dx) / dt;
+    double dY = (this->dy - initial->dy) / dt;
+    double dT = (this->dtheta - initial->dtheta) / dt;
+    std::shared_ptr<Twist2D> tmp = std::make_shared<Twist2D>(dX, dY, dT);
+    return tmp;
+}

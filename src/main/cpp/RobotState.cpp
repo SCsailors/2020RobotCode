@@ -84,7 +84,7 @@ void FRC_7054::RobotState::addObservation(double timestamp, shared_ptr<Twist2D> 
     vehicle_velocity_measured_=measured_velocity;
     vehicle_velocity_predicted_=predicted_velocity;
 
-    if (fabs(vehicle_velocity_measured_->dtheta < 2.0 *Constants::kPI))
+    if (fabs(vehicle_velocity_measured_->dtheta) < 2.0 *Constants::kPI)
     {
         //reject really high angular velocities from filter
         vehicle_velocity_measured_filtered_.add(vehicle_velocity_measured_);
@@ -93,6 +93,14 @@ void FRC_7054::RobotState::addObservation(double timestamp, shared_ptr<Twist2D> 
         shared_ptr<Twist2D> twist = make_shared<Twist2D>(vehicle_velocity_measured_->dx, vehicle_velocity_measured_->dy, 0.0);
         vehicle_velocity_measured_filtered_.add(twist);
     }
+
+    vehicle_acceleration_measured_ = vehicle_velocity_measured_->derive(prev_vehicle_acceleration_, timestamp - prev_timestamp);
+    
+    //check if limits are needed    
+    vehicle_acceleration_measured_filtered_.add(vehicle_acceleration_measured_);
+
+    prev_vehicle_acceleration_ = vehicle_acceleration_measured_;
+    prev_timestamp = timestamp;
 }
 
 shared_ptr<Twist2D> FRC_7054::RobotState::generateOdometryFromSensors(double left_encoder_delta_distance, double right_encoder_delta_distance, shared_ptr<Rotation2D> current_gyro_angle){
@@ -123,6 +131,16 @@ shared_ptr<Twist2D> FRC_7054::RobotState::getSmoothedVelocity()
     return vehicle_velocity_measured_filtered_.getAverage();
 }
 
+shared_ptr<Twist2D> FRC_7054::RobotState::getMeasuredAcceleration()
+{
+    return vehicle_acceleration_measured_;
+}
+
+shared_ptr<Twist2D> FRC_7054::RobotState::getSmoothedAcceleration()
+{
+    return vehicle_acceleration_measured_filtered_.getAverage();
+}
+
 void FRC_7054::RobotState::resetVision()
 {
     vision_target_intake.reset();
@@ -131,23 +149,20 @@ void FRC_7054::RobotState::resetVision()
 
 std::shared_ptr<Pose2D> FRC_7054::RobotState::getCameraToVisionTargetPose(VisionTargeting::TargetInfo target, bool turret, std::shared_ptr<Subsystems::Limelight> source)
 {
-    //compensate for camera pitch
-    std::shared_ptr<Translation2D> xz_plane_translation = std::make_shared<Translation2D>( target.getX(), target.getZ() )->rotateBy( source->getHorizontalPlaneToLens() );
-    double x = xz_plane_translation->x();
-    double y = target.getY();
-    double z = xz_plane_translation->y();
+    //change coordinate frames: x (left, right), y (up, down), z (forwards, backwards) to x (forward, backwards), y (left, right), z (up, down)
+    double x = target.getZ(); // depth
+    double y = target.getX(); // left right
+    double z = target.getY(); // height
 
-    //also rotate rotations?
-
-    //figure out rotation
-    std::shared_ptr<Pose2D> pose = std::make_shared<Pose2D>(z, y, 0.0);
+    //if (util.epsilonEquals())
+    std::shared_ptr<Pose2D> pose = std::make_shared<Pose2D>(x, y, 0.0);
     return pose;
 }
 
 void FRC_7054::RobotState::updateGoalTracker(double timestamp, std::vector<std::shared_ptr<Pose2D>> goalPose, VisionTargeting::GoalTracker goalTracker, std::shared_ptr<Subsystems::Limelight> source)
 {
     std::vector<std::shared_ptr<Pose2D>> goalPoses;
-    //check if z axis needs to be rotated by camera angle
+    //check if z axis needs to be rotated by camera angle, should be rotated above
     if (goalPose.empty())
     {
         std::cout<<"failed to update Goal Tracker: " << source->getName() <<std::endl;
@@ -157,8 +172,8 @@ void FRC_7054::RobotState::updateGoalTracker(double timestamp, std::vector<std::
     {
         std::shared_ptr<Pose2D> fieldToVisionTarget = getFieldToTurret(timestamp)->transformBy(source->getTurretToLens()->transformBy(pose));
         goalPoses.push_back(fieldToVisionTarget);
-        goalTracker.update(timestamp, goalPoses);
     }
+    goalTracker.update(timestamp, goalPoses);
     
 }
 
@@ -167,6 +182,7 @@ void FRC_7054::RobotState::addVisionUpdate(double timestamp, std::vector<VisionT
     if (observations.empty())
     {
         frc::SmartDashboard::PutBoolean("CheckPoint/ VisionUpdate/ empty", true);
+        //std::cout << "Removing Old Targets: observations empty" << std::endl;
         //empty update Goal trackers to remove old targets
         vision_target_intake.update(timestamp, emptyVector);
         vision_target_turret.update(timestamp, emptyVector);
@@ -248,7 +264,7 @@ VisionTargeting::AimingParameters FRC_7054::RobotState::getAimingParameters(bool
     {
         if (track.latest_timestamp > timestamp - max_track_age)
         {
-            if (comparator.compare(report, track) >0)
+            if (comparator.compare(report, track) > 0)
             {
                 report = track;
             }
@@ -257,7 +273,6 @@ VisionTargeting::AimingParameters FRC_7054::RobotState::getAimingParameters(bool
 
     std::shared_ptr<Pose2D> vehicleToGoal = getFieldToVehicle(timestamp)->inverse()->transformBy(report.field_to_target);
     VisionTargeting::AimingParameters params{
-        //vehicleToGoal->getTranslation()->norm(),
         vehicleToGoal,
         report.field_to_target,
         report.field_to_target->getRotation(),
@@ -272,7 +287,17 @@ void FRC_7054::RobotState::outputToSmartDashboard(){
     frc::SmartDashboard::PutNumber("Robot Pose X", odometry->getTranslation()->x());
     frc::SmartDashboard::PutNumber("Robot Pose Y", odometry->getTranslation()->y());
     frc::SmartDashboard::PutNumber("Robot Pose Theta", odometry->getRotation()->getDegrees());
-    frc::SmartDashboard::PutNumber("Robot Linear Velocity", vehicle_velocity_measured_->dx);
+    frc::SmartDashboard::PutNumber("Robot Velocity (X)", vehicle_velocity_measured_->dx);
+    frc::SmartDashboard::PutNumber("Robot Velocity (Theta)", vehicle_velocity_measured_->dtheta);
+
+    frc::SmartDashboard::PutNumber("Robot filtered Velocity (X)", vehicle_velocity_measured_filtered_.getAverage()->dx);
+    frc::SmartDashboard::PutNumber("Robot filtered Velocity (Theta)", vehicle_velocity_measured_filtered_.getAverage()->dtheta);
+
+    frc::SmartDashboard::PutNumber("Robot Acceleration (X)", vehicle_acceleration_measured_->dx);
+    frc::SmartDashboard::PutNumber("Robot Acceleration (Theta)", vehicle_acceleration_measured_->dtheta);
+
+    frc::SmartDashboard::PutNumber("Robot filtered Acceleration (X)", vehicle_acceleration_measured_filtered_.getAverage()->dx);
+    frc::SmartDashboard::PutNumber("Robot filtered Acceleration (Theta)", vehicle_acceleration_measured_filtered_.getAverage()->dtheta);
 }
 
 string FRC_7054::RobotState::toPlannerCSV(){

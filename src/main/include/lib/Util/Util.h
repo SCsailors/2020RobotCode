@@ -22,5 +22,8 @@ class Util {
   double interpolate(double a, double b, double x);
   bool epsilonEquals(double a, double b);
   bool epsilonEquals(double a, double b, double epsilon);
+  
+  //0 - 360 -> -180 to 180; 
+  double convertTurretAngle(double angle);
   string toString(double value);
 };

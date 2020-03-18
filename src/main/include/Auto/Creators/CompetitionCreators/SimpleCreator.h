@@ -6,20 +6,19 @@
 /*----------------------------------------------------------------------------*/
 
 #pragma once
+
+#include "Auto/Creators/AutoModeCreator.h"
+
+#include "Auto/Modes/CompetitionModes/SimpleMode.h"
+
 #include <memory>
-#include <cmath>
-using namespace std;
 
-class Twist2D {
-  
-
+class SimpleCreator : public AutoModeCreator {
+  std::shared_ptr<SimpleMode> mSimpleMode = std::make_shared<SimpleMode>();
  public:
-  double dx;
-  double dy;
-  double dtheta;
-  Twist2D(double dx_, double dy_, double dtheta_);
-  shared_ptr<Twist2D> scaled(double scale);
-  double norm();
-  shared_ptr<Twist2D> derive(shared_ptr<Twist2D> initial, double dt);
-  Twist2D();
+  SimpleCreator();
+  std::shared_ptr<AutoModeBase> getStateDependentAutoMode(bool left)
+  {
+    return mSimpleMode;
+  }
 };

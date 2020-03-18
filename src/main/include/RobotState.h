@@ -65,13 +65,20 @@ class RobotState {
   shared_ptr<Pose2D> pose=make_shared<Pose2D>();
   int kObservationBufferSize=100;
   static std::shared_ptr<RobotState> mInstance;
+  Util util{};
  public:
  shared_ptr<InterpolatingTreeMap> field_to_vehicle = make_shared<InterpolatingTreeMap>(kObservationBufferSize);
  shared_ptr<InterpolatingTreeMap> vehicle_to_turret = make_shared<InterpolatingTreeMap>(kObservationBufferSize);
+ 
  shared_ptr<Twist2D> vehicle_velocity_predicted_=make_shared<Twist2D>();
  shared_ptr<Twist2D> vehicle_velocity_measured_=make_shared<Twist2D>();
  Utility::MovingAverageTwist2D vehicle_velocity_measured_filtered_{25};
+ 
+ shared_ptr<Twist2D> prev_vehicle_acceleration_ = make_shared<Twist2D>();
+ shared_ptr<Twist2D> vehicle_acceleration_measured_=make_shared<Twist2D>();
+ Utility::MovingAverageTwist2D vehicle_acceleration_measured_filtered_{25};
 
+ double prev_timestamp = 0.0;
 
 
  double distance_driven_=0.0;
@@ -111,6 +118,8 @@ class RobotState {
   shared_ptr<Twist2D> getPredictedVelocity();
   shared_ptr<Twist2D> getMeasuredVelocity();
   shared_ptr<Twist2D> getSmoothedVelocity();
+  shared_ptr<Twist2D> getMeasuredAcceleration();
+  shared_ptr<Twist2D> getSmoothedAcceleration();
   
   void resetVision();
   std::shared_ptr<Pose2D> getCameraToVisionTargetPose(VisionTargeting::TargetInfo target, bool turret, std::shared_ptr<Subsystems::Limelight> source);

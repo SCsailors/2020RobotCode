@@ -25,7 +25,6 @@ void Robot::RobotInit() {
   //add subsystem loops to vector
   
   subsystems.push_back(mLimelightManager);
-
   //create and start subsystem loops
   mSubsystemLoops=make_shared<Looper>(subsystems);
 
@@ -39,6 +38,8 @@ void Robot::RobotPeriodic() {
 }
 
 void Robot::DisabledInit(){
+  //mSuperstructure->setWantRobotRelativeTurret(Rotation2D::fromDegrees(0.0));
+  mLimelightManager->setAllLEDS(Subsystems::Limelight::LedMode::OFF);
   mSubsystemLoops->stopEnabledLoops();
   mSubsystemLoops->startDisabledLoops();
 }
@@ -48,16 +49,53 @@ void Robot::DisabledPeriodic(){
 }
 
 void Robot::AutonomousInit() {
+  //mSuperstructure->setWantAutoAim(Rotation2D::fromDegrees(0.0));
+  mLimelightManager->setAllLEDS(Subsystems::Limelight::LedMode::ON);
   mSubsystemLoops->resetSensors();
   mSubsystemLoops->stopDisabledLoops();
   mSubsystemLoops->startEnabledLoops();
 }
 
-void Robot::AutonomousPeriodic() {
+void Robot::AutonomousPeriodic() 
+{
+  /*
+  //simple drive auto
+  if (mAutoTimer.Get() < 2.0)
+  {
+    std::shared_ptr<DriveSignal> signal = std::make_shared<DriveSignal>(.3, .3);
+    mDrive->setOpenLoop(signal);
+  }
+  else
+  {
+    std::shared_ptr<DriveSignal> signal = std::make_shared<DriveSignal>(0.0,0.0);
+    mDrive->setOpenLoop(signal);
+  }
+  */
+  /*
+  //Qual 15: Enginerds
+  if (mAutoTimer.Get() > 8.0 && mAutoTimer.Get() < 11.0)
+  {
+    mBallPathTop->setOpenLoop(-.8);
+    mSuperstructure->setBallPathManual(true);
+  } 
 
+  if (mAutoTimer.Get() > 12.0 && mAutoTimer.Get() < 15.0)
+  {
+    mBallPathTop->setOpenLoop(0.0);
+    mSuperstructure->setBallPathManual(false);
+    std::shared_ptr<DriveSignal> signal = std::make_shared<DriveSignal>(-.3, -.7);
+    mDrive->setOpenLoop(signal);
+  } else
+  {
+    std::shared_ptr<DriveSignal> signal = std::make_shared<DriveSignal>(0.0,0.0);
+    mDrive->setOpenLoop(signal);
+  }
+  */
 }
 
 void Robot::TeleopInit() {
+  //mSuperstructure->setWantAutoAim(Rotation2D::fromDegrees(0.0));
+  mLimelightManager->setAllLEDS(Subsystems::Limelight::LedMode::ON);
   mSubsystemLoops->stopDisabledLoops();
   mSubsystemLoops->startEnabledLoops();
   

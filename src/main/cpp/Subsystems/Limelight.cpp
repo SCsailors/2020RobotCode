@@ -21,9 +21,9 @@ void Limelight::readPeriodicInputs()
 {
     frc::SmartDashboard::PutNumber(mConstants->kName + "/reading inputs", i++);
     //#ifdef CompetitionBot
-    mPeriodicIO.latency = mNetworkTable->GetEntry("tl").GetDouble(0.0)/ 1000.0 + Constants::kImageCaptureLatency;
-    mPeriodicIO.givenLedMode = (int) mNetworkTable->GetEntry("ledmode").GetDouble(0.0); //need std::round?
+    mPeriodicIO.givenLedMode = (int) mNetworkTable->GetEntry("ledmode").GetDouble(0.0);
     mPeriodicIO.givenPipeline = (int) mNetworkTable->GetEntry("pipeline").GetDouble(0.0);
+    mPeriodicIO.latency = mNetworkTable->GetEntry("tl").GetDouble(0.0)/ 1000.0 + mPeriodicIO.givenPipeline == 1? Constants::kImageCaptureFastLatency: Constants::kImageCaptureSlowLatency;
     mPeriodicIO.xOffset = mNetworkTable->GetEntry("tx").GetDouble(0.0);
     mPeriodicIO.yOffset = mNetworkTable->GetEntry("ty").GetDouble(0.0);
     mPeriodicIO.xOffsetRaw = mNetworkTable->GetEntry("tx0").GetDouble(0.0);
@@ -31,8 +31,18 @@ void Limelight::readPeriodicInputs()
     mPeriodicIO.area = mNetworkTable->GetEntry("ta").GetDouble(0.0);
     mPeriodicIO.horPixels = mNetworkTable->GetEntry("thor").GetDouble(0.0);
     mPeriodicIO.vertPixels = mNetworkTable->GetEntry("tvert").GetDouble(0.0);
+    mPeriodicIO.skewRaw = mNetworkTable->GetEntry("ts").GetDouble(0.0);
+    mPeriodicIO.skew = (mPeriodicIO.skewRaw + mPeriodicIO.skewRaw < -45.0 ? 90.0 : 0.0); //adjust everything to be around 0: add scale constant to adjust it to degrees
+    
     mSeesTarget = mNetworkTable->GetEntry("tv").GetDouble(0.0) == 1.0;
     //#endif
+    if (mPeriodicIO.area >= 1.15) // tune: first guess
+    {
+        setPipeline(0);
+    } else
+    {
+        setPipeline(1);
+    }
 }
 
 void Limelight::writePeriodicOutputs()
@@ -100,9 +110,14 @@ std::vector<VisionTargeting::TargetCorner> Limelight::getCorners()
     mCornY = mNetworkTable->GetEntry("tcorny").GetDoubleArray(mZeroArray);
 
     XYToTargetCorner(mCornX, mCornY);
-
-    filterTargetCorners(mTargetCorners);
-
+    if (mTargetCorners.size() == 4)
+    {
+        return mTargetCorners;
+    } else if (mTargetCorners.size() > 4)
+    { //filter to 4 outside corners
+        filterTargetCorners(mTargetCorners);
+    }
+    
     return mTargetCorners;
 }
 
@@ -110,9 +125,8 @@ void Limelight::XYToTargetCorner(std::vector<double> Xs, std::vector<double> Ys)
 {
     for (int i = 0; i <Xs.size()-1 ; i++)
     {
-        //for each corner, create a targetinfo class to store coordinates from the center of the target.
-        //transforms coordinates relative to the center of the target.
-        mTargetCorners.push_back(VisionTargeting::TargetCorner{Xs.at(i) - (1.0+mPeriodicIO.xOffsetRaw) * Constants::kLimelightWidth/2.0, Ys.at(i) - (1.0 + mPeriodicIO.yOffsetRaw) * Constants::kLimelightHeight/2.0});
+        //for each corner, create a targetinfo class to store coordinates
+        mTargetCorners.push_back(VisionTargeting::TargetCorner{Xs.at(i), Ys.at(i)});
     }
 }
 
@@ -165,32 +179,62 @@ void Limelight::filterTargetCorners(std::vector<VisionTargeting::TargetCorner> t
 
 VisionTargeting::TargetInfo Limelight::getCameraXYZ()
 {
+    //std::cout << "Starting GetCameraXYZ()" << std::endl;
     if (mPeriodicIO.horPixels == 0.0 && mPeriodicIO.vertPixels == 0.0)
     {
         
         frc::SmartDashboard::PutBoolean("Subsystems/" + mConstants->kName + "/No Target: getCameraXYZ:", true); 
+        //std::cout << "Returning empty Target" << std::endl;
         return VisionTargeting::TargetInfo{};
     } 
-    frc::SmartDashboard::PutBoolean("Subsystems/" + mConstants->kName + "/No Target: getCameraXYZ:", false);
     cv::Mat mRotationVector; //axis angle form
     cv::Mat mTranslationVector;
-    std::vector<cv::Point2d> imagePoints;
-
-    TargetCornerToCVPoint2d(getCorners(), imagePoints);
-
-
-    if (mPeriodicIO.horPixels > mPeriodicIO.vertPixels) 
+    if (mPeriodicIO.givenPipeline == 0)
     {
-        //hex goal
-        //std::cout<<"Using Hex Model: getCameraXYZ()"<< mConstants->kName<<std::endl;
-        cv::solvePnP(mHexModelPoints, imagePoints, mCameraMatrix, mDistCoeffs, mRotationVector, mTranslationVector, false, cv::SOLVEPNP_P3P); 
-    } else 
+        std::vector<double> camTran = mNetworkTable->GetEntry("camtran").GetDoubleArray(mZeroArray);
+        if (util.epsilonEquals(camTran.at(3), 0.0, 5.0))
+        { //have a target with an x distance of 0 inches: not valid target
+            setPipeline(1);
+            return VisionTargeting::TargetInfo{};
+        }
+        
+        return VisionTargeting::TargetInfo{camTran};
+
+    } else if (mPeriodicIO.givenPipeline == 1)
     {
-        //rectangular goal
-        //std::cout<<"Using Rect Model: getCameraXYZ()"<< mConstants->kName<<std::endl;
-        cv::solvePnP(mRectModelPoints, imagePoints, mCameraMatrix, mDistCoeffs, mRotationVector, mTranslationVector, false, cv::SOLVEPNP_P3P);
+        frc::SmartDashboard::PutBoolean("Subsystems/" + mConstants->kName + "/No Target: getCameraXYZ:", false);
+    
+    std::vector<VisionTargeting::TargetCorner> corners = getCorners();
+    if (corners.size() < 4)
+    {
+        std::cout << "Don't have 4 points: "<< mConstants->kName << std::endl;
+        return VisionTargeting::TargetInfo{};
     }
+    
+    std::vector<cv::Point2d> imagePoints;
+    
+    TargetCornerToCVPoint2d(corners, imagePoints);
+    //std::cout << "Convert corners to CVPoint2d" << std::endl;
+    
+        if (mPeriodicIO.horPixels > mPeriodicIO.vertPixels) 
+        {
+            //hex goal
+            //std::cout<<"Using Hex Model: getCameraXYZ()"<< mConstants->kName<<std::endl;
+            cv::solvePnP(mHexModelPoints, imagePoints, mCameraMatrix, mDistCoeffs, mRotationVector, mTranslationVector, false, cv::SOLVEPNP_P3P);
+            //std::cout << "Used Hex Model" << std::endl; 
+        } else 
+        {
+            //rectangular goal
+            //std::cout<<"Using Rect Model: getCameraXYZ()"<< mConstants->kName<<std::endl;
+            cv::solvePnP(mRectModelPoints, imagePoints, mCameraMatrix, mDistCoeffs, mRotationVector, mTranslationVector, false, cv::SOLVEPNP_P3P);
+            //std::cout << "Used Rectangular Model" << std::endl;
+        }
+        
+    
+    
     return VisionTargeting::TargetInfo{mTranslationVector, mRotationVector};
+    }
+    
 }
 
 void Limelight::TargetCornerToCVPoint2d(std::vector<VisionTargeting::TargetCorner> corners, std::vector<cv::Point2d> &imagePoints)

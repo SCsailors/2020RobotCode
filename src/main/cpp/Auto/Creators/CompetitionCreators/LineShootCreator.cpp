@@ -5,21 +5,6 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-#pragma once
-#include <memory>
-#include <cmath>
-using namespace std;
+#include "Auto/Creators/CompetitionCreators/LineShootCreator.h"
 
-class Twist2D {
-  
-
- public:
-  double dx;
-  double dy;
-  double dtheta;
-  Twist2D(double dx_, double dy_, double dtheta_);
-  shared_ptr<Twist2D> scaled(double scale);
-  double norm();
-  shared_ptr<Twist2D> derive(shared_ptr<Twist2D> initial, double dt);
-  Twist2D();
-};
+LineShootCreator::LineShootCreator() {}
