@@ -20,8 +20,9 @@ std::shared_ptr<TalonSRX> TalonFactory::createDefaultTalonSRX(int id)
 std::shared_ptr<TalonSRX> TalonFactory::createTalonSRX(int id, std::shared_ptr<TalonConfig> config)
 {
     std::shared_ptr<TalonSRX> talon = std::make_shared<TalonSRX>(id);
+	talon->ConfigFactoryDefault();
     //std::cout<<"Made Talon SRX in TalonFactory CreateTalonSRX"<< std::endl;
-	//configTalon(id, config, talon);
+	configTalon(id, config, talon);
 	//std::cout<<"Configed Talon TalonFactory CreateTalonSRX"<< std::endl;
     return talon;
 }
@@ -73,7 +74,8 @@ std::shared_ptr<TalonFX> TalonFactory::createDefaultTalonFX(int id)
 std::shared_ptr<TalonFX> TalonFactory::createTalonFX(int id, std::shared_ptr<TalonConfig> config)
 {
     std::shared_ptr<TalonFX> talon = std::make_shared<TalonFX>(id);
-    //configTalon(id, config, talon);
+    talon->ConfigFactoryDefault();
+	configTalon(id, config, talon);
     return talon;
 }
 

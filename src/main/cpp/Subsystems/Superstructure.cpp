@@ -142,7 +142,7 @@ void Superstructure::maybeUpdateGoalFromFieldRelativeGoal(double timestamp)
             ->rotateBy(mRelativeGoal);
     double turretGoal = mCurrentState.turret + turret_error->getDegrees();
 
-    mGoal.state.turret = getDesiredTurretAngle(util.convertTurretAngle(turretGoal), timestamp);
+    mGoal.state.turret = getDesiredTurretAngle(util.convertTurretAngle(turretGoal), timestamp); //puts it into -180 to 180
     
     if (mGoal.state.turret < mTurret->getMinUnits())
     {
@@ -152,9 +152,6 @@ void Superstructure::maybeUpdateGoalFromFieldRelativeGoal(double timestamp)
     {
         mGoal.state.turret = mTurret->getMaxUnits();
     }
-
-
-
 }
 
 void Superstructure::maybeUpdateGoalFromVision(double timestamp)
@@ -236,7 +233,7 @@ double Superstructure::getDesiredTurretAngle(double turretGoal, double timestamp
 {
     double limit_deadzone = 8.0;
     double flip_delay = .8;
-    double desiredAngle;
+    double desiredAngle = 0.0;
     if (turretGoal > (mTurret->getMinUnits() + limit_deadzone) && turretGoal < (mTurret->getMaxUnits() - limit_deadzone))
     { //with in limits
         mConsideringFlip = false;
@@ -258,13 +255,33 @@ double Superstructure::getDesiredTurretAngle(double turretGoal, double timestamp
     {
         if (turretGoal < 0)
         {
-            turretGoal += 360.0;
+            turretGoal += 360.0; //puts everything 0 - 360 (no jump in deadzone);
         }
+
+        double minlimits = mTurret->getMinUnits();
+        double maxlimits = mTurret->getMaxUnits();
         std::shared_ptr<Twist2D> smoothedVelocity = FRC_7054::RobotState::getInstance()->getSmoothedVelocity();
         std::shared_ptr<Twist2D> smoothedAcceleration = FRC_7054::RobotState::getInstance()->getSmoothedAcceleration();
+        if (minlimits < 0)
+        {
+            minlimits += 360.0;
+        }
+
+        double mid_deadzone = (minlimits + maxlimits) / 2.0;
+         
+        if (util.epsilonEquals(mCurrentState.turret, mTurret->getMaxUnits(), 4.0) && turretGoal > mid_deadzone && smoothedVelocity->dy > 0.0)
+        {   //at max units, turret goal is past midpoint, and goal is increasing
+            desiredAngle = minlimits;
+        } else if (util.epsilonEquals(mCurrentState.turret, mTurret->getMinUnits(), 4.0) && turretGoal < mid_deadzone && smoothedVelocity->dy < 0.0)
+        {   //at min units, turret goal is past midpoint, and goal is decreasing
+            desiredAngle = maxlimits;
+        } else
+        {
+            desiredAngle = turretGoal;
+        }
     }
 
-    return desiredAngle;
+    return util.convertTurretAngle(desiredAngle);
 }
 
 void Superstructure::resetAimingParameters()

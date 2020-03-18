@@ -11,6 +11,7 @@
 #include <opencv2/opencv.hpp>
 
 #include <iostream>
+#include <vector>
 
 namespace VisionTargeting{
 class TargetInfo {
@@ -25,7 +26,7 @@ class TargetInfo {
  public:
   TargetInfo(cv::Mat trans, cv::Mat rot);
   TargetInfo(): x(0.0), y(0.0), z(0.0), xTheta(0.0), yTheta(0.0), zTheta(0.0) {}
-
+  TargetInfo(std::vector<double> camTran);
   double getX(){return x;}
   double getY(){return y;}
   double getZ(){return z;}

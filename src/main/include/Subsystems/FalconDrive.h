@@ -98,7 +98,7 @@ class FalconDrive : public Subsystems::Subsystem {
   double mForwardSoftLimit = 0.0;
   double mReverseSoftLimit = 0.0;
 
-  double DRIVE_ENCODER_PPR = 2048.0;
+  double DRIVE_ENCODER_PPR = 8192.0;
   
   std::shared_ptr<DriveMotionPlanner::Output> output;
 
@@ -111,6 +111,9 @@ class FalconDrive : public Subsystems::Subsystem {
 
   std::shared_ptr<TalonFX> mLeftMaster;
   std::shared_ptr<TalonFX> mRightMaster;
+
+  std::shared_ptr<ctre::phoenix::CANifier> mLeftCANifier;
+  std::shared_ptr<ctre::phoenix::CANifier> mRightCANifier;
 
   std::vector<std::shared_ptr<TalonFX>> mLeftSlaves;
   std::vector<std::shared_ptr<TalonFX>> mRightSlaves;

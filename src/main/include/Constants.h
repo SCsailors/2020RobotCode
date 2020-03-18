@@ -21,9 +21,11 @@ namespace Constants {
   const double kRadsToDegrees = 180.0/kPI;
   const double kDegreesToRads = kPI/180.0;
   
-  const double kCameraFrameRate = 90.0;
-  const double kImageCaptureLatency = kCameraFrameRate/1000.0;
-  
+  const double kCameraFastFrameRate = 90.0;
+  const double kCameraSlowFrameRate = 22.0;
+  const double kImageCaptureFastLatency = kCameraFastFrameRate/1000.0;
+  const double kImageCaptureSlowLatency = kCameraSlowFrameRate/1000.0;
+
   const double kLimelightWidth = 320.0;
   const double kLimelightHeight = 240.0;
   

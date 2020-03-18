@@ -43,16 +43,26 @@ ServoMotorSubsystem
 1. Set PIDF constants on the fly
 
 Priority:
-1. Turret
-2. Indexing: test 12V vs. 5V signals (zener diode/ resistor divider), 2m distance sensor
+.5. AutoModeSelector //Test fix
+.75 AutoShift //
+1. Turret //add flip
+2. Indexing: DIO sensors fixed
 3. Climber
 4. Autonomous - 3 ball and addition actions/tests
-5. Superstructure atDesiredState
-6. Goal Tracking and PNP
-6.25 ServoMotorSubsystem PID - general tuning
+5. Superstructure atDesiredState //Test fix
+6. Goal Tracking and PNP 
+6.25 ServoMotorSubsystem PID - general tuning //Test fix
 6.5. Spot Shooting
 7. Motion Profiling
 7.25. Area Shooting
 7.5. 8 Ball
 8. Moving Shooting
 9. 13 and 15 ball autos.
+
+Tests:
+1. AutoModeSelector
+2. GoalTracking
+3. AutoShift
+4. MotionProfiling: max Velocity and Acceleration
+5. isAtDesiredState
+6. On the Fly PIDF

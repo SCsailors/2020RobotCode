@@ -64,6 +64,7 @@ class RobotState {
   shared_ptr<Pose2D> pose=make_shared<Pose2D>();
   int kObservationBufferSize=100;
   static std::shared_ptr<RobotState> mInstance;
+  Util util{};
  public:
  shared_ptr<InterpolatingTreeMap> field_to_vehicle = make_shared<InterpolatingTreeMap>(kObservationBufferSize);
  shared_ptr<InterpolatingTreeMap> vehicle_to_turret = make_shared<InterpolatingTreeMap>(kObservationBufferSize);

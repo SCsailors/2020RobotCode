@@ -30,6 +30,24 @@ TargetInfo::TargetInfo( cv::Mat trans, cv::Mat rot)
     frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / zTheta: ", zTheta);
 }
 
+TargetInfo::TargetInfo(std::vector<double> camTran)
+{
+    x = camTran.at(0);
+    y = camTran.at(1);
+    z = camTran.at(2);
+
+    xTheta = camTran.at(3);
+    yTheta = camTran.at(4);
+    zTheta = camTran.at(5);
+
+    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / X: ", x);
+    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / Y: ", y);
+    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / Z: ", z);
+    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / xTheta: ", xTheta);
+    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / yTheta: ", yTheta);
+    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / zTheta: ", zTheta);
+}
+
 TargetCorner::TargetCorner( double y, double z): y(y), z(z)
 {
     radius = std::hypot(y, z);

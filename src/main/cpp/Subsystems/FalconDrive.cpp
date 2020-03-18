@@ -172,6 +172,23 @@ FalconDrive::FalconDrive(std::shared_ptr<TalonConstants> leftConstants, std::sha
         
     }    
     }
+    mLeftCANifier = std::make_shared<CANifier>(8);
+    mRightCANifier = std::make_shared<CANifier>(9);
+
+    mLeftCANifier->ConfigFactoryDefault();
+    mRightCANifier->ConfigFactoryDefault();
+
+    mLeftCANifier->ConfigVelocityMeasurementPeriod(CANifierVelocityMeasPeriod::Period_100Ms, Constants::kLongCANTimeoutMs);
+    mLeftCANifier->ConfigVelocityMeasurementWindow(64, Constants::kLongCANTimeoutMs);
+
+    mRightCANifier->ConfigVelocityMeasurementPeriod(CANifierVelocityMeasPeriod::Period_100Ms, Constants::kLongCANTimeoutMs);
+    mRightCANifier->ConfigVelocityMeasurementWindow(64, Constants::kLongCANTimeoutMs);
+
+    mLeftMaster->ConfigRemoteFeedbackFilter(8, RemoteSensorSource::RemoteSensorSource_CANifier_Quadrature, Constants::kLongCANTimeoutMs);
+    mRightMaster->ConfigRemoteFeedbackFilter(9, RemoteSensorSource::RemoteSensorSource_CANifier_Quadrature, Constants::kLongCANTimeoutMs);
+
+    mLeftMaster->ConfigSelectedFeedbackSensor(TalonFXFeedbackDevice::RemoteSensor0, 0, Constants::kLongCANTimeoutMs);
+    mRightMaster->ConfigSelectedFeedbackSensor(TalonFXFeedbackDevice::RemoteSensor0, 0, Constants::kLongCANTimeoutMs);
     #endif
 
     mIsHighGear=true;
@@ -262,7 +279,7 @@ void FalconDrive::OnStop(double timestamp)
 //Add Conversions
 double FalconDrive::rotationsToInches(double rotations)
 {
-    return rotations * (mIsHighGear? Constants::kDriveHighGearIPR: Constants::kDriveLowGearIPR);
+    return rotations * Constants::kDriveWheelDiameterInches * Constants::kPI;
 }
 
 double FalconDrive::RPMToInchesPerSecond(double rpm)
@@ -272,7 +289,7 @@ double FalconDrive::RPMToInchesPerSecond(double rpm)
 
 double FalconDrive::inchesToRotations(double inches)
 {
-    return inches / (mIsHighGear? Constants::kDriveHighGearIPR: Constants::kDriveLowGearIPR);
+    return inches / (Constants::kDriveWheelDiameterInches * Constants::kPI);
 }
 
 double FalconDrive::inchesPerSecondToRPM(double inches_per_second)
@@ -453,10 +470,16 @@ void FalconDrive::outputTelemetry()
 {
     frc::SmartDashboard::PutNumber("Drive/Right Encoder Distance", mPeriodicIO->right_distance);//check first four
     frc::SmartDashboard::PutNumber("Drive/Left Encoder Distance", mPeriodicIO->left_distance);
-    frc::SmartDashboard::PutNumber("Drive/Right Encoder Rotations", mPeriodicIO->right_ticks);
-    frc::SmartDashboard::PutNumber("Drive/Left Encoder Rotations", mPeriodicIO->left_ticks);
+    frc::SmartDashboard::PutNumber("Drive/Right Encoder Position", mPeriodicIO->right_ticks);
+    frc::SmartDashboard::PutNumber("Drive/Left Encoder Position", mPeriodicIO->left_ticks);
     frc::SmartDashboard::PutNumber("Drive/Right Linear Velocity", getRightLinearVelocity());
     frc::SmartDashboard::PutNumber("Drive/Left Linear Velocity", getLeftLinearVelocity());
+
+    frc::SmartDashboard::PutNumber("Drive/Left Canifier/Position", mLeftCANifier->GetQuadraturePosition());
+    frc::SmartDashboard::PutNumber("Drive/Left Canifier/Velocity", mLeftCANifier->GetQuadratureVelocity());
+
+    frc::SmartDashboard::PutNumber("Drive/Right Canifier/Position", mRightCANifier->GetQuadraturePosition());
+    frc::SmartDashboard::PutNumber("Drive/Right Canifier/Velocity", mRightCANifier->GetQuadratureVelocity());
 
     frc::SmartDashboard::PutNumber("Drive/X Error", mPeriodicIO->error->inverse()->getTranslation()->x());
     frc::SmartDashboard::PutNumber("Drive/Y Error", mPeriodicIO->error->inverse()->getTranslation()->y());
@@ -482,8 +505,11 @@ void FalconDrive::resetEncoders()
 {
     mPeriodicIO = std::make_shared<FalconDrive::PeriodicIO>();
     #ifdef CompetitionBot
-    mLeftMaster->SetSelectedSensorPosition(0);
-    mRightMaster->SetSelectedSensorPosition(0);
+    mLeftMaster->SetSelectedSensorPosition(0, Constants::kLongCANTimeoutMs);
+    mRightMaster->SetSelectedSensorPosition(0, Constants::kLongCANTimeoutMs);
+
+    mLeftCANifier->SetQuadraturePosition(0, Constants::kLongCANTimeoutMs);
+    mRightCANifier->SetQuadraturePosition(0, Constants::kLongCANTimeoutMs);
     #endif
 }
 
@@ -499,13 +525,13 @@ double FalconDrive::getRightEncoderRotations()
 }
 
 double FalconDrive::getLeftEncoderDistance()
-{ //distance in inches of wheels
-    getLeftEncoderRotations() * (mIsHighGear? Constants::kDriveHighGearIPR: Constants::kDriveLowGearIPR);
+{ 
+    return rotationsToInches(getLeftEncoderRotations());
 }
 
 double FalconDrive::getRightEncoderDistance()
 {
-    getRightEncoderRotations() * (mIsHighGear? Constants::kDriveHighGearIPR: Constants::kDriveLowGearIPR);
+    return rotationsToInches(getRightEncoderRotations());
 }
 
 double FalconDrive::getLeftVelocityNativeUnits()
@@ -520,22 +546,22 @@ double FalconDrive::getRightVelocityNativeUnits()
 
 double FalconDrive::getLeftRadsPerSec()
 {
-    getLeftLinearVelocity() / Constants::kDriveWheelRadiusInches;
+    return getLeftLinearVelocity() / Constants::kDriveWheelRadiusInches;
 }
 
 double FalconDrive::getRightRadsPerSec()
 {
-    getRightLinearVelocity() / Constants::kDriveWheelRadiusInches;
+    return getRightLinearVelocity() / Constants::kDriveWheelRadiusInches;
 }
 
 double FalconDrive::getLeftLinearVelocity()
 {
-    return getLeftVelocityNativeUnits() * 10.0 / DRIVE_ENCODER_PPR * (mIsHighGear? Constants::kDriveHighGearIPR: Constants::kDriveLowGearIPR);
+    return rotationsToInches(getLeftVelocityNativeUnits() * 10.0 / DRIVE_ENCODER_PPR);
 }
 
 double FalconDrive::getRightLinearVelocity()
 {
-    return getRightVelocityNativeUnits() * 10.0 / DRIVE_ENCODER_PPR * (mIsHighGear? Constants::kDriveHighGearIPR: Constants::kDriveLowGearIPR);
+    return rotationsToInches(getRightVelocityNativeUnits() * 10.0 / DRIVE_ENCODER_PPR);
 }
 
 double FalconDrive::getLinearVelocity()

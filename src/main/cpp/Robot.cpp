@@ -268,8 +268,6 @@ void Robot::manualControl()
   bool intake = mControlBoard->getIntake();
   bool cancel = mControlBoard->getCancel();
   bool isTurretJogging = mControlBoard->isTurretJogging();
-  bool autoAim = mControlBoard->getAutoAim();
-  //bool pathToggle = mControlBoard->getBallPathToggle();
   bool climbRun = mControlBoard->getClimbRun();
   bool shootLine = mControlBoard->getLineShoot();
   bool shootClose = mControlBoard->getCloseShoot();
@@ -277,6 +275,8 @@ void Robot::manualControl()
   bool fieldRelative = mControlBoard->getFieldRelative();
   bool autoAim = mControlBoard->getAutoAim();
   bool validTurretCardinal = mControlBoard->getValidTurretCardinal();
+
+  bool manualShift = mControlBoard->getDriveShifterManual();
 
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getQuickTurn()", quickTurn);
   frc::SmartDashboard::PutBoolean("CheckPoint/ ControlBoard/ getWantsLowGear()", wantsHighGear);
@@ -298,11 +298,6 @@ void Robot::manualControl()
 
   double timestamp = frc::Timer::GetFPGATimestamp();
   
-  //Drive
-  bool manualShift = mControlBoard->getDriveShifterManual();
-  bool firstManual = manualDriveShifter.update(manualShift);
-  bool firstAuto = autoDriveShifter.update(manualShift);
-
   //Manual
   //BallPath
   if (!util.epsilonEquals(0.0, ballPath, .5))
@@ -336,14 +331,21 @@ void Robot::manualControl()
     mSuperstructure->setHoodManual(false);
   }
   
-  
-  if (wantsHighGear)
+  if (manualShift)
   {
-    mDrive->setShifterState(Subsystems::FalconDrive::ShifterState::FORCE_HIGH_GEAR);
+    if (wantsHighGear)
+    {
+      mDrive->setShifterState(Subsystems::FalconDrive::ShifterState::FORCE_HIGH_GEAR);
+    } else
+    {
+      mDrive->setShifterState(Subsystems::FalconDrive::ShifterState::FORCE_LOW_GEAR);
+    }
   } else
   {
-    mDrive->setShifterState(Subsystems::FalconDrive::ShifterState::FORCE_LOW_GEAR);
+    mDrive->setShifterState(Subsystems::FalconDrive::ShifterState::AUTO_SHIFT);
   }
+  
+  
 
   if (shootLine && isShootClose)
   {
@@ -399,7 +401,6 @@ void Robot::manualControl()
     shooting = false;
   }
 
-  
   frc::SmartDashboard::PutBoolean("CheckPoint/ preshoot ", preshoot);
   frc::SmartDashboard::PutBoolean("CheckPoint/ shooting", shooting);
   
@@ -563,8 +564,6 @@ void Robot::TestControl()
 
   //drive->setHighGear(wantsHighGear);
   bool manualShift = mControlBoard->getDriveShifterManual();
-  bool firstManual = manualDriveShifter.update(manualShift);
-  bool firstAuto = autoDriveShifter.update(manualShift);
   
   double ballPathOutput = -mControlBoard->getBallPath();
 

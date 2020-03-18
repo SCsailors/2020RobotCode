@@ -23,6 +23,7 @@
 
 #include <lib/Geometry/Pose2D.h>
 #include <lib/Vision/TargetInfo.h>
+#include <lib/Util/Util.h>
 
 namespace Subsystems{
 
@@ -64,6 +65,8 @@ class Limelight : public Subsystems::Subsystem{
       double area = 0.0; 
       double horPixels = 0.0;
       double vertPixels = 0.0;
+      double skew = 0.0;
+      double skewRaw = 0.0;
 
     //Outputs
       int ledMode = 1; // 0 -use pipeline mode, 1 - off, 2 - blink, 3 - on
@@ -74,6 +77,7 @@ class Limelight : public Subsystems::Subsystem{
 
   };
 
+  Util util{};
   std::shared_ptr<NetworkTable> mNetworkTable;
   std::shared_ptr<LimelightConstants> mConstants;
   PeriodicIO mPeriodicIO{};

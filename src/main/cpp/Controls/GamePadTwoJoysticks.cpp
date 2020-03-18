@@ -235,7 +235,8 @@ double GamePadTwoJoysticks::getTurretJog()
 
 bool GamePadTwoJoysticks::getDriveShifterManual()
 {
-    bool manual = ManualShiftToggle.update(mLeftJoystick.GetRawButton(3));
+    /*
+    bool manual = ManualShiftToggle.update();
     if (manual && !wantsManual)
     { //want manual shift
         wantsManual = true;
@@ -245,6 +246,9 @@ bool GamePadTwoJoysticks::getDriveShifterManual()
         wantsManual = false;
     }
     return wantsManual;
+    */
+
+   return !mLeftJoystick.GetRawButton(3);
 }
 
 bool GamePadTwoJoysticks::getCloseShoot()
