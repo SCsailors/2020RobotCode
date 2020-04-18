@@ -9,6 +9,7 @@
 
 #include <lib/Geometry/Pose2D.h>
 #include <lib/Vision/GoalTrack.h>
+#include <lib/Vision/TimedPose2D.h>
 
 #include <vector>
 
@@ -20,7 +21,7 @@ class TrackReport{
     double latest_timestamp;
     double stability;
     int id;
-    TrackReport(GoalTrack track);
+    TrackReport(std::shared_ptr<GoalTrack> track);
     TrackReport(): 
       field_to_target(std::make_shared<Pose2D>()),
       latest_timestamp(0.0),
@@ -46,12 +47,12 @@ class GoalTracker {
 
  public:
   GoalTracker();
-  std::vector<GoalTrack> mCurrentTracks;
+  std::vector<std::shared_ptr<GoalTrack>> mCurrentTracks;
   int mNextId = 0;
 
   void reset(){mCurrentTracks.clear();}
 
-  void update(double timestamp, std::vector<std::shared_ptr<Pose2D>> field_to_goals);
+  void update(std::vector<std::shared_ptr<TimedPose2D>> field_to_goals);
 
   bool hasTracks(){return !(mCurrentTracks.size()==0);}
 

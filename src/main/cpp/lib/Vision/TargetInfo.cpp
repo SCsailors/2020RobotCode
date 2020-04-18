@@ -11,8 +11,10 @@
 #include "frc/smartdashboard/SmartDashboard.h"
 using namespace VisionTargeting;
 
-TargetInfo::TargetInfo( cv::Mat trans, cv::Mat rot)
+TargetInfo::TargetInfo( cv::Mat trans, cv::Mat rot, Constants::TargetNames camera)
 {
+    mCamera = camera;
+
     x = trans.at<double>(0)/25.4; //convert mm to inches;
     y = trans.at<double>(1)/25.4;
     z = trans.at<double>(2)/25.4;
@@ -30,9 +32,13 @@ TargetInfo::TargetInfo( cv::Mat trans, cv::Mat rot)
     frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / zTheta: ", zTheta);
 }
 
-TargetInfo::TargetInfo(std::vector<double> camTran)
+TargetInfo::TargetInfo(Constants::TargetNames camera): mCamera(camera), x(0.0), y(0.0), z(0.0), xTheta(0.0), yTheta(0.0), zTheta(0.0) {}
+
+TargetInfo::TargetInfo(std::vector<double> camTran, Constants::TargetNames camera)
 {
-    x = camTran.at(0);
+    mCamera = camera;
+
+    x = camTran.at(0); //figure out what needs to be made negative
     y = camTran.at(1);
     z = camTran.at(2);
 
@@ -40,12 +46,12 @@ TargetInfo::TargetInfo(std::vector<double> camTran)
     yTheta = camTran.at(4);
     zTheta = camTran.at(5);
 
-    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / X: ", x);
-    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / Y: ", y);
-    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / Z: ", z);
-    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / xTheta: ", xTheta);
-    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / yTheta: ", yTheta);
-    frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / zTheta: ", zTheta);
+    //frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / X: ", x);
+    //frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / Y: ", y);
+    //frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / Z: ", z);
+    //frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / xTheta: ", xTheta);
+    //frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / yTheta: ", yTheta);
+    //frc::SmartDashboard::PutNumber("CheckPoint / VisionUpdate / zTheta: ", zTheta);
 }
 
 TargetCorner::TargetCorner( double y, double z): y(y), z(z)

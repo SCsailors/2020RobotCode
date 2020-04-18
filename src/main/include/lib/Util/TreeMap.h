@@ -32,9 +32,11 @@ class TreeMap {
   void put(T key, U object)
   {
     Objects objects{key, object};
+    
     if (mMaxSize>0 && mMaxSize<=pastObjects.size()){
         pastObjects.erase(pastObjects.begin());
     }
+    
     pastObjects.push_back(objects);
   }
 
@@ -42,6 +44,7 @@ class TreeMap {
 
   void pruneByTime()
   {
+    
     double delete_before = frc::Timer::GetFPGATimestamp()-maxGoalTrackAge;
     auto it = pastObjects.begin();
     int i = 0;

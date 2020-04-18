@@ -19,6 +19,7 @@
 #include "lib/Vision/GoalTracker.h"
 #include "lib/Vision/AimingParameters.h"
 #include "lib/Vision/TargetInfo.h"
+#include "lib/Vision/TimedPose2D.h"
 
 #include "Subsystems/Limelight.h"
 
@@ -62,7 +63,7 @@ class RobotState {
   * 4. Camera-to-goal: Measured by vision system.
   */
   Kinematics kinematics{};
-  shared_ptr<Pose2D> pose=make_shared<Pose2D>();
+  shared_ptr<Pose2D> pose = make_shared<Pose2D>();
   int kObservationBufferSize=100;
   static std::shared_ptr<RobotState> mInstance;
   Util util{};
@@ -80,16 +81,16 @@ class RobotState {
 
  double prev_timestamp = 0.0;
 
-
  double distance_driven_=0.0;
 
- VisionTargeting::GoalTracker vision_target_turret{};
- VisionTargeting::GoalTracker vision_target_intake{};
+ //One tracker for each goal shape.
+ VisionTargeting::GoalTracker vision_target_power_port{};
+ VisionTargeting::GoalTracker vision_target_loading_bay{};
 
- std::vector<std::shared_ptr<Pose2D>> mCameraToVisionTargetPosesTurret;
- std::vector<std::shared_ptr<Pose2D>> mCameraToVisionTargetPosesIntake; 
+ std::vector<std::shared_ptr<TimedPose2D>> mFieldToVisionTargetPosesPowerPort;
+ std::vector<std::shared_ptr<TimedPose2D>> mFieldToVisionTargetPosesLoadingBay; 
 
-  const std::vector<std::shared_ptr<Pose2D>> emptyVector{};
+  const std::vector<std::shared_ptr<TimedPose2D>> emptyVector{};
   
   RobotState();
   
@@ -122,12 +123,15 @@ class RobotState {
   shared_ptr<Twist2D> getSmoothedAcceleration();
   
   void resetVision();
-  std::shared_ptr<Pose2D> getCameraToVisionTargetPose(VisionTargeting::TargetInfo target, bool turret, std::shared_ptr<Subsystems::Limelight> source);
-  void updateGoalTracker(double timestamp, std::vector<std::shared_ptr<Pose2D>> goalPose, VisionTargeting::GoalTracker goalTracker, std::shared_ptr<Subsystems::Limelight> source);
+  std::shared_ptr<TimedPose2D> getFieldToVisionTargetPose(double timestamp, VisionTargeting::TargetInfo target, std::shared_ptr<Subsystems::Limelight> source);
+  void updateGoalTracker(std::vector<std::shared_ptr<TimedPose2D>> goalPose, VisionTargeting::GoalTracker goalTracker, std::shared_ptr<Subsystems::Limelight> source);
   void addVisionUpdate(double timestamp, std::vector<VisionTargeting::TargetInfo> observations, std::vector<std::shared_ptr<Subsystems::Limelight>> limelights);
+  double findClosestNormal(double predicted);
+  void updateVisionTargetRotationToNearestNormal(std::shared_ptr<Pose2D> &fieldToVisionTarget);
 
-
+  //if including 0.0, include 360.0 for wrap: if no 0.0, don't include 360.0, but figure out a better way to integrate angle wrap.
   std::vector<double> kPossibleNormals{0.0, 180.0};
+  //std::vector<double> kPossibleNormals{180.0, 225.0, 270.0}; //just for testing the second half
   shared_ptr<Pose2D> getFieldToVisionTarget(bool turret);
   shared_ptr<Pose2D> getVehicleToVisionTarget(double timestamp, bool turret);
 

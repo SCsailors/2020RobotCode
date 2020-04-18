@@ -20,7 +20,8 @@ void Robot::RobotInit() {
 
   mRobotState->reset();
 
-  mLimelightManager->setAllLEDS(Subsystems::Limelight::LedMode::ON);
+  NavX.Reset();
+  NavX.ZeroYaw();
   
   //add subsystem loops to vector
   
@@ -34,12 +35,12 @@ void Robot::RobotInit() {
 
 
 void Robot::RobotPeriodic() {
-  
+  frc::SmartDashboard::PutNumber("NavX Heading", NavX.GetFusedHeading());
 }
 
 void Robot::DisabledInit(){
   //mSuperstructure->setWantRobotRelativeTurret(Rotation2D::fromDegrees(0.0));
-  mLimelightManager->setAllLEDS(Subsystems::Limelight::LedMode::OFF);
+  //mLimelightManager->setAllLEDS(Subsystems::Limelight::LedMode::OFF);
   mSubsystemLoops->stopEnabledLoops();
   mSubsystemLoops->startDisabledLoops();
 }
@@ -58,6 +59,7 @@ void Robot::AutonomousInit() {
 
 void Robot::AutonomousPeriodic() 
 {
+  mLimelightManager->setAllLEDS(Subsystems::Limelight::LedMode::ON);
   /*
   //simple drive auto
   if (mAutoTimer.Get() < 2.0)
@@ -102,7 +104,7 @@ void Robot::TeleopInit() {
 }
 
 void Robot::TeleopPeriodic() {
- 
+  mLimelightManager->setAllLEDS(Subsystems::Limelight::LedMode::ON);
 }
 
 

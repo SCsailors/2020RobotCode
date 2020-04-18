@@ -26,10 +26,14 @@ namespace Constants {
   const double kImageCaptureFastLatency = kCameraFastFrameRate/1000.0;
   const double kImageCaptureSlowLatency = kCameraSlowFrameRate/1000.0;
 
+  enum TargetNames{PowerPort, LoadingBay};
+
   const double kLimelightWidth = 320.0;
   const double kLimelightHeight = 240.0;
   
   const double kMaxTrackerDistance = 648.0; //tune
+  const double kMaxThetaError = 15.0;
+  const double kMaxXYError = 8.0;
   const double kMaxTrackAgeNotTracking = .1;
   const double kMaxGoalTrackSmoothingTime = .5;
   const double kMaxGoalTrackAge = 2.5;

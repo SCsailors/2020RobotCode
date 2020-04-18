@@ -13,12 +13,12 @@
 using namespace VisionTargeting;
 GoalTracker::GoalTracker() {}
 
-TrackReport::TrackReport(GoalTrack track)
+TrackReport::TrackReport(std::shared_ptr<VisionTargeting::GoalTrack> track)
 {
-    field_to_target = track.getSmoothedPosition();
-    latest_timestamp = track.getLatestTimestamp();
-    stability = track.getStability();
-    id = track.getId();
+    field_to_target = track->getSmoothedPosition();
+    latest_timestamp = track->getLatestTimestamp();
+    stability = track->getStability();
+    id = track->getId();
 }
 
 TrackReportComparator::TrackReportComparator(double stability_weight, double age_weight, double switching_weight, int last_track_id, double current_timestamp)
@@ -54,15 +54,16 @@ int TrackReportComparator::compare(TrackReport o1, TrackReport o2)
     }
 }
 
-void GoalTracker::update(double timestamp, std::vector<std::shared_ptr<Pose2D>> field_to_goals)
+void GoalTracker::update(std::vector<std::shared_ptr<TimedPose2D>> field_to_goals)
 {
     if (field_to_goals.empty())
     {
         for (auto track : mCurrentTracks)
         {
-            track.emptyUpdate();
+            track->emptyUpdate();
         }
     }
+   
     //Try to update existing tracks
     for (auto target : field_to_goals)
     {
@@ -71,28 +72,29 @@ void GoalTracker::update(double timestamp, std::vector<std::shared_ptr<Pose2D>> 
         {
             if (!hasUpdatedTrack)
             {
-                if (track.tryUpdate(timestamp, target))
+                if (track->tryUpdate(target->timestamp, target->pose))
                 {
                     hasUpdatedTrack = true;
                 }
             } else
             {
-                track.emptyUpdate();
+                track->emptyUpdate();
             }
-            
         }
         if (!hasUpdatedTrack)
         {
-            mCurrentTracks.push_back(GoalTrack::makeNewTrack(timestamp, target, mNextId));
+            mCurrentTracks.push_back(GoalTrack::makeNewTrack(target->timestamp, target->pose, mNextId));
             ++mNextId;
         }
         
     }
 
+        
+    //prune tracks to remove old tracks
     auto it = mCurrentTracks.begin();
     for (auto track : mCurrentTracks)
     {
-        if (!track.isAlive())
+        if (!track->isAlive())
         {
             mCurrentTracks.erase(it);
         } else

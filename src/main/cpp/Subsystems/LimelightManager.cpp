@@ -31,22 +31,24 @@ std::shared_ptr<LimelightManager> LimelightManager::getInstance()
 
 void LimelightManager::OnStart(double timestamp)
 {
-    setAllLEDS(Limelight::LedMode::OFF);
+    //setAllLEDS(Limelight::LedMode::OFF); Do this in Robot.cpp
 
     FRC_7054::RobotState::getInstance()->resetVision();
 }
 
 void LimelightManager::OnLoop(double timestamp)
 {
-    frc::SmartDashboard::PutNumber("CheckPoint/ VisionUpdate/ Timestamp: ", timestamp);
-    frc::SmartDashboard::PutNumber("CheckPoint/ VisionUpdate/ Timestamp of photo (latency): ", getAverageLatency());
-    //FRC_7054::RobotState::getInstance()->addVisionUpdate(timestamp - getAverageLatency(), getTargetInfos(), getLimelights());
-    getTargetInfos();
+    //frc::SmartDashboard::PutNumber("CheckPoint/ VisionUpdate/ Timestamp: ", timestamp);
+    //frc::SmartDashboard::PutNumber("CheckPoint/ VisionUpdate/ Timestamp of photo (latency): ", getAverageLatency());
+    
+    //Latency for photo and processing handled in RobotState.cpp
+    FRC_7054::RobotState::getInstance()->addVisionUpdate(timestamp, getTargetInfos(), getLimelights());
+    //getTargetInfos();
 }
 
 void LimelightManager::OnStop(double timestamp)
 {
-    setAllLEDS(Limelight::LedMode::OFF);
+    //setAllLEDS(Limelight::LedMode::OFF);
 }
 
 void LimelightManager::readPeriodicInputs()

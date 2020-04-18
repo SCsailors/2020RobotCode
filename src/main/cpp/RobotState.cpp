@@ -143,91 +143,119 @@ shared_ptr<Twist2D> FRC_7054::RobotState::getSmoothedAcceleration()
 
 void FRC_7054::RobotState::resetVision()
 {
-    vision_target_intake.reset();
-    vision_target_turret.reset();
+    vision_target_power_port.reset();
+    vision_target_loading_bay.reset();
 }
 
-std::shared_ptr<Pose2D> FRC_7054::RobotState::getCameraToVisionTargetPose(VisionTargeting::TargetInfo target, bool turret, std::shared_ptr<Subsystems::Limelight> source)
+std::shared_ptr<TimedPose2D> FRC_7054::RobotState::getFieldToVisionTargetPose(double timestamp, VisionTargeting::TargetInfo target, std::shared_ptr<Subsystems::Limelight> source)
 {
     //change coordinate frames: x (left, right), y (up, down), z (forwards, backwards) to x (forward, backwards), y (left, right), z (up, down)
     double x = target.getZ(); // depth
     double y = target.getX(); // left right
     double z = target.getY(); // height
+    double rot = target.getYTheta(); // y rotation: check this is right
 
-    //if (util.epsilonEquals())
-    std::shared_ptr<Pose2D> pose = std::make_shared<Pose2D>(x, y, 0.0);
-    return pose;
+    std::shared_ptr<Pose2D> pose = std::make_shared<Pose2D>(x, y, rot);
+    std::shared_ptr<Pose2D> fieldToVisionTarget;
+    if (source->getName() == "Turret Limelight")
+    {
+        fieldToVisionTarget = getFieldToTurret(timestamp)->transformBy(source->getFrameToLens()->transformBy(pose->inverse()));
+    } else if (source->getName() == "Intake Limelight")
+    {
+        fieldToVisionTarget = getFieldToVehicle(timestamp)->transformBy(source->getFrameToLens()->transformBy(pose->inverse()));
+    } else
+    {
+        fieldToVisionTarget = std::make_shared<Pose2D>();
+        std::cout<< "Invalid Source Name: " << source->getName() << std::endl;
+    }
+    
+    //update to known normals: into the target (perspective of robot facing the goal) 
+    updateVisionTargetRotationToNearestNormal(fieldToVisionTarget);
+
+    std::shared_ptr<TimedPose2D> fieldToTargetTimed = std::make_shared<TimedPose2D>(timestamp - source->getLatency(), fieldToVisionTarget);
+    
+    return fieldToTargetTimed;
 }
 
-void FRC_7054::RobotState::updateGoalTracker(double timestamp, std::vector<std::shared_ptr<Pose2D>> goalPose, VisionTargeting::GoalTracker goalTracker, std::shared_ptr<Subsystems::Limelight> source)
+void FRC_7054::RobotState::updateGoalTracker(std::vector<std::shared_ptr<TimedPose2D>> goalPose, VisionTargeting::GoalTracker goalTracker, std::shared_ptr<Subsystems::Limelight> source)
 {
-    std::vector<std::shared_ptr<Pose2D>> goalPoses;
-    //check if z axis needs to be rotated by camera angle, should be rotated above
     if (goalPose.empty())
     {
-        std::cout<<"failed to update Goal Tracker: " << source->getName() <<std::endl;
+        //std::cout<<"failed to update Goal Tracker: " << source->getName() <<std::endl;
         return;
     }
-    for (auto pose : goalPose)
-    {
-        std::shared_ptr<Pose2D> fieldToVisionTarget = getFieldToTurret(timestamp)->transformBy(source->getTurretToLens()->transformBy(pose));
-        goalPoses.push_back(fieldToVisionTarget);
-    }
-    goalTracker.update(timestamp, goalPoses);
     
+    goalTracker.update(goalPose);   
 }
 
 void FRC_7054::RobotState::addVisionUpdate(double timestamp, std::vector<VisionTargeting::TargetInfo> observations, std::vector<std::shared_ptr<Subsystems::Limelight>> limelights)
 {
     if (observations.empty())
     {
-        frc::SmartDashboard::PutBoolean("CheckPoint/ VisionUpdate/ empty", true);
-        //std::cout << "Removing Old Targets: observations empty" << std::endl;
+        //frc::SmartDashboard::PutBoolean("CheckPoint/ VisionUpdate/ empty", true);
         //empty update Goal trackers to remove old targets
-        vision_target_intake.update(timestamp, emptyVector);
-        vision_target_turret.update(timestamp, emptyVector);
+        vision_target_power_port.update(emptyVector);
+        vision_target_loading_bay.update(emptyVector);
         return;
     }
 
-    mCameraToVisionTargetPosesIntake.clear();
-    mCameraToVisionTargetPosesTurret.clear();
+    mFieldToVisionTargetPosesPowerPort.clear();
+    mFieldToVisionTargetPosesLoadingBay.clear();
     
     for (auto target : observations)
     {
-        mCameraToVisionTargetPosesTurret.push_back( getCameraToVisionTargetPose(target, true, limelights.at(0) ) );
-        mCameraToVisionTargetPosesIntake.push_back( getCameraToVisionTargetPose(target, false, limelights.at(1) ) );
+        if (target.mCamera == limelights.at(0)->getTargetName())
+        {
+            mFieldToVisionTargetPosesPowerPort.push_back( getFieldToVisionTargetPose(timestamp, target, limelights.at(0) ) );
+        } else if (target.mCamera == limelights.at(1)->getTargetName())
+        {
+            mFieldToVisionTargetPosesLoadingBay.push_back( getFieldToVisionTargetPose(timestamp, target, limelights.at(1) ) );
+        }
     }
-    frc::SmartDashboard::PutBoolean("CheckPoint/ VisionUpdate/ added xyz poses", true);
-    
+    //frc::SmartDashboard::PutBoolean("CheckPoint/ VisionUpdate/ added xyz poses", true);
     
     //update Goal trackers with actual data
-    updateGoalTracker(timestamp, mCameraToVisionTargetPosesTurret, vision_target_turret, limelights.at(0));
-    updateGoalTracker(timestamp, mCameraToVisionTargetPosesIntake, vision_target_intake, limelights.at(1));    
-    
+    updateGoalTracker( mFieldToVisionTargetPosesPowerPort, vision_target_power_port, limelights.at(0));
+    updateGoalTracker( mFieldToVisionTargetPosesLoadingBay, vision_target_loading_bay, limelights.at(1));    
 }
+
+double FRC_7054::RobotState::findClosestNormal(double predicted)
+{
+    double normalPositive = std::fmod((predicted + 360.0), 360.0);
+    double normalClamped = kPossibleNormals.at(0);
+    for (double possible : kPossibleNormals)
+    {
+        //calculate smallest distance including angle wrap 
+        double minDThetaClamped = std::fmin(std::fabs(normalPositive - normalClamped), std::fabs((360.0 - normalClamped  + normalPositive > 360.0 ? 360.0 + normalClamped - normalPositive : 360.0 - normalClamped  + normalPositive)));
+        double minDThetaPossible = std::fmin(std::fabs(normalPositive - possible), std::fabs((360.0 - possible + normalPositive > 360.0 ? 360.0 + possible - normalPositive : 360.0 - possible + normalPositive)));
+        if ( minDThetaPossible < minDThetaClamped) 
+        {
+            normalClamped = possible;
+        }
+    }
+
+    return normalClamped;
+}
+
+void FRC_7054::RobotState::updateVisionTargetRotationToNearestNormal(std::shared_ptr<Pose2D> &fieldToVisionTarget)
+{
+    double normal = findClosestNormal(fieldToVisionTarget->getRotation()->getDegrees());
+
+    fieldToVisionTarget = std::make_shared<Pose2D>(fieldToVisionTarget->getTranslation(), Rotation2D::fromDegrees(normal));
+}
+
 
 std::shared_ptr<Pose2D> FRC_7054::RobotState::getFieldToVisionTarget(bool turret)
 {
-    VisionTargeting::GoalTracker tracker = turret ? vision_target_turret : vision_target_intake;
+    VisionTargeting::GoalTracker tracker = turret ? vision_target_power_port : vision_target_loading_bay;
 
     if (!tracker.hasTracks())
     {
         return NULL;
     }
-
-    std::shared_ptr<Pose2D> fieldToTarget = tracker.getTracks().at(0).field_to_target;
-
-    double normalPositive = fmod(fieldToTarget->getRotation()->getDegrees() + 360.0, 360.0); 
-    double normalClamped = kPossibleNormals.at(0);
-    for (double possible : kPossibleNormals)
-    {
-        if (fabs(normalPositive - possible) < fabs(normalPositive - normalClamped))
-        {
-            normalClamped = possible;
-        }
-    }
-    std::shared_ptr<Pose2D> pose = std::make_shared<Pose2D>(fieldToTarget->getTranslation(), fieldToTarget->getRotation()->fromDegrees(normalClamped));
-    return pose;
+    //Test sorting
+    return tracker.getTracks().at(0).field_to_target;
+    
 }
 
 std::shared_ptr<Pose2D> FRC_7054::RobotState::getVehicleToVisionTarget(double timestamp, bool turret)
@@ -245,7 +273,7 @@ std::shared_ptr<Pose2D> FRC_7054::RobotState::getVehicleToVisionTarget(double ti
 
 VisionTargeting::AimingParameters FRC_7054::RobotState::getAimingParameters(bool turret, int prev_track_id, double max_track_age)
 {
-    VisionTargeting::GoalTracker tracker = turret ? vision_target_turret : vision_target_intake;
+    VisionTargeting::GoalTracker tracker = turret ? vision_target_power_port : vision_target_loading_bay;
 
     std::vector<VisionTargeting::TrackReport> reports = tracker.getTracks();
 

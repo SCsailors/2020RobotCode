@@ -10,7 +10,7 @@
 
 Util::Util() 
 {
-    frc::SmartDashboard::PutBoolean("Util Constructed", true);
+    //frc::SmartDashboard::PutBoolean("Util Constructed", true);
 }
 
 bool Util::epsilonEquals(double a, double b){

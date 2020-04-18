@@ -5,14 +5,17 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-#include "Auto/Modes/CompetitionModes/LineShootMode.h"
+#pragma once
 
-void LineShootMode::routine()
-{
-    runAction(mSeries);
-}
+#include <lib/Geometry/Pose2D.h>
 
-std::string LineShootMode::getID()
-{
-    return "LineShootMode";
-}
+#include <memory>
+
+class TimedPose2D {
+  
+ public:
+  std::shared_ptr<Pose2D> pose;
+  double timestamp;
+  TimedPose2D(double timestamp, std::shared_ptr<Pose2D> pose): pose(pose), timestamp(timestamp) {}
+  
+};

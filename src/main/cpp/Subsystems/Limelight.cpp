@@ -13,13 +13,13 @@ Limelight::Limelight(std::shared_ptr<LimelightConstants> constants)
 {
     mConstants = constants;
     mNetworkTable = nt::NetworkTableInstance::GetDefault().GetTable(mConstants->kTableName);
-
+    mTargetName = mConstants->kDefaultTargetName;
 
 }
 
 void Limelight::readPeriodicInputs()
 {
-    frc::SmartDashboard::PutNumber(mConstants->kName + "/reading inputs", i++);
+    //frc::SmartDashboard::PutNumber(mConstants->kName + "/reading inputs", i++);
     //#ifdef CompetitionBot
     mPeriodicIO.givenLedMode = (int) mNetworkTable->GetEntry("ledmode").GetDouble(0.0);
     mPeriodicIO.givenPipeline = (int) mNetworkTable->GetEntry("pipeline").GetDouble(0.0);
@@ -36,7 +36,12 @@ void Limelight::readPeriodicInputs()
     
     mSeesTarget = mNetworkTable->GetEntry("tv").GetDouble(0.0) == 1.0;
     //#endif
-    if (mPeriodicIO.area >= 1.15) // tune: first guess
+    //if (mPipelineSwitch.update(mPeriodicIO.area >= 1.15, .3)) // tune: first guess
+    //{
+    //    PnPpipeline = !PnPpipeline;
+    //}
+
+    if (PnPpipeline) 
     {
         setPipeline(0);
     } else
@@ -89,7 +94,7 @@ void Limelight::setPipeline(int mode)
 
         mPeriodicIO.pipeline = mode;
         mOutputsHaveChanged = true;
-        std::cout<<"changing pipeline"<<std::endl;
+        std::cout<<"changing pipeline to: "<< mPeriodicIO.pipeline <<std::endl;
     }
 }
 
@@ -103,34 +108,79 @@ double Limelight::getLatency()
     return mPeriodicIO.latency;
 }
 
-std::vector<VisionTargeting::TargetCorner> Limelight::getCorners()
-{   
-    mTargetCorners.clear();
-    mCornX = mNetworkTable->GetEntry("tcornx").GetDoubleArray(mZeroArray);
-    mCornY = mNetworkTable->GetEntry("tcorny").GetDoubleArray(mZeroArray);
-
-    XYToTargetCorner(mCornX, mCornY);
-    if (mTargetCorners.size() == 4)
-    {
-        return mTargetCorners;
-    } else if (mTargetCorners.size() > 4)
-    { //filter to 4 outside corners
-        filterTargetCorners(mTargetCorners);
-    }
-    
-    return mTargetCorners;
+void Limelight::getCorners(std::vector<cv::Point2d> &imagePoints)
+{
+    getCorners(getLimelightCornerXYs(), imagePoints);
 }
 
-void Limelight::XYToTargetCorner(std::vector<double> Xs, std::vector<double> Ys)
+void Limelight::getCorners(std::vector<double> cornerXY, std::vector<cv::Point2d> &imagePoints)
+{   
+    double timestamp = frc::Timer::GetFPGATimestamp();
+    std::vector<VisionTargeting::TargetCorner> filteredTargetCorners;
+    
+    if (cornerXY.size() == 8)
+    {
+        XYToTargetCorner(cornerXY, filteredTargetCorners);
+    } else if (cornerXY.size() > 8)
+    { //filter to 4 outside corners
+        std::vector<VisionTargeting::TargetCorner> targetCorners;
+        XYToTargetCorner(cornerXY, targetCorners);
+        
+        filterTargetCorners(targetCorners, filteredTargetCorners);
+    } else 
+    { //fill to zero if nothing worked
+        std::cout << "Don't have 4 points: "<< mConstants->kName << std::endl;
+        XYToTargetCorner(mZeroArray, filteredTargetCorners);
+    }
+
+    TargetCornerToCVPoint2d(filteredTargetCorners, imagePoints);
+    
+}
+
+std::vector<double> Limelight::getLimelightCornerXYs()
 {
-    for (int i = 0; i <Xs.size()-1 ; i++)
+    return mNetworkTable->GetEntry("tcornxy").GetDoubleArray(mZeroArray);
+}
+
+bool Limelight::getLimelightCornersValid(std::vector<cv::Point2d> imagePoints)
+{
+    for ( auto point : imagePoints)
+    {
+        if (util.epsilonEquals(point.x, 0.0) && util.epsilonEquals(point.y, 0.0))
+        {
+            return false;
+        }
+    }
+    return true;
+
+}
+
+void Limelight::XYToTargetCorner(std::vector<double> XYs, std::vector<VisionTargeting::TargetCorner> &targetCorners)
+{
+    double centerX = 0.0;
+    double centerY = 0.0;
+    if (XYs.size() > 4)
+    {
+        for ( int k = 0; k < 4; k+=2)
+        {
+            centerX += XYs.at(k);
+            centerY += XYs.at(k+1);
+        }
+        centerX /= 2.0;
+        centerY /= 2.0;
+    }
+    frc::SmartDashboard::PutNumber("CenterX", centerX);
+    frc::SmartDashboard::PutNumber("CenterY", centerY);
+    
+    targetCorners.clear();
+    for (int i = 0; i < XYs.size()-1 ; i+=2)
     {
         //for each corner, create a targetinfo class to store coordinates
-        mTargetCorners.push_back(VisionTargeting::TargetCorner{Xs.at(i), Ys.at(i)});
+        targetCorners.push_back(VisionTargeting::TargetCorner{XYs.at(i), XYs.at(i+1)});
     }
 }
 
-void Limelight::filterTargetCorners(std::vector<VisionTargeting::TargetCorner> targetCorners)
+void Limelight::filterTargetCorners(std::vector<VisionTargeting::TargetCorner> targetCorners, std::vector<VisionTargeting::TargetCorner> &filteredTargetCorners)
 {
     VisionTargeting::TargetCorner tr{};
     VisionTargeting::TargetCorner br{};
@@ -169,72 +219,91 @@ void Limelight::filterTargetCorners(std::vector<VisionTargeting::TargetCorner> t
             std::cout <<"corner failed to be put in a quadrant! "<< "Theta: " << corner.getTheta() <<std::endl;
         }
     }
-    mTargetCorners.clear();
-    mTargetCorners.push_back(tr);
-    mTargetCorners.push_back(tl);
-    mTargetCorners.push_back(bl);
-    mTargetCorners.push_back(br);
+    filteredTargetCorners.clear();
+    filteredTargetCorners.push_back(tl);
+    filteredTargetCorners.push_back(tr);
+    filteredTargetCorners.push_back(br);
+    filteredTargetCorners.push_back(bl);
+    
 
 }
 
 VisionTargeting::TargetInfo Limelight::getCameraXYZ()
 {
+    return getCameraXYZ(getLimelightCornerXYs());
+}
+
+VisionTargeting::TargetInfo Limelight::getCameraXYZ(std::vector<double> cornerXYs)
+{
+    //differentiate between the two targets and set mTargetname to the right one
+    if (mPeriodicIO.horPixels > mPeriodicIO.vertPixels) 
+    {   
+        mTargetName = Constants::PowerPort;
+    } else
+    {   
+        mTargetName = Constants::LoadingBay;
+    }
+    double timestamp = frc::Timer::GetFPGATimestamp();
     //std::cout << "Starting GetCameraXYZ()" << std::endl;
+    
+    //No Target
     if (mPeriodicIO.horPixels == 0.0 && mPeriodicIO.vertPixels == 0.0)
     {
         
         frc::SmartDashboard::PutBoolean("Subsystems/" + mConstants->kName + "/No Target: getCameraXYZ:", true); 
         //std::cout << "Returning empty Target" << std::endl;
-        return VisionTargeting::TargetInfo{};
+        return VisionTargeting::TargetInfo{mConstants->kDefaultTargetName};
     } 
     cv::Mat mRotationVector; //axis angle form
     cv::Mat mTranslationVector;
+    
+    //Use Limelight PnP
     if (mPeriodicIO.givenPipeline == 0)
     {
         std::vector<double> camTran = mNetworkTable->GetEntry("camtran").GetDoubleArray(mZeroArray);
         if (util.epsilonEquals(camTran.at(3), 0.0, 5.0))
         { //have a target with an x distance of 0 inches: not valid target
-            setPipeline(1);
-            return VisionTargeting::TargetInfo{};
+            //setPipeline(1);
+            return VisionTargeting::TargetInfo{mConstants->kDefaultTargetName};
         }
         
-        return VisionTargeting::TargetInfo{camTran};
+        return VisionTargeting::TargetInfo{camTran, mConstants->kDefaultTargetName};
 
+    //Use Rio PnP
     } else if (mPeriodicIO.givenPipeline == 1)
     {
         frc::SmartDashboard::PutBoolean("Subsystems/" + mConstants->kName + "/No Target: getCameraXYZ:", false);
-    
-    std::vector<VisionTargeting::TargetCorner> corners = getCorners();
-    if (corners.size() < 4)
-    {
-        std::cout << "Don't have 4 points: "<< mConstants->kName << std::endl;
-        return VisionTargeting::TargetInfo{};
-    }
-    
-    std::vector<cv::Point2d> imagePoints;
-    
-    TargetCornerToCVPoint2d(corners, imagePoints);
-    //std::cout << "Convert corners to CVPoint2d" << std::endl;
-    
+
+        std::vector<cv::Point2d> imagePoints;
+        
+        getCorners(cornerXYs, imagePoints);
+
+        //check no points are equal to (0.0, 0.0): crashes solvePnP();
+        if (!getLimelightCornersValid(imagePoints))
+        {
+            return VisionTargeting::TargetInfo{mConstants->kDefaultTargetName};
+        }
+
+        //Decide which Target
         if (mPeriodicIO.horPixels > mPeriodicIO.vertPixels) 
         {
             //hex goal
             //std::cout<<"Using Hex Model: getCameraXYZ()"<< mConstants->kName<<std::endl;
-            cv::solvePnP(mHexModelPoints, imagePoints, mCameraMatrix, mDistCoeffs, mRotationVector, mTranslationVector, false, cv::SOLVEPNP_P3P);
+            cv::solvePnP(mHexModelPoints, imagePoints, mCameraMatrix, mDistCoeffs, mRotationVector, mTranslationVector, false); //, cv::SOLVEPNP_P3P
             //std::cout << "Used Hex Model" << std::endl; 
         } else 
         {
             //rectangular goal
             //std::cout<<"Using Rect Model: getCameraXYZ()"<< mConstants->kName<<std::endl;
-            cv::solvePnP(mRectModelPoints, imagePoints, mCameraMatrix, mDistCoeffs, mRotationVector, mTranslationVector, false, cv::SOLVEPNP_P3P);
+            cv::solvePnP(mRectModelPoints, imagePoints, mCameraMatrix, mDistCoeffs, mRotationVector, mTranslationVector, false);
             //std::cout << "Used Rectangular Model" << std::endl;
-        }
-        
+        } 
     
     
-    return VisionTargeting::TargetInfo{mTranslationVector, mRotationVector};
+    return VisionTargeting::TargetInfo{mTranslationVector, mRotationVector, mConstants->kDefaultTargetName};
     }
-    
+    //should never reach here
+    return VisionTargeting::TargetInfo{mConstants->kDefaultTargetName};
 }
 
 void Limelight::TargetCornerToCVPoint2d(std::vector<VisionTargeting::TargetCorner> corners, std::vector<cv::Point2d> &imagePoints)

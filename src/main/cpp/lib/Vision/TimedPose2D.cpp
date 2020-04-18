@@ -5,6 +5,6 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-#include "Auto/Creators/CompetitionCreators/SimpleCreator.h"
+#include "lib/Vision/TimedPose2D.h"
 
-SimpleCreator::SimpleCreator() {}
+//TimedPose2D::TimedPose2D() {}

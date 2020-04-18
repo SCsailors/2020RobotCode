@@ -29,6 +29,8 @@ using namespace std;
 #include <frc/smartdashboard/SendableChooser.h>
 #include <cameraserver/CameraServer.h>
 
+#include <AHRS.h>
+
 class Robot : public frc::TimedRobot {
  public:
   void RobotInit() override;
@@ -40,6 +42,8 @@ class Robot : public frc::TimedRobot {
   void TestPeriodic() override;
   void DisabledInit() override;
   void DisabledPeriodic() override;
+
+AHRS NavX{frc::SPI::Port::kMXP, AHRS::kProcessedData, 200};
 
 //Util
 std::shared_ptr<FRC_7054::RobotState> mRobotState;

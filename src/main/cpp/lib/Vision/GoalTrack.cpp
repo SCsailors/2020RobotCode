@@ -9,12 +9,12 @@
 using namespace VisionTargeting;
 GoalTrack::GoalTrack() {}
 
-GoalTrack GoalTrack::makeNewTrack(double timestamp, std::shared_ptr<Pose2D> first_observation, int id)
+std::shared_ptr<GoalTrack> GoalTrack::makeNewTrack(double timestamp, std::shared_ptr<Pose2D> first_observation, int id)
 {
-    GoalTrack rv{};
-    rv.mObservedPositions.put(timestamp, first_observation);
-    rv.mSmoothedPosition = first_observation;
-    rv.mId = id;
+    std::shared_ptr<VisionTargeting::GoalTrack> rv = std::make_shared<VisionTargeting::GoalTrack>();
+    rv->mObservedPositions.put(timestamp, first_observation);
+    rv->mSmoothedPosition = first_observation;
+    rv->mId = id;
     return rv;
 }
 
@@ -25,14 +25,20 @@ bool GoalTrack::tryUpdate(double timestamp, std::shared_ptr<Pose2D> new_observat
         return false;
     }
     double distance = mSmoothedPosition->inverse()->transformBy(new_observation)->getTranslation()->norm();
-    if(distance < Constants::kMaxTrackerDistance && util.epsilonEquals(mSmoothedPosition->getRotation()->getDegrees(), new_observation->getRotation()->getDegrees(), 30.0)) // TODO: tune epsilon of 30.
+    if(distance < Constants::kMaxTrackerDistance && 
+            util.epsilonEquals(mSmoothedPosition->getRotation()->getDegrees(), new_observation->getRotation()->getDegrees(), Constants::kMaxThetaError) && 
+            util.epsilonEquals(mSmoothedPosition->getTranslation()->y(), new_observation->getTranslation()->y(), Constants::kMaxXYError) && 
+            util.epsilonEquals(mSmoothedPosition->getTranslation()->x(), new_observation->getTranslation()->x(), Constants::kMaxXYError)
+            ) // TODO: tune X, Y, Theta epsilons.
     {
+        //std::cout << "Putting Pose" << std::endl;
         mObservedPositions.put(timestamp, new_observation);
-        mObservedPositions.pruneByTime();
+        //mObservedPositions.pruneByTime();
+        
         return true;
     } else
     {
-        emptyUpdate();
+        //emptyUpdate();
         return false;
     }
     
@@ -49,10 +55,9 @@ void GoalTrack::smooth()
 
         double t_now = frc::Timer::GetFPGATimestamp();
         int num_samples = 0;
-        for (int i = 0; i < mObservedPositions.pastObjects.size()-1; i++)
+        for (auto pose: mObservedPositions.pastObjects)
         {
-            auto pose = mObservedPositions.pastObjects.at(i);
-            if (t_now-pose.mKey)
+            if (t_now-pose.mKey > Constants::kMaxGoalTrackSmoothingTime)
             {
                 continue;
             }

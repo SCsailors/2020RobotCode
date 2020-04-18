@@ -24,8 +24,8 @@ class LimelightManager : public Subsystems::Subsystem {
   
   static std::shared_ptr<LimelightManager> mInstance;
 
-  std::shared_ptr<Subsystems::LimelightConstants> mTurretLimelightConstants = std::make_shared<Subsystems::LimelightConstants>("Turret Limelight", "limelight-turret", 0.0, std::make_shared<Pose2D>(0.0,0.0,0.0), std::make_shared<Rotation2D>(0.0,0.0, true));
-  std::shared_ptr<Subsystems::LimelightConstants> mIntakeLimelightConstants = std::make_shared<Subsystems::LimelightConstants>("Intake Limelight", "limelight-intake", 0.0, std::make_shared<Pose2D>(0.0,0.0,0.0), std::make_shared<Rotation2D>(0.0,0.0, true));
+  std::shared_ptr<Subsystems::LimelightConstants> mTurretLimelightConstants = std::make_shared<Subsystems::LimelightConstants>("Turret Limelight", "limelight-turret", Constants::TargetNames::PowerPort, 0.0, std::make_shared<Pose2D>(0.0,0.0,0.0), std::make_shared<Rotation2D>(0.0,0.0, true));
+  std::shared_ptr<Subsystems::LimelightConstants> mIntakeLimelightConstants = std::make_shared<Subsystems::LimelightConstants>("Intake Limelight", "limelight-intake", Constants::TargetNames::LoadingBay, 0.0, std::make_shared<Pose2D>(0.0,0.0,0.0), std::make_shared<Rotation2D>(0.0,0.0, true));
   
   std::shared_ptr<Subsystems::Limelight> mTurretLimelight = std::make_shared<Subsystems::Limelight>(mTurretLimelightConstants);
   std::shared_ptr<Subsystems::Limelight> mIntakeLimelight = std::make_shared<Subsystems::Limelight>(mIntakeLimelightConstants);

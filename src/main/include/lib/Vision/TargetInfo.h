@@ -10,6 +10,8 @@
 #include <cmath>
 #include <opencv2/opencv.hpp>
 
+#include <Constants.h>
+
 #include <iostream>
 #include <vector>
 
@@ -22,14 +24,18 @@ class TargetInfo {
   double xTheta;
   double yTheta;
   double zTheta;
-  //maybe add rotation?
  public:
-  TargetInfo(cv::Mat trans, cv::Mat rot);
-  TargetInfo(): x(0.0), y(0.0), z(0.0), xTheta(0.0), yTheta(0.0), zTheta(0.0) {}
-  TargetInfo(std::vector<double> camTran);
+  //Limelight mConstants->kName
+  Constants::TargetNames mCamera;
+  TargetInfo(cv::Mat trans, cv::Mat rot, Constants::TargetNames camera);
+  TargetInfo(Constants::TargetNames camera);
+  TargetInfo(std::vector<double> camTran, Constants::TargetNames camera);
   double getX(){return x;}
   double getY(){return y;}
   double getZ(){return z;}
+  double getXTheta(){return xTheta;}
+  double getYTheta(){return yTheta;}
+  double getZTheta(){return zTheta;}
   
   
 };
