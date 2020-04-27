@@ -19,9 +19,9 @@ class AddVisionUpdateTest : public ::testing::Test {
     virtual void SetUp(){}
     virtual void TearDown(){}
 
-    std::vector<double> mLargeXY{-20.0, 15.0, 20.0, 15.0, -12.0, -15.0, 12.0, -15.0, -10.0, 5.0}; //10
-    std::vector<double> mStandardXY{-20.0, 15.0, 20.0, 15.0, 12.0, -15.0, -12.0, -15.0}; //8
-    std::vector<double> mSmallXY{-20.0, 15.0, 20.0, 15.0, -12.0, -15.0}; //6
+    std::vector<double> mLargeXY{333.0, 235.0, 608.0, 229.0, 547.0, 341.0, 404.0, 345.0, -10.0, 5.0}; //10
+    std::vector<double> mStandardXY{333.0, 235.0, 608.0, 229.0, 547.0, 341.0, 404.0, 345.0}; //8
+    std::vector<double> mSmallXY{333.0, 235.0, 608.0, 229.0, 547.0, 341.0}; //6
 
     std::vector<double> mZeroXY{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
@@ -34,17 +34,17 @@ TEST_F(AddVisionUpdateTest, TestXYToTargetCorner)
   std::vector<VisionTargeting::TargetCorner> targetCorners;
   mLimelight->XYToTargetCorner(mStandardXY, targetCorners);
 
-  EXPECT_NEAR(-20.0, targetCorners.at(0).getY(), kEpsilon);
-  EXPECT_NEAR(15.0, targetCorners.at(0).getZ(), kEpsilon);
+  EXPECT_NEAR(333.0, targetCorners.at(0).getY(), kEpsilon);
+  EXPECT_NEAR(235.0, targetCorners.at(0).getZ(), kEpsilon);
 
-  EXPECT_NEAR(20.0, targetCorners.at(1).getY(), kEpsilon);
-  EXPECT_NEAR(15.0, targetCorners.at(1).getZ(), kEpsilon);
+  EXPECT_NEAR(608.0, targetCorners.at(1).getY(), kEpsilon);
+  EXPECT_NEAR(229.0, targetCorners.at(1).getZ(), kEpsilon);
 
-  EXPECT_NEAR(12.0, targetCorners.at(2).getY(), kEpsilon);
-  EXPECT_NEAR(-15.0, targetCorners.at(2).getZ(), kEpsilon);
+  EXPECT_NEAR(547.0, targetCorners.at(2).getY(), kEpsilon);
+  EXPECT_NEAR(341.0, targetCorners.at(2).getZ(), kEpsilon);
 
-  EXPECT_NEAR(-12.0, targetCorners.at(3).getY(), kEpsilon);
-  EXPECT_NEAR(-15.0, targetCorners.at(3).getZ(), kEpsilon);
+  EXPECT_NEAR(404.0, targetCorners.at(3).getY(), kEpsilon);
+  EXPECT_NEAR(345.0, targetCorners.at(3).getZ(), kEpsilon);
 }  
 
 TEST_F(AddVisionUpdateTest, TestTargetCornerToCVPoint2d)
@@ -55,17 +55,17 @@ TEST_F(AddVisionUpdateTest, TestTargetCornerToCVPoint2d)
   std::vector<cv::Point2d> imagePoints;
   mLimelight->TargetCornerToCVPoint2d(targetCorners, imagePoints);
 
-  EXPECT_NEAR(-20.0, imagePoints.at(0).x, kEpsilon);
-  EXPECT_NEAR(15.0, imagePoints.at(0).y, kEpsilon);
+  EXPECT_NEAR(333.0, imagePoints.at(0).x, kEpsilon);
+  EXPECT_NEAR(235.0, imagePoints.at(0).y, kEpsilon);
 
-  EXPECT_NEAR(20.0, imagePoints.at(1).x, kEpsilon);
-  EXPECT_NEAR(15.0, imagePoints.at(1).y, kEpsilon);
+  EXPECT_NEAR(608.0, imagePoints.at(1).x, kEpsilon);
+  EXPECT_NEAR(229.0, imagePoints.at(1).y, kEpsilon);
 
-  EXPECT_NEAR(12.0, imagePoints.at(2).x, kEpsilon);
-  EXPECT_NEAR(-15.0, imagePoints.at(2).y, kEpsilon);
+  EXPECT_NEAR(547.0, imagePoints.at(2).x, kEpsilon);
+  EXPECT_NEAR(341.0, imagePoints.at(2).y, kEpsilon);
 
-  EXPECT_NEAR(-12.0, imagePoints.at(3).x, kEpsilon);
-  EXPECT_NEAR(-15.0, imagePoints.at(3).y, kEpsilon);
+  EXPECT_NEAR(404.0, imagePoints.at(3).x, kEpsilon);
+  EXPECT_NEAR(345.0, imagePoints.at(3).y, kEpsilon);
 
 
 }
@@ -78,17 +78,17 @@ TEST_F(AddVisionUpdateTest, TestFilterTargetCorners)
   std::vector<VisionTargeting::TargetCorner> filteredTargetCorners;
   mLimelight->filterTargetCorners(targetCorners, filteredTargetCorners);
 
-  EXPECT_NEAR(-20.0, filteredTargetCorners.at(0).getY(), kEpsilon);
-  EXPECT_NEAR(15.0, filteredTargetCorners.at(0).getZ(), kEpsilon);
+  EXPECT_NEAR(333.0, filteredTargetCorners.at(0).getY(), kEpsilon);
+  EXPECT_NEAR(235.0, filteredTargetCorners.at(0).getZ(), kEpsilon);
 
-  EXPECT_NEAR(20.0, filteredTargetCorners.at(1).getY(), kEpsilon);
-  EXPECT_NEAR(15.0, filteredTargetCorners.at(1).getZ(), kEpsilon);
+  EXPECT_NEAR(608.0, filteredTargetCorners.at(1).getY(), kEpsilon);
+  EXPECT_NEAR(229.0, filteredTargetCorners.at(1).getZ(), kEpsilon);
 
-  EXPECT_NEAR(12.0, filteredTargetCorners.at(2).getY(), kEpsilon);
-  EXPECT_NEAR(-15.0, filteredTargetCorners.at(2).getZ(), kEpsilon);
+  EXPECT_NEAR(547.0, filteredTargetCorners.at(2).getY(), kEpsilon);
+  EXPECT_NEAR(341.0, filteredTargetCorners.at(2).getZ(), kEpsilon);
 
-  EXPECT_NEAR(-12.0, filteredTargetCorners.at(3).getY(), kEpsilon);
-  EXPECT_NEAR(-15.0, filteredTargetCorners.at(3).getZ(), kEpsilon);
+  EXPECT_NEAR(404.0, filteredTargetCorners.at(3).getY(), kEpsilon);
+  EXPECT_NEAR(345.0, filteredTargetCorners.at(3).getZ(), kEpsilon);
 
   EXPECT_EQ(4, filteredTargetCorners.size());
 }
@@ -99,17 +99,17 @@ TEST_F(AddVisionUpdateTest, TestGetCornersStandard)
   std::vector<cv::Point2d> imagePoints;
   mLimelight->getCorners(mStandardXY, imagePoints);
 
-  EXPECT_NEAR(-20.0, imagePoints.at(0).x, kEpsilon);
-  EXPECT_NEAR(15.0, imagePoints.at(0).y, kEpsilon);
+  EXPECT_NEAR(333.0, imagePoints.at(0).x, kEpsilon);
+  EXPECT_NEAR(235.0, imagePoints.at(0).y, kEpsilon);
 
-  EXPECT_NEAR(20.0, imagePoints.at(1).x, kEpsilon);
-  EXPECT_NEAR(15.0, imagePoints.at(1).y, kEpsilon);
+  EXPECT_NEAR(608.0, imagePoints.at(1).x, kEpsilon);
+  EXPECT_NEAR(229.0, imagePoints.at(1).y, kEpsilon);
 
-  EXPECT_NEAR(12.0, imagePoints.at(2).x, kEpsilon);
-  EXPECT_NEAR(-15.0, imagePoints.at(2).y, kEpsilon);
+  EXPECT_NEAR(547.0, imagePoints.at(2).x, kEpsilon);
+  EXPECT_NEAR(341.0, imagePoints.at(2).y, kEpsilon);
 
-  EXPECT_NEAR(-12.0, imagePoints.at(3).x, kEpsilon);
-  EXPECT_NEAR(-15.0, imagePoints.at(3).y, kEpsilon);
+  EXPECT_NEAR(404.0, imagePoints.at(3).x, kEpsilon);
+  EXPECT_NEAR(345.0, imagePoints.at(3).y, kEpsilon);
 }
 
 TEST_F(AddVisionUpdateTest, TestGetCornersLarge)
@@ -118,17 +118,17 @@ TEST_F(AddVisionUpdateTest, TestGetCornersLarge)
   std::vector<cv::Point2d> imagePoints;
   mLimelight->getCorners(mLargeXY, imagePoints);
 
-  EXPECT_NEAR(-20.0, imagePoints.at(0).x, kEpsilon);
-  EXPECT_NEAR(15.0, imagePoints.at(0).y, kEpsilon);
+  EXPECT_NEAR(333.0, imagePoints.at(0).x, kEpsilon);
+  EXPECT_NEAR(235.0, imagePoints.at(0).y, kEpsilon);
 
-  EXPECT_NEAR(20.0, imagePoints.at(1).x, kEpsilon);
-  EXPECT_NEAR(15.0, imagePoints.at(1).y, kEpsilon);
+  EXPECT_NEAR(608.0, imagePoints.at(1).x, kEpsilon);
+  EXPECT_NEAR(229.0, imagePoints.at(1).y, kEpsilon);
 
-  EXPECT_NEAR(12.0, imagePoints.at(2).x, kEpsilon);
-  EXPECT_NEAR(-15.0, imagePoints.at(2).y, kEpsilon);
+  EXPECT_NEAR(547.0, imagePoints.at(2).x, kEpsilon);
+  EXPECT_NEAR(341.0, imagePoints.at(2).y, kEpsilon);
 
-  EXPECT_NEAR(-12.0, imagePoints.at(3).x, kEpsilon);
-  EXPECT_NEAR(-15.0, imagePoints.at(3).y, kEpsilon);
+  EXPECT_NEAR(404.0, imagePoints.at(3).x, kEpsilon);
+  EXPECT_NEAR(345.0, imagePoints.at(3).y, kEpsilon);
 }
 
 TEST_F(AddVisionUpdateTest, TestGetCornersSmall)
@@ -173,19 +173,19 @@ TEST_F(AddVisionUpdateTest, TestGetCornersZero)
 
 TEST_F(AddVisionUpdateTest, TestGetCameraXYZStandard)
 {
-  double T = 0;
-  int x = 0;
-  for (int i = 0; i < 100; i++)
-  {
+  //double T = 0;
+  //int x = 0;
+  //for (int i = 0; i < 100; i++)
+  //{
     double timestamp = frc::Timer::GetFPGATimestamp();
     VisionTargeting::TargetInfo info = mLimelight->getCameraXYZ(mStandardXY);
     double dt = frc::Timer::GetFPGATimestamp() - timestamp;
-    std::cout<< "X = " << info.getX() << ", Y = " << info.getY() << ", Z = "<< info.getZ() <<  std::endl;  
-    x++;
-    T += dt;
-  }
+    std::cout<< "dt = " << dt << ", X = " << info.getX() << ", Y = " << info.getY() << ", Z = "<< info.getZ() << ", X theta = "<< info.getXTheta() << ", Y theta = "<< info.getYTheta() << ", Z theta = "<< info.getZTheta() <<  std::endl;  
+    //x++;
+    //T += dt;
+  //}
   
-  std::cout<<"Average Time: " << T/x << std::endl;
+  //std::cout<<"Average Time: " << T/x << std::endl;
 
 }
 

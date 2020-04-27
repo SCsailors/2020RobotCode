@@ -35,6 +35,27 @@ void Limelight::readPeriodicInputs()
     mPeriodicIO.skew = (mPeriodicIO.skewRaw + mPeriodicIO.skewRaw < -45.0 ? 90.0 : 0.0); //adjust everything to be around 0: add scale constant to adjust it to degrees
     
     mSeesTarget = mNetworkTable->GetEntry("tv").GetDouble(0.0) == 1.0;
+    /*
+    std::vector<double> cornxy = mNetworkTable->GetEntry("tcornxy").GetDoubleArray(mZeroArray);
+
+    frc::SmartDashboard::PutNumber("Vision Targeting/X0", cornxy.at(0));
+    frc::SmartDashboard::PutNumber("Vision Targeting/Y0", cornxy.at(1));
+    frc::SmartDashboard::PutNumber("Vision Targeting/X1", cornxy.at(2));
+    frc::SmartDashboard::PutNumber("Vision Targeting/Y1", cornxy.at(3));
+    frc::SmartDashboard::PutNumber("Vision Targeting/X2", cornxy.at(4));
+    frc::SmartDashboard::PutNumber("Vision Targeting/Y2", cornxy.at(5));
+    frc::SmartDashboard::PutNumber("Vision Targeting/X3", cornxy.at(6));
+    frc::SmartDashboard::PutNumber("Vision Targeting/Y3", cornxy.at(7));
+    */
+    std::vector<double> camtran = mNetworkTable->GetEntry("camtran").GetDoubleArray(mZeroArray);
+
+    frc::SmartDashboard::PutNumber("Vision Targeting/X", camtran.at(0));
+    frc::SmartDashboard::PutNumber("Vision Targeting/Y", camtran.at(1));
+    frc::SmartDashboard::PutNumber("Vision Targeting/Z", camtran.at(2));
+    frc::SmartDashboard::PutNumber("Vision Targeting/X Theta", camtran.at(3));
+    frc::SmartDashboard::PutNumber("Vision Targeting/Y Theta", camtran.at(4));
+    frc::SmartDashboard::PutNumber("Vision Targeting/Z Theta", camtran.at(5));
+
     //#endif
     //if (mPipelineSwitch.update(mPeriodicIO.area >= 1.15, .3)) // tune: first guess
     //{
@@ -289,8 +310,10 @@ VisionTargeting::TargetInfo Limelight::getCameraXYZ(std::vector<double> cornerXY
         {
             //hex goal
             //std::cout<<"Using Hex Model: getCameraXYZ()"<< mConstants->kName<<std::endl;
-            cv::solvePnP(mHexModelPoints, imagePoints, mCameraMatrix, mDistCoeffs, mRotationVector, mTranslationVector, false); //, cv::SOLVEPNP_P3P
-            //std::cout << "Used Hex Model" << std::endl; 
+            cv::solvePnPRansac(mHexModelPoints, imagePoints, mCameraMatrix, mDistCoeffs, mRotationVector, mTranslationVector, false, 100, 2.0, cv::SOLVEPNP_P3P); //, 
+            //std::cout << "Used Hex Model" << std::endl;
+
+            
         } else 
         {
             //rectangular goal
@@ -298,7 +321,11 @@ VisionTargeting::TargetInfo Limelight::getCameraXYZ(std::vector<double> cornerXY
             cv::solvePnP(mRectModelPoints, imagePoints, mCameraMatrix, mDistCoeffs, mRotationVector, mTranslationVector, false);
             //std::cout << "Used Rectangular Model" << std::endl;
         } 
-    
+
+    cv::Mat R;
+    cv::Rodrigues(mRotationVector, R);
+    R = R.t();
+    mTranslationVector = -R * mTranslationVector;
     
     return VisionTargeting::TargetInfo{mTranslationVector, mRotationVector, mConstants->kDefaultTargetName};
     }

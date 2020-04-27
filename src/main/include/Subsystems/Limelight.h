@@ -92,10 +92,10 @@ class Limelight : public Subsystems::Subsystem{
   std::vector<double> mZeroArray{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
   const int mNumCorners = 4; 
   bool PnPpipeline = false;
-  //field models of hex and rectangular vision tape (mm);
+  //field models of hex and rectangular vision tape (inches);
   //outside hex corners in mm from the center.
   //const std::vector<cv::Point3d> mHexModelPoints{cv::Point3d(-498.475, 215.8, 0.0), cv::Point3d(498.475, 215.8, 0.0), cv::Point3d(249.175, -215.8, 0.0), cv::Point3d(-249.175, -215.8, 0.0)};
-  const std::vector<cv::Point3d> mHexModelPoints{cv::Point3d(-498.475, 0.0, 0.0), cv::Point3d(498.475, 0.0, 0.0), cv::Point3d(249.175, 2.0 * -215.8, 0.0), cv::Point3d(-249.175, 2.0 * -215.8, 0.0)};
+  const std::vector<cv::Point3d> mHexModelPoints{cv::Point3d(-19.625, 0.0, 0.0), cv::Point3d(19.625, 0.0, 0.0), cv::Point3d(9.82, 17.0, 0.0), cv::Point3d(-9.82, 17.0, 0.0)};
   
   //outside rectangular corners in mm from the center.
   const std::vector<cv::Point3d> mRectModelPoints{cv::Point3d(-88.9, 139.7, 0.0), cv::Point3d(88.9, 139.7, 0.0), cv::Point3d(88.9, -139.7, 0.0), cv::Point3d(-88.9, -139.7, 0.0)};
@@ -104,11 +104,10 @@ class Limelight : public Subsystems::Subsystem{
   cv::Point2d center = cv::Point2d(160.0, 120.0);
   //cv::Mat mCameraMatrix = (cv::Mat_<double>(3,3) << focal_length, 0.0, center.x, 0.0, focal_length, center.y, 0.0, 0.0, 1.0); //go to https://readthedocs.org/projects/limelight/downloads/pdf/latest/
   //320 x 240
-  //cv::Mat mCameraMatrix = (cv::Mat_<double>(3,3) << 772.53876202/2.75, 0.0, 479.132337442/3.0, 0.0, 769.052151477/2.75, 359.143001808/3., 0.0, 0.0, 1.0);
-  //cv::Mat mDistCoeffs = (cv::Mat_<double>(5,1) << 0.29684613693070039, -1.4380252254747885, -0.0022098421479494509, -.003389456353390716, 2.5344430354806740);
-  //cv::Mat mDistCoeffs = (cv::Mat_<double>(5,1) << 0.0, 0.0, 0.0, 0.0, 0.0);
+  cv::Mat mCameraMatrix = (cv::Mat_<double>(3,3) << 772.53876202/3.0, 0.0, 479.132337442/3.0, 0.0, 769.052151477/3.0, 359.143001808/3., 0.0, 0.0, 1.0);
+  
   //960 x 720
-  cv::Mat mCameraMatrix = (cv::Mat_<double>(3,3) << 772.53876202, 0.0, 479.132337442, 0.0, 769.052151477, 359.143001808, 0.0, 0.0, 1.0);
+  //cv::Mat mCameraMatrix = (cv::Mat_<double>(3,3) << 772.53876202, 0.0, 479.132337442, 0.0, 769.052151477, 359.143001808, 0.0, 0.0, 1.0);
   cv::Mat mDistCoeffs = (cv::Mat_<double>(5,1) << 0.29684613693070039, -1.4380252254747885, -0.0022098421479494509, -.003389456353390716, 2.5344430354806740);
   
   std::vector<VisionTargeting::TargetCorner> mTargetCorners;

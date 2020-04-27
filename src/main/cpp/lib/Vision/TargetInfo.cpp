@@ -15,9 +15,9 @@ TargetInfo::TargetInfo( cv::Mat trans, cv::Mat rot, Constants::TargetNames camer
 {
     mCamera = camera;
 
-    x = trans.at<double>(0)/25.4; //convert mm to inches;
-    y = trans.at<double>(1)/25.4;
-    z = trans.at<double>(2)/25.4;
+    x = trans.at<double>(0); 
+    y = trans.at<double>(1);
+    z = trans.at<double>(2);
 
     xTheta = rot.at<double>(0) * Constants::kRadsToDegrees; //convert radians to degrees
     yTheta = rot.at<double>(1) * Constants::kRadsToDegrees;
