@@ -19,7 +19,7 @@ class AddVisionUpdateTest : public ::testing::Test {
     virtual void SetUp(){}
     virtual void TearDown(){}
 
-    std::vector<double> mLargeXY{333.0, 235.0, 608.0, 229.0, 547.0, 341.0, 404.0, 345.0, -10.0, 5.0}; //10
+    std::vector<double> mLargeXY{333.0, 235.0, 608.0, 229.0, 547.0, 341.0, 404.0, 345.0}; //10
     std::vector<double> mStandardXY{333.0, 235.0, 608.0, 229.0, 547.0, 341.0, 404.0, 345.0}; //8
     std::vector<double> mSmallXY{333.0, 235.0, 608.0, 229.0, 547.0, 341.0}; //6
 

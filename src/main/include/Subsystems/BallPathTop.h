@@ -23,7 +23,6 @@ class BallPathTop : public Subsystems::TalonSRXSubsystem {
   frc::DigitalInput mFirstMake{Constants::kDIO_FirstMake};
   frc::DigitalInput mLastBreak{Constants::kDIO_LastBreak};
   frc::DigitalInput mLastMake{Constants::kDIO_LastMake};
-  frc::DigitalInput mPhotoEye{Constants::kDIO_PhotoEye};
 
   bool mFirstBreakState = false;
   bool mFirstMakeState = false;

@@ -495,12 +495,12 @@ double FalconDrive::getRightEncoderRotations()
 
 double FalconDrive::getLeftEncoderDistance()
 { //distance in inches of wheels
-    getLeftEncoderRotations() * (mIsHighGear? Constants::kDriveHighGearIPR: Constants::kDriveLowGearIPR);
+    return getLeftEncoderRotations() * (mIsHighGear? Constants::kDriveHighGearIPR: Constants::kDriveLowGearIPR);
 }
 
 double FalconDrive::getRightEncoderDistance()
 {
-    getRightEncoderRotations() * (mIsHighGear? Constants::kDriveHighGearIPR: Constants::kDriveLowGearIPR);
+    return getRightEncoderRotations() * (mIsHighGear? Constants::kDriveHighGearIPR: Constants::kDriveLowGearIPR);
 }
 
 double FalconDrive::getLeftVelocityNativeUnits()
@@ -515,12 +515,12 @@ double FalconDrive::getRightVelocityNativeUnits()
 
 double FalconDrive::getLeftRadsPerSec()
 {
-    getLeftLinearVelocity() / Constants::kDriveWheelRadiusInches;
+    return getLeftLinearVelocity() / Constants::kDriveWheelRadiusInches;
 }
 
 double FalconDrive::getRightRadsPerSec()
 {
-    getRightLinearVelocity() / Constants::kDriveWheelRadiusInches;
+    return getRightLinearVelocity() / Constants::kDriveWheelRadiusInches;
 }
 
 double FalconDrive::getLeftLinearVelocity()

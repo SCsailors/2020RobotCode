@@ -15,8 +15,7 @@
 
 
 namespace VisionTargeting{
-class GoalTracker {
- public:
+
   class TrackReport{
    public:
     std::shared_ptr<Pose2D> field_to_target;

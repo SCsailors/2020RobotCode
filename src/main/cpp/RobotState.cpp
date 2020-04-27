@@ -275,7 +275,7 @@ VisionTargeting::AimingParameters FRC_7054::RobotState::getAimingParameters(bool
 {
     VisionTargeting::GoalTracker tracker = turret ? vision_target_power_port : vision_target_loading_bay;
 
-    std::vector<VisionTargeting::GoalTracker::TrackReport> reports = tracker.getTracks();
+    std::vector<VisionTargeting::TrackReport> reports = tracker.getTracks();
 
     if (reports.empty())
     {
@@ -286,7 +286,7 @@ VisionTargeting::AimingParameters FRC_7054::RobotState::getAimingParameters(bool
 
     VisionTargeting::TrackReportComparator comparator{Constants::kTrackStabilityWeight, Constants::kTrackAgeWeight, Constants::kTrackSwitchingWeight, prev_track_id, timestamp};
 
-    VisionTargeting::GoalTracker::TrackReport report{};
+    VisionTargeting::TrackReport report{};
 
     for (auto track : reports)
     {

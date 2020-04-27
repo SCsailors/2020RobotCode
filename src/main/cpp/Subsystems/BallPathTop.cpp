@@ -80,7 +80,6 @@ void BallPathTop::readPeriodicInputs()
 
     mLastBreakState = mLastBreak.Get();
     mLastMakeState = mLastMake.Get();
-    mPhotoEyeState = mPhotoEye.Get();
 
     updateLast();
     updateFirst();
