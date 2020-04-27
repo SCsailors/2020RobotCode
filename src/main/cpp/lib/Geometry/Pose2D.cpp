@@ -111,5 +111,5 @@ bool Pose2D::isColinear(shared_ptr<Pose2D> other){
         return false;
     }
     shared_ptr<Twist2D> twist = log(inverse()->transformBy(other));
-    return (util.epsilonEquals(twist->dy, 0.0)&&util.epsilonEquals(twist->dtheta, 0.0));
+    return (Robot::util.epsilonEquals(twist->dy, 0.0)&&Robot::util.epsilonEquals(twist->dtheta, 0.0));
 }

@@ -15,7 +15,9 @@
 
 
 namespace VisionTargeting{
-class TrackReport{
+class GoalTracker {
+ public:
+  class TrackReport{
    public:
     std::shared_ptr<Pose2D> field_to_target;
     double latest_timestamp;
@@ -29,7 +31,7 @@ class TrackReport{
       id(0) {}
   };
 
-class TrackReportComparator{
+  class TrackReportComparator{
     public:
       double mStabilityWeight;
       double mAgeWeight;

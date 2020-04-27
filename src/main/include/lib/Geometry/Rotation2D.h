@@ -8,8 +8,6 @@
 #pragma once
 #include "lib/Geometry/Translation2D.h"
 
-#include "lib/Util/Util.h"
-
 #include <memory>
 #include <cmath>
 
@@ -20,7 +18,7 @@ class Rotation2D {
   double kEpsilon=.000000001;
   double sin_angle_;
   double cos_angle_;
-  Util util{};
+
  public:
   Rotation2D();
   Rotation2D(double x, double y, bool normalize);

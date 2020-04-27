@@ -90,7 +90,7 @@ shared_ptr<Rotation2D> Rotation2D::interpolate(shared_ptr<Rotation2D> other, dou
 
 bool Rotation2D::isParallel(shared_ptr<Rotation2D> other){
     shared_ptr<Translation2D> temp = make_shared<Translation2D>();
-    return util.epsilonEquals(temp->cross(toTranslation(), other->toTranslation()), 0.0);
+    return Robot::util.epsilonEquals(temp->cross(toTranslation(), other->toTranslation()), 0.0);
 }
 
 shared_ptr<Translation2D> Rotation2D::toTranslation(){

@@ -9,7 +9,6 @@
 #include "lib/Geometry/Rotation2D.h"
 #include "lib/Geometry/Translation2D.h"
 #include "lib/Geometry/Twist2D.h"
-#include "lib/Util/Util.h"
 #include <cmath>
 #include <memory>
 using namespace std;
@@ -22,7 +21,6 @@ class Pose2D {
   double half_dtheta;
   double cos_minus_one;
   double halfdtheta_by_tan_halfdtheta;
-  Util util{};
   public:
   shared_ptr<Translation2D> translation_;
   shared_ptr<Rotation2D> rotation_;
